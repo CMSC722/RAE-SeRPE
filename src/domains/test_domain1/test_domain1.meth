@@ -1,0 +1,13 @@
+m-opendoor(r, d, l, h):
+  task: opendoor
+  pre: loc(r) == l && adjacent(l, d) && handl(d, h)
+  body:
+    while !reachable(r, h) do
+      move-close(r, h)
+    end
+    monitor-status(r, d)
+    if door-status(d) == closed then
+      unlatch(r, d)
+    end
+    throw-wide(r, d)
+    end-monitor-status(r, d)
