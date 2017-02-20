@@ -25,6 +25,20 @@ semantics and operation.
 More information on the PLY module used to build the the lexer and the parser
 can be found at the following URL:
 http://www.dabeaz.com/ply/ply.html#ply_nn1
+
+_________________
+
+Finally, some ideas that we might consider future TODO's:
+1) finish implementing local variable read/write for method bodies
+2) write a lexer for domain description files, and design the lexer to
+    construct a symbol table that it then passes to the method-file parser,
+    so that we can check at compile-time that state variables are accessed
+    with the proper number of arguments
+3) enhance the domain description files and the dom-parser to construct a typed
+    symbol table that is then supplied to the method-file parser, so that we can
+    check at compile-time for type-consistency in the use of state variables
+    (e.g., predicates appear only in boolean expressions, int/float-state vars
+    only appear in numerical operations, etc.)
 """
 
 # import statements here
@@ -33,11 +47,47 @@ import ply.yacc as yacc
 from pydoc import pager # we'll be using this to produce less-like,
                         # paged output -- primarily for debugging purposes
 import lex_rules        # this is the module where we've specified the lexer rules
+import yacc_rules       # this is the module where we've specified the parser rules
+
+
 
 # First we build the lexer and the parser, using the lexing and parsing rules
 # defined in our lex_rules.py and yacc_rules.py files:
-lexer = lex.lex(module=lex_rules)
-parser = yacc.yacc(module=yacc_rules)
+meth_lexer = lex.lex(module=lex_rules)
+meth_parser = yacc.yacc(module=yacc_rules)
+
+"""
+EXPRESSION TYPES
+
+The following hash defines the types of expressions in the byte-code used
+by the intrepeter. The comments after each expression type lists their
+arguments, and the types of those arguments, for the developer's convenience.
+For now, we only list the types that have been actually implemented in the
+parser, so as not to confuse:
+"""
+
+e_types = dict(
+    # misc
+    e_noop =    'NOOP',     # [no arguments]
+    # statements
+    e_seq =     'SEQ',      # local_variables (list), exprs (list)
+    e_while =   'WHILE',    # cond (expr), exprs (list)
+    e_if =      'IF',        # conds (expr list), blocks (list of lists of exprs)
+    # binary operators
+    e_and =     'AND',      # arg1 (expr), arg2 (expr)
+    e_or =      'OR',       # "    "       "    "
+    e_equals =  'EQUALS',   # "    "       "    "
+    e_lt =      'LT',       # "    "       "    "
+    e_gt =      'GT',       # "    "       "    "
+    e_lte =     'LTE',      # "    "       "    "
+    e_gte =     'GTE',      # "    "       "    "
+    # unary operators
+    e_not =     'NOT',      # arg1 (expr)
+    # primitive values
+    e_true =    'TRUE',     # arg1 (True)
+    e_false =   'FALSE'     # arg1 (False)
+
+)
 
 
 """
@@ -89,12 +139,12 @@ def lex_print(filename, paged=True):
     input = ''
     with open(filename, 'r') as f:
         input = f.read()
-    lexer.input(input)
+    meth_lexer.input(input)
 
     # lex the file and aggregate the output
     output = ''
     while True:
-        tok = lexer.token()
+        tok = meth_lexer.token()
         if not tok:
             break
         output += (tok.__repr__() + '\n')
@@ -106,8 +156,38 @@ def lex_print(filename, paged=True):
     else:
         print(output)
 
-# some aliases for the above function, for Ruby-like convenience:
+# some aliases for the above function, for Ruby-like happiness convenience:
 print_token_stream = lex_print
+
+def parse_print(filename, paged=True):
+    """
+    Attempts to open the file specified by the supplied path ('filename'),
+    then reads the file in as a string, lexes it using the method-file lexer,
+    parses it, and that prints the constructed AST in paged format (if paged
+    is left set to True, as it is by default) -- or not (if paged is set to
+    False).
+
+    TODO: add error handling -- in particular against the case where the file-
+    name is invalid or the specified file doesn't exist.
+    """
+
+    # try to read the supplied file
+    input = ''
+    with open(filename, 'r') as f:
+        input = f.read()
+    ast = meth_parser.parse(input, lexer=meth_lexer)
+
+    print(type(ast))
+
+    # print the output
+    # if paged:
+    #     pager(ast)
+    # else:
+    #     print(ast)
+
+# some aliases for the above function, for Ruby-like happiness and convenience:
+print_ast = parse_print
+parser_print = parse_print
 
 
 """
@@ -118,4 +198,4 @@ we'll use such code for debugging purposes, since this file is intended to
 function as a module).
 """
 
-lex_print("domains/test_domain1/test_domain1.meth")
+print_ast("domains/test_domain1/test_domain1.meth")

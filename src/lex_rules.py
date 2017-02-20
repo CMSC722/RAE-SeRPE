@@ -32,6 +32,8 @@ More information on the PLY module and how it works can be found at the
 following URL: http://www.dabeaz.com/ply/ply.html#ply_nn1
 """
 
+# no imports needed here
+
 
 """
 TOKENS
@@ -51,6 +53,7 @@ reserved = {
     'else':     'ELSE',
     'elsif':    'ELSIF',    # this makes lexing and parsing a bit easier
     'while':    'WHILE',
+    'do':       'DO',
     #'for':      'FOR',
     #'in':       'IN',
     'end':      'END',
