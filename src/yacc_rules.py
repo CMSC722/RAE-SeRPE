@@ -148,31 +148,33 @@ signatures, preconditions, and local-variable lists.
 # productions for methods
 def p_methods(p):
     '''methods : method methods
-               | empty         '''
-    if len(p) == 2:
-        # we've reached the end of the method file
-        return method_table
-    else:
-        # we have more methods to parse, so parse the first one:
-        method_id = p[1].id
+               |               '''
+    if len(p) == 3:
+        method_id = p[1]['id']
+        method_table_addition = dict()
+        method_table_addition[method_id] = p[1]
         method_table[method_id] = p[1]
-        # and then return the result of parsing the rest:
-        return p[2]
+
+        p[0] = p[2].update(method_table_addition)
+        # method_table = p[0]
+    else:
+        p[0] = dict()
+        # method_table = p[0]
 
 def p_method(p):
     'method : ID LPAREN params RPAREN COLON task pre body'
     # create a dictionary representing the 'method' nonterminal's value
     p[0] = dict(
         id = p[1],
-        parameters = p[2],
-        task = p[5],
-        preconditions = p[6],
-        local_variables = p[7]['local_variables'],
-        exprs = p[7]['exprs']
+        parameters = p[3],
+        task = p[6],
+        preconditions = p[7],
+        local_variables = p[8]['local_variables'],
+        exprs = p[8]['exprs']
     )
     # now add this method to the relevant task's method list in the
     # task-method-map:
-    task_method_map[p[5]['id']].append(p[0])
+    task_method_map[p[6]['id']].append(p[0])
 
 # productions for parameter lists
 def p_params(p):
@@ -216,7 +218,7 @@ def p_pre(p):
         p[0] = list()
 
 def p_precon_list(p):
-    '''preconditions : bexpr COMMA preconditions
+    '''preconditions : bexpr AND preconditions
                      | bexpr                    '''
     if len(p) == 4:
         p[0] = list(p[1]) + p[3]
@@ -246,8 +248,8 @@ def p_exprs(p):
     if len(p) == 3:
         p[0] = dict(
             e_type = 'SEQ',
-            local_variables = p[1]['local_variables'] + p[2]['local_variables'],
-            exprs = list(p[1]) + p[2]['exprs']
+            local_variables = p[1].get('local_variables', []) + p[2]['local_variables'],
+            exprs = [p[1]] + p[2]['exprs']
         )
     else:
         p[0] = dict(
@@ -260,10 +262,10 @@ def p_exprs(p):
 def p_expr(p):
     '''expr : control_structure
             | state_var_rd
-            | state_var_wr     '''
+            | state_var_wr
+            | loc_var_rd
+            | loc_var_wr        '''
     #        | task_invocation
-    #        | loc_var_rd
-    #        | loc_var_wr        '''
     p[0] = p[1]
 
 # ... nd the same here -- once again for readibility
@@ -281,35 +283,64 @@ def p_while_loop(p):
     )
 
 def p_if_statement(p):
-    'if_statement : IF bexpr DO exprs elsif_block'
-    p[0] = dict(
-        e_type = p[1],
-        conds = list(p[2]) + p[6]['conds'],
-        blocks = list(p[5]) + p[6]['blocks']
-    )
-
-def p_elsif_block(p):
-    '''elsif_block : ELSIF bexpr DO exprs elsif_block
-                   | ELSE exprs END
-                   | END                              '''
+    '''if_statement : IF bexpr THEN exprs END
+                    | IF bexpr THEN exprs elsif_blocks END
+                    | IF bexpr THEN exprs ELSE exprs END
+                    | IF bexpr THEN exprs elsif_blocks ELSE exprs END'''
     if len(p) == 6:
         p[0] = dict(
-            e_type = None,
-            conds = list(p[2]) + p[5]['conds'],
-            blocks = list(p[4]) + p[5]['blocks']
+            e_type = p[1],
+            conds = [p[2]],
+            blocks = [p[4]]
         )
-    elif len(p) == 4:
+    elif len(p) == 7:
         p[0] = dict(
+            e_type = p[1],
+            conds = [p[2]] + p[5]['conds'],
+            blocks = [p[4]] + p[5]['blocks']
+        )
+    elif len(p) == 8:
+        e_else = dict(
             e_type = None,
             conds = list(e_true),
-            blocks = list(p[2])
+            blocks = [p[6]]
         )
-    else:
+        p[0] = dict(
+            e_type = p[1],
+            conds = [p[2]] + e_else['conds'],
+            blocks = [p[4]] + e_else['blocks']
+        )
+    elif len(p) == 9:
+        e_else = dict(
+            e_type = None,
+            conds = list(e_true),
+            blocks = [p[7]]
+        )
+        p[0] = dict(
+            e_type = p[1],
+            conds = [p[2]] + p[5]['conds'] + e_else['conds'],
+            blocks = [p[5]] + p[5]['blocks'] + e_else['blocks']
+        )
+
+def p_elsif_blocks(p):
+    '''elsif_blocks : elsif_blocks elsif_block
+                    | elsif_block             '''
+    if len(p) == 3:
         p[0] = dict(
             e_type = None,
-            conds = list(),
-            blocks = list()
+            conds = p[1]['conds'] + p[2]['conds'],
+            blocks = p[1]['blocks'] + p[2]['blocks'],
         )
+    else:
+        p[0] = p[1]
+
+def p_elsif_block(p):
+    'elsif_block : ELSIF bexpr THEN exprs'
+    p[0] = dict(
+        e_type = None,
+        conds = [p[2]],
+        blocks = [p[4]]
+    )
 
 '''
 def p_task_invocation(p):
@@ -338,11 +369,13 @@ def p_bexpr(p):
             arg1 = p[1],
             arg2 = p[3]
         )
-    else:
+    elif len(p) == 3:
         p[0] = dict(
             e_type = p[1],
             arg1 = p[2]
         )
+    else:
+        p[0] = p[1]
 
 # var read/write:
 def p_state_var_rd(p):
@@ -356,20 +389,25 @@ def p_state_var_rd(p):
 def p_state_var_wr(p):
     'state_var_wr : ID LPAREN params RPAREN ASSIGN expr'
     p[0] = dict(
-        e_type = 'STATE_VAR_RD',
+        e_type = 'STATE_VAR_WR',
         arg1 = p[1],
         arg2 = p[3]
     )
 
-"""
 def p_loc_var_rd(p):
-    'loc_var_rd : empty'
-    pass
+    'loc_var_rd : ID'
+    p[0] = dict(
+        e_type = 'LOC_VAR_RD',
+        arg1 = p[1]
+    )
 
 def p_loc_var_wr(p):
-    'loc_var_wr : empty'
-    pass
-"""
+    'loc_var_wr : ID ASSIGN expr'
+    p[0] = dict(
+        e_type = 'LOC_VAR_WR',
+        arg1 = p[1],
+        arg2 = p[3]
+    )
 
 # numerical expressions:
 
@@ -377,7 +415,8 @@ def p_loc_var_wr(p):
 # the error-handling function:
 def p_error(p):
     if p:
-         print("Syntax error at token", p.type)
+         print("Syntax error at token: ", p.type)
+         print("\tline ", p.lineno)
          # Just discard the token and tell the parser it's okay.
          # meth_parser.errok()
     else:
@@ -387,3 +426,10 @@ def p_error(p):
 def p_empty(p):
     'empty :'
     pass
+
+"""
+PARSER API
+"""
+
+def get_method_table():
+    return method_table

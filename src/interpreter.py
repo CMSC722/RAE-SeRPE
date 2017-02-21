@@ -48,6 +48,8 @@ from pydoc import pager # we'll be using this to produce less-like,
                         # paged output -- primarily for debugging purposes
 import lex_rules        # this is the module where we've specified the lexer rules
 import yacc_rules       # this is the module where we've specified the parser rules
+# import pprint         # python's pretty-printer for arbitrary data
+import json             # a better way of getting a pretty print of a dict
 
 
 
@@ -72,7 +74,7 @@ e_types = dict(
     # statements
     e_seq =     'SEQ',      # local_variables (list), exprs (list)
     e_while =   'WHILE',    # cond (expr), exprs (list)
-    e_if =      'IF',        # conds (expr list), blocks (list of lists of exprs)
+    e_if =      'IF',       # conds (expr list), blocks (list of lists of exprs)
     # binary operators
     e_and =     'AND',      # arg1 (expr), arg2 (expr)
     e_or =      'OR',       # "    "       "    "
@@ -85,8 +87,15 @@ e_types = dict(
     e_not =     'NOT',      # arg1 (expr)
     # primitive values
     e_true =    'TRUE',     # arg1 (True)
-    e_false =   'FALSE'     # arg1 (False)
-
+    e_false =   'FALSE',    # arg1 (False)
+    # variable expressions
+    e_state_var_rd =    'STATE_VAR_RD',     # arg1 (id string),
+                                            # arg2 (list of parameter ids)
+    e_state_var_wr =    'STATE_VAR_WR',     # arg1 (id string),
+                                            # arg2 (list of parameter ids)
+                                            # arg3 (expr)
+    e_loc_var_rd =      'LOC_VAR_RD',       # arg1 (id string)
+    e_loc_var_wr =      'LOC_VAR_WR'        # arg1 (id string), arg2 (expr)
 )
 
 
@@ -159,7 +168,7 @@ def lex_print(filename, paged=True):
 # some aliases for the above function, for Ruby-like happiness convenience:
 print_token_stream = lex_print
 
-def parse_print(filename, paged=True):
+def parse_print(filename, paged=True, debug=True):
     """
     Attempts to open the file specified by the supplied path ('filename'),
     then reads the file in as a string, lexes it using the method-file lexer,
@@ -175,15 +184,20 @@ def parse_print(filename, paged=True):
     input = ''
     with open(filename, 'r') as f:
         input = f.read()
-    ast = meth_parser.parse(input, lexer=meth_lexer)
+    ast = meth_parser.parse(input, lexer=meth_lexer, tracking=True, debug=debug)
 
-    print(type(ast))
+    #print(type(ast))
+    #output = ast.__repr__()
+    # pprinter = pprint.PrettyPrinter(indent = 4)
+    method_table = yacc_rules.get_method_table()
+    # asts_string = pprinter.pformat(method_table)
+    asts_string = json.dumps(method_table, sort_keys=False, indent=4)
 
     # print the output
-    # if paged:
-    #     pager(ast)
-    # else:
-    #     print(ast)
+    if paged:
+        pager(asts_string)
+    else:
+        print(asts_string)
 
 # some aliases for the above function, for Ruby-like happiness and convenience:
 print_ast = parse_print
@@ -198,4 +212,5 @@ we'll use such code for debugging purposes, since this file is intended to
 function as a module).
 """
 
-print_ast("domains/test_domain1/test_domain1.meth")
+print_token_stream("../domains/test_domain1/test_domain1.meth")
+print_ast("../domains/test_domain1/test_domain1.meth", debug=False)

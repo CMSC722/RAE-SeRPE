@@ -2,7 +2,6 @@ Created by PLY version 3.10 (http://www.dabeaz.com/ply)
 
 Unused terminals:
 
-    THEN
     STRING
     INT
     FLOAT
@@ -11,7 +10,7 @@ Grammar
 
 Rule 0     S' -> methods
 Rule 1     methods -> method methods
-Rule 2     methods -> empty
+Rule 2     methods -> <empty>
 Rule 3     method -> ID LPAREN params RPAREN COLON task pre body
 Rule 4     params -> ID COMMA params
 Rule 5     params -> ID
@@ -19,7 +18,7 @@ Rule 6     params -> <empty>
 Rule 7     task -> TASK COLON ID LPAREN params RPAREN
 Rule 8     pre -> PRE COLON preconditions
 Rule 9     pre -> PRE COLON
-Rule 10    preconditions -> bexpr COMMA preconditions
+Rule 10    preconditions -> bexpr AND preconditions
 Rule 11    preconditions -> bexpr
 Rule 12    body -> BODY COLON exprs
 Rule 13    exprs -> expr exprs
@@ -27,76 +26,86 @@ Rule 14    exprs -> empty
 Rule 15    expr -> control_structure
 Rule 16    expr -> state_var_rd
 Rule 17    expr -> state_var_wr
-Rule 18    control_structure -> while_loop
-Rule 19    control_structure -> if_statement
-Rule 20    while_loop -> WHILE bexpr DO exprs END
-Rule 21    if_statement -> IF bexpr DO exprs elsif_block
-Rule 22    elsif_block -> ELSIF bexpr DO exprs elsif_block
-Rule 23    elsif_block -> ELSE exprs END
-Rule 24    elsif_block -> END
-Rule 25    bexpr -> bexpr AND bexpr
-Rule 26    bexpr -> bexpr OR bexpr
-Rule 27    bexpr -> expr EQUALS expr
-Rule 28    bexpr -> expr LT expr
-Rule 29    bexpr -> expr GT expr
-Rule 30    bexpr -> expr LTE expr
-Rule 31    bexpr -> expr GTE expr
-Rule 32    bexpr -> NOT bexpr
-Rule 33    bexpr -> expr
-Rule 34    state_var_rd -> ID LPAREN params RPAREN
-Rule 35    state_var_wr -> ID LPAREN params RPAREN ASSIGN expr
-Rule 36    empty -> <empty>
+Rule 18    expr -> loc_var_rd
+Rule 19    expr -> loc_var_wr
+Rule 20    control_structure -> while_loop
+Rule 21    control_structure -> if_statement
+Rule 22    while_loop -> WHILE bexpr DO exprs END
+Rule 23    if_statement -> IF bexpr THEN exprs END
+Rule 24    if_statement -> IF bexpr THEN exprs elsif_blocks END
+Rule 25    if_statement -> IF bexpr THEN exprs ELSE exprs END
+Rule 26    if_statement -> IF bexpr THEN exprs elsif_blocks ELSE exprs END
+Rule 27    elsif_blocks -> elsif_blocks elsif_block
+Rule 28    elsif_blocks -> elsif_block
+Rule 29    elsif_block -> ELSIF bexpr THEN exprs
+Rule 30    bexpr -> bexpr AND bexpr
+Rule 31    bexpr -> bexpr OR bexpr
+Rule 32    bexpr -> expr EQUALS expr
+Rule 33    bexpr -> expr LT expr
+Rule 34    bexpr -> expr GT expr
+Rule 35    bexpr -> expr LTE expr
+Rule 36    bexpr -> expr GTE expr
+Rule 37    bexpr -> NOT bexpr
+Rule 38    bexpr -> expr
+Rule 39    state_var_rd -> ID LPAREN params RPAREN
+Rule 40    state_var_wr -> ID LPAREN params RPAREN ASSIGN expr
+Rule 41    loc_var_rd -> ID
+Rule 42    loc_var_wr -> ID ASSIGN expr
+Rule 43    empty -> <empty>
 
 Terminals, with rules where they appear
 
-AND                  : 25
-ASSIGN               : 35
+AND                  : 10 30
+ASSIGN               : 40 42
 BODY                 : 12
 COLON                : 3 7 8 9 12
-COMMA                : 4 10
-DO                   : 20 21 22
-ELSE                 : 23
-ELSIF                : 22
-END                  : 20 23 24
-EQUALS               : 27
+COMMA                : 4
+DO                   : 22
+ELSE                 : 25 26
+ELSIF                : 29
+END                  : 22 23 24 25 26
+EQUALS               : 32
 FLOAT                : 
-GT                   : 29
-GTE                  : 31
-ID                   : 3 4 5 7 34 35
-IF                   : 21
+GT                   : 34
+GTE                  : 36
+ID                   : 3 4 5 7 39 40 41 42
+IF                   : 23 24 25 26
 INT                  : 
-LPAREN               : 3 7 34 35
-LT                   : 28
-LTE                  : 30
-NOT                  : 32
-OR                   : 26
+LPAREN               : 3 7 39 40
+LT                   : 33
+LTE                  : 35
+NOT                  : 37
+OR                   : 31
 PRE                  : 8 9
-RPAREN               : 3 7 34 35
+RPAREN               : 3 7 39 40
 STRING               : 
 TASK                 : 7
-THEN                 : 
-WHILE                : 20
+THEN                 : 23 24 25 26 29
+WHILE                : 22
 error                : 
 
 Nonterminals, with rules where they appear
 
-bexpr                : 10 11 20 21 22 25 25 26 26 32
+bexpr                : 10 11 22 23 24 25 26 29 30 30 31 31 37
 body                 : 3
 control_structure    : 15
-elsif_block          : 21 22
-empty                : 2 14
-expr                 : 13 27 27 28 28 29 29 30 30 31 31 33 35
-exprs                : 12 13 20 21 22 23
-if_statement         : 19
+elsif_block          : 27 28
+elsif_blocks         : 24 26 27
+empty                : 14
+expr                 : 13 32 32 33 33 34 34 35 35 36 36 38 40 42
+exprs                : 12 13 22 23 24 25 25 26 26 29
+if_statement         : 21
+loc_var_rd           : 18
+loc_var_wr           : 19
 method               : 1
 methods              : 1 0
-params               : 3 4 7 34 35
+params               : 3 4 7 39 40
 pre                  : 3
 preconditions        : 8 10
 state_var_rd         : 16
 state_var_wr         : 17
 task                 : 3
-while_loop           : 18
+while_loop           : 20
 
 Parsing method: LALR
 
@@ -104,16 +113,14 @@ state 0
 
     (0) S' -> . methods
     (1) methods -> . method methods
-    (2) methods -> . empty
+    (2) methods -> .
     (3) method -> . ID LPAREN params RPAREN COLON task pre body
-    (36) empty -> .
 
+    $end            reduce using rule 2 (methods -> .)
     ID              shift and go to state 3
-    $end            reduce using rule 36 (empty -> .)
 
     methods                        shift and go to state 1
     method                         shift and go to state 2
-    empty                          shift and go to state 4
 
 state 1
 
@@ -125,143 +132,134 @@ state 2
 
     (1) methods -> method . methods
     (1) methods -> . method methods
-    (2) methods -> . empty
+    (2) methods -> .
     (3) method -> . ID LPAREN params RPAREN COLON task pre body
-    (36) empty -> .
 
+    $end            reduce using rule 2 (methods -> .)
     ID              shift and go to state 3
-    $end            reduce using rule 36 (empty -> .)
 
-    methods                        shift and go to state 5
+    methods                        shift and go to state 4
     method                         shift and go to state 2
-    empty                          shift and go to state 4
 
 state 3
 
     (3) method -> ID . LPAREN params RPAREN COLON task pre body
 
-    LPAREN          shift and go to state 6
+    LPAREN          shift and go to state 5
 
 
 state 4
-
-    (2) methods -> empty .
-
-    $end            reduce using rule 2 (methods -> empty .)
-
-
-state 5
 
     (1) methods -> method methods .
 
     $end            reduce using rule 1 (methods -> method methods .)
 
 
-state 6
+state 5
 
     (3) method -> ID LPAREN . params RPAREN COLON task pre body
     (4) params -> . ID COMMA params
     (5) params -> . ID
     (6) params -> .
 
-    ID              shift and go to state 8
+    ID              shift and go to state 7
     RPAREN          reduce using rule 6 (params -> .)
 
-    params                         shift and go to state 7
+    params                         shift and go to state 6
 
-state 7
+state 6
 
     (3) method -> ID LPAREN params . RPAREN COLON task pre body
 
-    RPAREN          shift and go to state 9
+    RPAREN          shift and go to state 8
 
 
-state 8
+state 7
 
     (4) params -> ID . COMMA params
     (5) params -> ID .
 
-    COMMA           shift and go to state 10
+    COMMA           shift and go to state 9
     RPAREN          reduce using rule 5 (params -> ID .)
 
 
-state 9
+state 8
 
     (3) method -> ID LPAREN params RPAREN . COLON task pre body
 
-    COLON           shift and go to state 11
+    COLON           shift and go to state 10
 
 
-state 10
+state 9
 
     (4) params -> ID COMMA . params
     (4) params -> . ID COMMA params
     (5) params -> . ID
     (6) params -> .
 
-    ID              shift and go to state 8
+    ID              shift and go to state 7
     RPAREN          reduce using rule 6 (params -> .)
 
-    params                         shift and go to state 12
+    params                         shift and go to state 11
 
-state 11
+state 10
 
     (3) method -> ID LPAREN params RPAREN COLON . task pre body
     (7) task -> . TASK COLON ID LPAREN params RPAREN
 
-    TASK            shift and go to state 14
+    TASK            shift and go to state 13
 
-    task                           shift and go to state 13
+    task                           shift and go to state 12
 
-state 12
+state 11
 
     (4) params -> ID COMMA params .
 
     RPAREN          reduce using rule 4 (params -> ID COMMA params .)
 
 
-state 13
+state 12
 
     (3) method -> ID LPAREN params RPAREN COLON task . pre body
     (8) pre -> . PRE COLON preconditions
     (9) pre -> . PRE COLON
 
-    PRE             shift and go to state 16
+    PRE             shift and go to state 15
 
-    pre                            shift and go to state 15
+    pre                            shift and go to state 14
 
-state 14
+state 13
 
     (7) task -> TASK . COLON ID LPAREN params RPAREN
 
-    COLON           shift and go to state 17
+    COLON           shift and go to state 16
 
 
-state 15
+state 14
 
     (3) method -> ID LPAREN params RPAREN COLON task pre . body
     (12) body -> . BODY COLON exprs
 
-    BODY            shift and go to state 19
+    BODY            shift and go to state 18
 
-    body                           shift and go to state 18
+    body                           shift and go to state 17
 
-state 16
+state 15
 
     (8) pre -> PRE . COLON preconditions
     (9) pre -> PRE . COLON
 
-    COLON           shift and go to state 20
+    COLON           shift and go to state 19
 
 
-state 17
+state 16
 
     (7) task -> TASK COLON . ID LPAREN params RPAREN
 
-    ID              shift and go to state 21
+    ID              shift and go to state 20
 
 
-state 18
+state 17
 
     (3) method -> ID LPAREN params RPAREN COLON task pre body .
 
@@ -269,61 +267,70 @@ state 18
     $end            reduce using rule 3 (method -> ID LPAREN params RPAREN COLON task pre body .)
 
 
-state 19
+state 18
 
     (12) body -> BODY . COLON exprs
 
-    COLON           shift and go to state 22
+    COLON           shift and go to state 21
 
 
-state 20
+state 19
 
     (8) pre -> PRE COLON . preconditions
     (9) pre -> PRE COLON .
-    (10) preconditions -> . bexpr COMMA preconditions
+    (10) preconditions -> . bexpr AND preconditions
     (11) preconditions -> . bexpr
-    (25) bexpr -> . bexpr AND bexpr
-    (26) bexpr -> . bexpr OR bexpr
-    (27) bexpr -> . expr EQUALS expr
-    (28) bexpr -> . expr LT expr
-    (29) bexpr -> . expr GT expr
-    (30) bexpr -> . expr LTE expr
-    (31) bexpr -> . expr GTE expr
-    (32) bexpr -> . NOT bexpr
-    (33) bexpr -> . expr
+    (30) bexpr -> . bexpr AND bexpr
+    (31) bexpr -> . bexpr OR bexpr
+    (32) bexpr -> . expr EQUALS expr
+    (33) bexpr -> . expr LT expr
+    (34) bexpr -> . expr GT expr
+    (35) bexpr -> . expr LTE expr
+    (36) bexpr -> . expr GTE expr
+    (37) bexpr -> . NOT bexpr
+    (38) bexpr -> . expr
     (15) expr -> . control_structure
     (16) expr -> . state_var_rd
     (17) expr -> . state_var_wr
-    (18) control_structure -> . while_loop
-    (19) control_structure -> . if_statement
-    (34) state_var_rd -> . ID LPAREN params RPAREN
-    (35) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
-    (20) while_loop -> . WHILE bexpr DO exprs END
-    (21) if_statement -> . IF bexpr DO exprs elsif_block
+    (18) expr -> . loc_var_rd
+    (19) expr -> . loc_var_wr
+    (20) control_structure -> . while_loop
+    (21) control_structure -> . if_statement
+    (39) state_var_rd -> . ID LPAREN params RPAREN
+    (40) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
+    (41) loc_var_rd -> . ID
+    (42) loc_var_wr -> . ID ASSIGN expr
+    (22) while_loop -> . WHILE bexpr DO exprs END
+    (23) if_statement -> . IF bexpr THEN exprs END
+    (24) if_statement -> . IF bexpr THEN exprs elsif_blocks END
+    (25) if_statement -> . IF bexpr THEN exprs ELSE exprs END
+    (26) if_statement -> . IF bexpr THEN exprs elsif_blocks ELSE exprs END
 
     BODY            reduce using rule 9 (pre -> PRE COLON .)
-    NOT             shift and go to state 34
-    ID              shift and go to state 30
-    WHILE           shift and go to state 33
-    IF              shift and go to state 31
+    NOT             shift and go to state 35
+    ID              shift and go to state 31
+    WHILE           shift and go to state 34
+    IF              shift and go to state 32
 
     while_loop                     shift and go to state 27
-    expr                           shift and go to state 32
+    expr                           shift and go to state 33
     state_var_wr                   shift and go to state 28
-    state_var_rd                   shift and go to state 23
-    preconditions                  shift and go to state 29
+    state_var_rd                   shift and go to state 22
+    loc_var_rd                     shift and go to state 29
+    preconditions                  shift and go to state 30
+    loc_var_wr                     shift and go to state 23
     if_statement                   shift and go to state 26
     control_structure              shift and go to state 24
     bexpr                          shift and go to state 25
 
-state 21
+state 20
 
     (7) task -> TASK COLON ID . LPAREN params RPAREN
 
-    LPAREN          shift and go to state 35
+    LPAREN          shift and go to state 36
 
 
-state 22
+state 21
 
     (12) body -> BODY COLON . exprs
     (13) exprs -> . expr exprs
@@ -331,313 +338,428 @@ state 22
     (15) expr -> . control_structure
     (16) expr -> . state_var_rd
     (17) expr -> . state_var_wr
-    (36) empty -> .
-    (18) control_structure -> . while_loop
-    (19) control_structure -> . if_statement
-    (34) state_var_rd -> . ID LPAREN params RPAREN
-    (35) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
-    (20) while_loop -> . WHILE bexpr DO exprs END
-    (21) if_statement -> . IF bexpr DO exprs elsif_block
+    (18) expr -> . loc_var_rd
+    (19) expr -> . loc_var_wr
+    (43) empty -> .
+    (20) control_structure -> . while_loop
+    (21) control_structure -> . if_statement
+    (39) state_var_rd -> . ID LPAREN params RPAREN
+    (40) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
+    (41) loc_var_rd -> . ID
+    (42) loc_var_wr -> . ID ASSIGN expr
+    (22) while_loop -> . WHILE bexpr DO exprs END
+    (23) if_statement -> . IF bexpr THEN exprs END
+    (24) if_statement -> . IF bexpr THEN exprs elsif_blocks END
+    (25) if_statement -> . IF bexpr THEN exprs ELSE exprs END
+    (26) if_statement -> . IF bexpr THEN exprs elsif_blocks ELSE exprs END
 
   ! shift/reduce conflict for ID resolved as shift
-    $end            reduce using rule 36 (empty -> .)
-    ID              shift and go to state 30
-    WHILE           shift and go to state 33
-    IF              shift and go to state 31
+    $end            reduce using rule 43 (empty -> .)
+    ID              shift and go to state 31
+    WHILE           shift and go to state 34
+    IF              shift and go to state 32
 
-  ! ID              [ reduce using rule 36 (empty -> .) ]
+  ! ID              [ reduce using rule 43 (empty -> .) ]
 
     while_loop                     shift and go to state 27
-    expr                           shift and go to state 36
+    expr                           shift and go to state 38
     state_var_wr                   shift and go to state 28
-    exprs                          shift and go to state 37
-    state_var_rd                   shift and go to state 23
+    exprs                          shift and go to state 39
+    state_var_rd                   shift and go to state 22
+    loc_var_rd                     shift and go to state 29
+    loc_var_wr                     shift and go to state 23
     if_statement                   shift and go to state 26
     control_structure              shift and go to state 24
-    empty                          shift and go to state 38
+    empty                          shift and go to state 37
 
-state 23
+state 22
 
     (16) expr -> state_var_rd .
 
-    EQUALS          reduce using rule 16 (expr -> state_var_rd .)
-    LT              reduce using rule 16 (expr -> state_var_rd .)
-    GT              reduce using rule 16 (expr -> state_var_rd .)
-    LTE             reduce using rule 16 (expr -> state_var_rd .)
-    GTE             reduce using rule 16 (expr -> state_var_rd .)
     AND             reduce using rule 16 (expr -> state_var_rd .)
     OR              reduce using rule 16 (expr -> state_var_rd .)
-    COMMA           reduce using rule 16 (expr -> state_var_rd .)
     BODY            reduce using rule 16 (expr -> state_var_rd .)
+    THEN            reduce using rule 16 (expr -> state_var_rd .)
     DO              reduce using rule 16 (expr -> state_var_rd .)
     ID              reduce using rule 16 (expr -> state_var_rd .)
     WHILE           reduce using rule 16 (expr -> state_var_rd .)
     IF              reduce using rule 16 (expr -> state_var_rd .)
     END             reduce using rule 16 (expr -> state_var_rd .)
-    $end            reduce using rule 16 (expr -> state_var_rd .)
-    ELSIF           reduce using rule 16 (expr -> state_var_rd .)
     ELSE            reduce using rule 16 (expr -> state_var_rd .)
+    ELSIF           reduce using rule 16 (expr -> state_var_rd .)
+    EQUALS          reduce using rule 16 (expr -> state_var_rd .)
+    LT              reduce using rule 16 (expr -> state_var_rd .)
+    GT              reduce using rule 16 (expr -> state_var_rd .)
+    LTE             reduce using rule 16 (expr -> state_var_rd .)
+    GTE             reduce using rule 16 (expr -> state_var_rd .)
+    $end            reduce using rule 16 (expr -> state_var_rd .)
+
+
+state 23
+
+    (19) expr -> loc_var_wr .
+
+    AND             reduce using rule 19 (expr -> loc_var_wr .)
+    OR              reduce using rule 19 (expr -> loc_var_wr .)
+    BODY            reduce using rule 19 (expr -> loc_var_wr .)
+    THEN            reduce using rule 19 (expr -> loc_var_wr .)
+    DO              reduce using rule 19 (expr -> loc_var_wr .)
+    ID              reduce using rule 19 (expr -> loc_var_wr .)
+    WHILE           reduce using rule 19 (expr -> loc_var_wr .)
+    IF              reduce using rule 19 (expr -> loc_var_wr .)
+    END             reduce using rule 19 (expr -> loc_var_wr .)
+    ELSE            reduce using rule 19 (expr -> loc_var_wr .)
+    ELSIF           reduce using rule 19 (expr -> loc_var_wr .)
+    EQUALS          reduce using rule 19 (expr -> loc_var_wr .)
+    LT              reduce using rule 19 (expr -> loc_var_wr .)
+    GT              reduce using rule 19 (expr -> loc_var_wr .)
+    LTE             reduce using rule 19 (expr -> loc_var_wr .)
+    GTE             reduce using rule 19 (expr -> loc_var_wr .)
+    $end            reduce using rule 19 (expr -> loc_var_wr .)
 
 
 state 24
 
     (15) expr -> control_structure .
 
-    EQUALS          reduce using rule 15 (expr -> control_structure .)
-    LT              reduce using rule 15 (expr -> control_structure .)
-    GT              reduce using rule 15 (expr -> control_structure .)
-    LTE             reduce using rule 15 (expr -> control_structure .)
-    GTE             reduce using rule 15 (expr -> control_structure .)
     AND             reduce using rule 15 (expr -> control_structure .)
     OR              reduce using rule 15 (expr -> control_structure .)
-    COMMA           reduce using rule 15 (expr -> control_structure .)
     BODY            reduce using rule 15 (expr -> control_structure .)
+    THEN            reduce using rule 15 (expr -> control_structure .)
     DO              reduce using rule 15 (expr -> control_structure .)
     ID              reduce using rule 15 (expr -> control_structure .)
     WHILE           reduce using rule 15 (expr -> control_structure .)
     IF              reduce using rule 15 (expr -> control_structure .)
     END             reduce using rule 15 (expr -> control_structure .)
-    $end            reduce using rule 15 (expr -> control_structure .)
-    ELSIF           reduce using rule 15 (expr -> control_structure .)
     ELSE            reduce using rule 15 (expr -> control_structure .)
+    ELSIF           reduce using rule 15 (expr -> control_structure .)
+    EQUALS          reduce using rule 15 (expr -> control_structure .)
+    LT              reduce using rule 15 (expr -> control_structure .)
+    GT              reduce using rule 15 (expr -> control_structure .)
+    LTE             reduce using rule 15 (expr -> control_structure .)
+    GTE             reduce using rule 15 (expr -> control_structure .)
+    $end            reduce using rule 15 (expr -> control_structure .)
 
 
 state 25
 
-    (10) preconditions -> bexpr . COMMA preconditions
+    (10) preconditions -> bexpr . AND preconditions
     (11) preconditions -> bexpr .
-    (25) bexpr -> bexpr . AND bexpr
-    (26) bexpr -> bexpr . OR bexpr
+    (30) bexpr -> bexpr . AND bexpr
+    (31) bexpr -> bexpr . OR bexpr
 
-    COMMA           shift and go to state 40
+    AND             shift and go to state 40
     BODY            reduce using rule 11 (preconditions -> bexpr .)
-    AND             shift and go to state 39
     OR              shift and go to state 41
 
 
 state 26
 
-    (19) control_structure -> if_statement .
+    (21) control_structure -> if_statement .
 
-    ID              reduce using rule 19 (control_structure -> if_statement .)
-    WHILE           reduce using rule 19 (control_structure -> if_statement .)
-    IF              reduce using rule 19 (control_structure -> if_statement .)
-    END             reduce using rule 19 (control_structure -> if_statement .)
-    ELSIF           reduce using rule 19 (control_structure -> if_statement .)
-    ELSE            reduce using rule 19 (control_structure -> if_statement .)
-    EQUALS          reduce using rule 19 (control_structure -> if_statement .)
-    LT              reduce using rule 19 (control_structure -> if_statement .)
-    GT              reduce using rule 19 (control_structure -> if_statement .)
-    LTE             reduce using rule 19 (control_structure -> if_statement .)
-    GTE             reduce using rule 19 (control_structure -> if_statement .)
-    COMMA           reduce using rule 19 (control_structure -> if_statement .)
-    AND             reduce using rule 19 (control_structure -> if_statement .)
-    OR              reduce using rule 19 (control_structure -> if_statement .)
-    BODY            reduce using rule 19 (control_structure -> if_statement .)
-    $end            reduce using rule 19 (control_structure -> if_statement .)
-    DO              reduce using rule 19 (control_structure -> if_statement .)
+    ID              reduce using rule 21 (control_structure -> if_statement .)
+    WHILE           reduce using rule 21 (control_structure -> if_statement .)
+    IF              reduce using rule 21 (control_structure -> if_statement .)
+    $end            reduce using rule 21 (control_structure -> if_statement .)
+    END             reduce using rule 21 (control_structure -> if_statement .)
+    ELSE            reduce using rule 21 (control_structure -> if_statement .)
+    ELSIF           reduce using rule 21 (control_structure -> if_statement .)
+    EQUALS          reduce using rule 21 (control_structure -> if_statement .)
+    LT              reduce using rule 21 (control_structure -> if_statement .)
+    GT              reduce using rule 21 (control_structure -> if_statement .)
+    LTE             reduce using rule 21 (control_structure -> if_statement .)
+    GTE             reduce using rule 21 (control_structure -> if_statement .)
+    AND             reduce using rule 21 (control_structure -> if_statement .)
+    OR              reduce using rule 21 (control_structure -> if_statement .)
+    BODY            reduce using rule 21 (control_structure -> if_statement .)
+    THEN            reduce using rule 21 (control_structure -> if_statement .)
+    DO              reduce using rule 21 (control_structure -> if_statement .)
 
 
 state 27
 
-    (18) control_structure -> while_loop .
+    (20) control_structure -> while_loop .
 
-    ID              reduce using rule 18 (control_structure -> while_loop .)
-    WHILE           reduce using rule 18 (control_structure -> while_loop .)
-    IF              reduce using rule 18 (control_structure -> while_loop .)
-    END             reduce using rule 18 (control_structure -> while_loop .)
-    ELSIF           reduce using rule 18 (control_structure -> while_loop .)
-    ELSE            reduce using rule 18 (control_structure -> while_loop .)
-    EQUALS          reduce using rule 18 (control_structure -> while_loop .)
-    LT              reduce using rule 18 (control_structure -> while_loop .)
-    GT              reduce using rule 18 (control_structure -> while_loop .)
-    LTE             reduce using rule 18 (control_structure -> while_loop .)
-    GTE             reduce using rule 18 (control_structure -> while_loop .)
-    COMMA           reduce using rule 18 (control_structure -> while_loop .)
-    AND             reduce using rule 18 (control_structure -> while_loop .)
-    OR              reduce using rule 18 (control_structure -> while_loop .)
-    BODY            reduce using rule 18 (control_structure -> while_loop .)
-    $end            reduce using rule 18 (control_structure -> while_loop .)
-    DO              reduce using rule 18 (control_structure -> while_loop .)
+    ID              reduce using rule 20 (control_structure -> while_loop .)
+    WHILE           reduce using rule 20 (control_structure -> while_loop .)
+    IF              reduce using rule 20 (control_structure -> while_loop .)
+    $end            reduce using rule 20 (control_structure -> while_loop .)
+    END             reduce using rule 20 (control_structure -> while_loop .)
+    ELSE            reduce using rule 20 (control_structure -> while_loop .)
+    ELSIF           reduce using rule 20 (control_structure -> while_loop .)
+    EQUALS          reduce using rule 20 (control_structure -> while_loop .)
+    LT              reduce using rule 20 (control_structure -> while_loop .)
+    GT              reduce using rule 20 (control_structure -> while_loop .)
+    LTE             reduce using rule 20 (control_structure -> while_loop .)
+    GTE             reduce using rule 20 (control_structure -> while_loop .)
+    AND             reduce using rule 20 (control_structure -> while_loop .)
+    OR              reduce using rule 20 (control_structure -> while_loop .)
+    BODY            reduce using rule 20 (control_structure -> while_loop .)
+    THEN            reduce using rule 20 (control_structure -> while_loop .)
+    DO              reduce using rule 20 (control_structure -> while_loop .)
 
 
 state 28
 
     (17) expr -> state_var_wr .
 
-    EQUALS          reduce using rule 17 (expr -> state_var_wr .)
-    LT              reduce using rule 17 (expr -> state_var_wr .)
-    GT              reduce using rule 17 (expr -> state_var_wr .)
-    LTE             reduce using rule 17 (expr -> state_var_wr .)
-    GTE             reduce using rule 17 (expr -> state_var_wr .)
     AND             reduce using rule 17 (expr -> state_var_wr .)
     OR              reduce using rule 17 (expr -> state_var_wr .)
-    COMMA           reduce using rule 17 (expr -> state_var_wr .)
     BODY            reduce using rule 17 (expr -> state_var_wr .)
+    THEN            reduce using rule 17 (expr -> state_var_wr .)
     DO              reduce using rule 17 (expr -> state_var_wr .)
     ID              reduce using rule 17 (expr -> state_var_wr .)
     WHILE           reduce using rule 17 (expr -> state_var_wr .)
     IF              reduce using rule 17 (expr -> state_var_wr .)
     END             reduce using rule 17 (expr -> state_var_wr .)
-    $end            reduce using rule 17 (expr -> state_var_wr .)
-    ELSIF           reduce using rule 17 (expr -> state_var_wr .)
     ELSE            reduce using rule 17 (expr -> state_var_wr .)
+    ELSIF           reduce using rule 17 (expr -> state_var_wr .)
+    EQUALS          reduce using rule 17 (expr -> state_var_wr .)
+    LT              reduce using rule 17 (expr -> state_var_wr .)
+    GT              reduce using rule 17 (expr -> state_var_wr .)
+    LTE             reduce using rule 17 (expr -> state_var_wr .)
+    GTE             reduce using rule 17 (expr -> state_var_wr .)
+    $end            reduce using rule 17 (expr -> state_var_wr .)
 
 
 state 29
+
+    (18) expr -> loc_var_rd .
+
+    AND             reduce using rule 18 (expr -> loc_var_rd .)
+    OR              reduce using rule 18 (expr -> loc_var_rd .)
+    BODY            reduce using rule 18 (expr -> loc_var_rd .)
+    THEN            reduce using rule 18 (expr -> loc_var_rd .)
+    DO              reduce using rule 18 (expr -> loc_var_rd .)
+    ID              reduce using rule 18 (expr -> loc_var_rd .)
+    WHILE           reduce using rule 18 (expr -> loc_var_rd .)
+    IF              reduce using rule 18 (expr -> loc_var_rd .)
+    END             reduce using rule 18 (expr -> loc_var_rd .)
+    ELSE            reduce using rule 18 (expr -> loc_var_rd .)
+    ELSIF           reduce using rule 18 (expr -> loc_var_rd .)
+    EQUALS          reduce using rule 18 (expr -> loc_var_rd .)
+    LT              reduce using rule 18 (expr -> loc_var_rd .)
+    GT              reduce using rule 18 (expr -> loc_var_rd .)
+    LTE             reduce using rule 18 (expr -> loc_var_rd .)
+    GTE             reduce using rule 18 (expr -> loc_var_rd .)
+    $end            reduce using rule 18 (expr -> loc_var_rd .)
+
+
+state 30
 
     (8) pre -> PRE COLON preconditions .
 
     BODY            reduce using rule 8 (pre -> PRE COLON preconditions .)
 
 
-state 30
-
-    (34) state_var_rd -> ID . LPAREN params RPAREN
-    (35) state_var_wr -> ID . LPAREN params RPAREN ASSIGN expr
-
-    LPAREN          shift and go to state 42
-
-
 state 31
 
-    (21) if_statement -> IF . bexpr DO exprs elsif_block
-    (25) bexpr -> . bexpr AND bexpr
-    (26) bexpr -> . bexpr OR bexpr
-    (27) bexpr -> . expr EQUALS expr
-    (28) bexpr -> . expr LT expr
-    (29) bexpr -> . expr GT expr
-    (30) bexpr -> . expr LTE expr
-    (31) bexpr -> . expr GTE expr
-    (32) bexpr -> . NOT bexpr
-    (33) bexpr -> . expr
-    (15) expr -> . control_structure
-    (16) expr -> . state_var_rd
-    (17) expr -> . state_var_wr
-    (18) control_structure -> . while_loop
-    (19) control_structure -> . if_statement
-    (34) state_var_rd -> . ID LPAREN params RPAREN
-    (35) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
-    (20) while_loop -> . WHILE bexpr DO exprs END
-    (21) if_statement -> . IF bexpr DO exprs elsif_block
+    (39) state_var_rd -> ID . LPAREN params RPAREN
+    (40) state_var_wr -> ID . LPAREN params RPAREN ASSIGN expr
+    (41) loc_var_rd -> ID .
+    (42) loc_var_wr -> ID . ASSIGN expr
 
-    NOT             shift and go to state 34
-    ID              shift and go to state 30
-    WHILE           shift and go to state 33
-    IF              shift and go to state 31
+    LPAREN          shift and go to state 43
+    ID              reduce using rule 41 (loc_var_rd -> ID .)
+    WHILE           reduce using rule 41 (loc_var_rd -> ID .)
+    IF              reduce using rule 41 (loc_var_rd -> ID .)
+    END             reduce using rule 41 (loc_var_rd -> ID .)
+    AND             reduce using rule 41 (loc_var_rd -> ID .)
+    OR              reduce using rule 41 (loc_var_rd -> ID .)
+    BODY            reduce using rule 41 (loc_var_rd -> ID .)
+    THEN            reduce using rule 41 (loc_var_rd -> ID .)
+    DO              reduce using rule 41 (loc_var_rd -> ID .)
+    $end            reduce using rule 41 (loc_var_rd -> ID .)
+    ELSE            reduce using rule 41 (loc_var_rd -> ID .)
+    ELSIF           reduce using rule 41 (loc_var_rd -> ID .)
+    EQUALS          reduce using rule 41 (loc_var_rd -> ID .)
+    LT              reduce using rule 41 (loc_var_rd -> ID .)
+    GT              reduce using rule 41 (loc_var_rd -> ID .)
+    LTE             reduce using rule 41 (loc_var_rd -> ID .)
+    GTE             reduce using rule 41 (loc_var_rd -> ID .)
+    ASSIGN          shift and go to state 42
 
-    while_loop                     shift and go to state 27
-    expr                           shift and go to state 32
-    state_var_wr                   shift and go to state 28
-    state_var_rd                   shift and go to state 23
-    if_statement                   shift and go to state 26
-    control_structure              shift and go to state 24
-    bexpr                          shift and go to state 43
 
 state 32
 
-    (27) bexpr -> expr . EQUALS expr
-    (28) bexpr -> expr . LT expr
-    (29) bexpr -> expr . GT expr
-    (30) bexpr -> expr . LTE expr
-    (31) bexpr -> expr . GTE expr
-    (33) bexpr -> expr .
+    (23) if_statement -> IF . bexpr THEN exprs END
+    (24) if_statement -> IF . bexpr THEN exprs elsif_blocks END
+    (25) if_statement -> IF . bexpr THEN exprs ELSE exprs END
+    (26) if_statement -> IF . bexpr THEN exprs elsif_blocks ELSE exprs END
+    (30) bexpr -> . bexpr AND bexpr
+    (31) bexpr -> . bexpr OR bexpr
+    (32) bexpr -> . expr EQUALS expr
+    (33) bexpr -> . expr LT expr
+    (34) bexpr -> . expr GT expr
+    (35) bexpr -> . expr LTE expr
+    (36) bexpr -> . expr GTE expr
+    (37) bexpr -> . NOT bexpr
+    (38) bexpr -> . expr
+    (15) expr -> . control_structure
+    (16) expr -> . state_var_rd
+    (17) expr -> . state_var_wr
+    (18) expr -> . loc_var_rd
+    (19) expr -> . loc_var_wr
+    (20) control_structure -> . while_loop
+    (21) control_structure -> . if_statement
+    (39) state_var_rd -> . ID LPAREN params RPAREN
+    (40) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
+    (41) loc_var_rd -> . ID
+    (42) loc_var_wr -> . ID ASSIGN expr
+    (22) while_loop -> . WHILE bexpr DO exprs END
+    (23) if_statement -> . IF bexpr THEN exprs END
+    (24) if_statement -> . IF bexpr THEN exprs elsif_blocks END
+    (25) if_statement -> . IF bexpr THEN exprs ELSE exprs END
+    (26) if_statement -> . IF bexpr THEN exprs elsif_blocks ELSE exprs END
 
-    EQUALS          shift and go to state 46
-    LT              shift and go to state 47
-    GT              shift and go to state 44
-    LTE             shift and go to state 48
-    GTE             shift and go to state 45
-    DO              reduce using rule 33 (bexpr -> expr .)
-    AND             reduce using rule 33 (bexpr -> expr .)
-    OR              reduce using rule 33 (bexpr -> expr .)
-    COMMA           reduce using rule 33 (bexpr -> expr .)
-    BODY            reduce using rule 33 (bexpr -> expr .)
+    NOT             shift and go to state 35
+    ID              shift and go to state 31
+    WHILE           shift and go to state 34
+    IF              shift and go to state 32
 
+    while_loop                     shift and go to state 27
+    expr                           shift and go to state 33
+    state_var_wr                   shift and go to state 28
+    state_var_rd                   shift and go to state 22
+    loc_var_rd                     shift and go to state 29
+    loc_var_wr                     shift and go to state 23
+    if_statement                   shift and go to state 26
+    control_structure              shift and go to state 24
+    bexpr                          shift and go to state 44
 
 state 33
 
-    (20) while_loop -> WHILE . bexpr DO exprs END
-    (25) bexpr -> . bexpr AND bexpr
-    (26) bexpr -> . bexpr OR bexpr
-    (27) bexpr -> . expr EQUALS expr
-    (28) bexpr -> . expr LT expr
-    (29) bexpr -> . expr GT expr
-    (30) bexpr -> . expr LTE expr
-    (31) bexpr -> . expr GTE expr
-    (32) bexpr -> . NOT bexpr
-    (33) bexpr -> . expr
-    (15) expr -> . control_structure
-    (16) expr -> . state_var_rd
-    (17) expr -> . state_var_wr
-    (18) control_structure -> . while_loop
-    (19) control_structure -> . if_statement
-    (34) state_var_rd -> . ID LPAREN params RPAREN
-    (35) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
-    (20) while_loop -> . WHILE bexpr DO exprs END
-    (21) if_statement -> . IF bexpr DO exprs elsif_block
+    (32) bexpr -> expr . EQUALS expr
+    (33) bexpr -> expr . LT expr
+    (34) bexpr -> expr . GT expr
+    (35) bexpr -> expr . LTE expr
+    (36) bexpr -> expr . GTE expr
+    (38) bexpr -> expr .
 
-    NOT             shift and go to state 34
-    ID              shift and go to state 30
-    WHILE           shift and go to state 33
-    IF              shift and go to state 31
+    EQUALS          shift and go to state 47
+    LT              shift and go to state 48
+    GT              shift and go to state 45
+    LTE             shift and go to state 49
+    GTE             shift and go to state 46
+    THEN            reduce using rule 38 (bexpr -> expr .)
+    AND             reduce using rule 38 (bexpr -> expr .)
+    OR              reduce using rule 38 (bexpr -> expr .)
+    BODY            reduce using rule 38 (bexpr -> expr .)
+    DO              reduce using rule 38 (bexpr -> expr .)
 
-    while_loop                     shift and go to state 27
-    expr                           shift and go to state 32
-    state_var_wr                   shift and go to state 28
-    state_var_rd                   shift and go to state 23
-    if_statement                   shift and go to state 26
-    control_structure              shift and go to state 24
-    bexpr                          shift and go to state 49
 
 state 34
 
-    (32) bexpr -> NOT . bexpr
-    (25) bexpr -> . bexpr AND bexpr
-    (26) bexpr -> . bexpr OR bexpr
-    (27) bexpr -> . expr EQUALS expr
-    (28) bexpr -> . expr LT expr
-    (29) bexpr -> . expr GT expr
-    (30) bexpr -> . expr LTE expr
-    (31) bexpr -> . expr GTE expr
-    (32) bexpr -> . NOT bexpr
-    (33) bexpr -> . expr
+    (22) while_loop -> WHILE . bexpr DO exprs END
+    (30) bexpr -> . bexpr AND bexpr
+    (31) bexpr -> . bexpr OR bexpr
+    (32) bexpr -> . expr EQUALS expr
+    (33) bexpr -> . expr LT expr
+    (34) bexpr -> . expr GT expr
+    (35) bexpr -> . expr LTE expr
+    (36) bexpr -> . expr GTE expr
+    (37) bexpr -> . NOT bexpr
+    (38) bexpr -> . expr
     (15) expr -> . control_structure
     (16) expr -> . state_var_rd
     (17) expr -> . state_var_wr
-    (18) control_structure -> . while_loop
-    (19) control_structure -> . if_statement
-    (34) state_var_rd -> . ID LPAREN params RPAREN
-    (35) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
-    (20) while_loop -> . WHILE bexpr DO exprs END
-    (21) if_statement -> . IF bexpr DO exprs elsif_block
+    (18) expr -> . loc_var_rd
+    (19) expr -> . loc_var_wr
+    (20) control_structure -> . while_loop
+    (21) control_structure -> . if_statement
+    (39) state_var_rd -> . ID LPAREN params RPAREN
+    (40) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
+    (41) loc_var_rd -> . ID
+    (42) loc_var_wr -> . ID ASSIGN expr
+    (22) while_loop -> . WHILE bexpr DO exprs END
+    (23) if_statement -> . IF bexpr THEN exprs END
+    (24) if_statement -> . IF bexpr THEN exprs elsif_blocks END
+    (25) if_statement -> . IF bexpr THEN exprs ELSE exprs END
+    (26) if_statement -> . IF bexpr THEN exprs elsif_blocks ELSE exprs END
 
-    NOT             shift and go to state 34
-    ID              shift and go to state 30
-    WHILE           shift and go to state 33
-    IF              shift and go to state 31
+    NOT             shift and go to state 35
+    ID              shift and go to state 31
+    WHILE           shift and go to state 34
+    IF              shift and go to state 32
 
     while_loop                     shift and go to state 27
-    expr                           shift and go to state 32
+    expr                           shift and go to state 33
     state_var_wr                   shift and go to state 28
-    state_var_rd                   shift and go to state 23
+    state_var_rd                   shift and go to state 22
+    loc_var_rd                     shift and go to state 29
+    loc_var_wr                     shift and go to state 23
     if_statement                   shift and go to state 26
     control_structure              shift and go to state 24
     bexpr                          shift and go to state 50
 
 state 35
 
+    (37) bexpr -> NOT . bexpr
+    (30) bexpr -> . bexpr AND bexpr
+    (31) bexpr -> . bexpr OR bexpr
+    (32) bexpr -> . expr EQUALS expr
+    (33) bexpr -> . expr LT expr
+    (34) bexpr -> . expr GT expr
+    (35) bexpr -> . expr LTE expr
+    (36) bexpr -> . expr GTE expr
+    (37) bexpr -> . NOT bexpr
+    (38) bexpr -> . expr
+    (15) expr -> . control_structure
+    (16) expr -> . state_var_rd
+    (17) expr -> . state_var_wr
+    (18) expr -> . loc_var_rd
+    (19) expr -> . loc_var_wr
+    (20) control_structure -> . while_loop
+    (21) control_structure -> . if_statement
+    (39) state_var_rd -> . ID LPAREN params RPAREN
+    (40) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
+    (41) loc_var_rd -> . ID
+    (42) loc_var_wr -> . ID ASSIGN expr
+    (22) while_loop -> . WHILE bexpr DO exprs END
+    (23) if_statement -> . IF bexpr THEN exprs END
+    (24) if_statement -> . IF bexpr THEN exprs elsif_blocks END
+    (25) if_statement -> . IF bexpr THEN exprs ELSE exprs END
+    (26) if_statement -> . IF bexpr THEN exprs elsif_blocks ELSE exprs END
+
+    NOT             shift and go to state 35
+    ID              shift and go to state 31
+    WHILE           shift and go to state 34
+    IF              shift and go to state 32
+
+    while_loop                     shift and go to state 27
+    expr                           shift and go to state 33
+    state_var_wr                   shift and go to state 28
+    state_var_rd                   shift and go to state 22
+    loc_var_rd                     shift and go to state 29
+    loc_var_wr                     shift and go to state 23
+    if_statement                   shift and go to state 26
+    control_structure              shift and go to state 24
+    bexpr                          shift and go to state 51
+
+state 36
+
     (7) task -> TASK COLON ID LPAREN . params RPAREN
     (4) params -> . ID COMMA params
     (5) params -> . ID
     (6) params -> .
 
-    ID              shift and go to state 8
+    ID              shift and go to state 7
     RPAREN          reduce using rule 6 (params -> .)
 
-    params                         shift and go to state 51
+    params                         shift and go to state 52
 
-state 36
+state 37
+
+    (14) exprs -> empty .
+
+    END             reduce using rule 14 (exprs -> empty .)
+    ELSE            reduce using rule 14 (exprs -> empty .)
+    ELSIF           reduce using rule 14 (exprs -> empty .)
+    ID              reduce using rule 14 (exprs -> empty .)
+    $end            reduce using rule 14 (exprs -> empty .)
+
+
+state 38
 
     (13) exprs -> expr . exprs
     (13) exprs -> . expr exprs
@@ -645,35 +767,44 @@ state 36
     (15) expr -> . control_structure
     (16) expr -> . state_var_rd
     (17) expr -> . state_var_wr
-    (36) empty -> .
-    (18) control_structure -> . while_loop
-    (19) control_structure -> . if_statement
-    (34) state_var_rd -> . ID LPAREN params RPAREN
-    (35) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
-    (20) while_loop -> . WHILE bexpr DO exprs END
-    (21) if_statement -> . IF bexpr DO exprs elsif_block
+    (18) expr -> . loc_var_rd
+    (19) expr -> . loc_var_wr
+    (43) empty -> .
+    (20) control_structure -> . while_loop
+    (21) control_structure -> . if_statement
+    (39) state_var_rd -> . ID LPAREN params RPAREN
+    (40) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
+    (41) loc_var_rd -> . ID
+    (42) loc_var_wr -> . ID ASSIGN expr
+    (22) while_loop -> . WHILE bexpr DO exprs END
+    (23) if_statement -> . IF bexpr THEN exprs END
+    (24) if_statement -> . IF bexpr THEN exprs elsif_blocks END
+    (25) if_statement -> . IF bexpr THEN exprs ELSE exprs END
+    (26) if_statement -> . IF bexpr THEN exprs elsif_blocks ELSE exprs END
 
   ! shift/reduce conflict for ID resolved as shift
-    $end            reduce using rule 36 (empty -> .)
-    ELSIF           reduce using rule 36 (empty -> .)
-    ELSE            reduce using rule 36 (empty -> .)
-    END             reduce using rule 36 (empty -> .)
-    ID              shift and go to state 30
-    WHILE           shift and go to state 33
-    IF              shift and go to state 31
+    $end            reduce using rule 43 (empty -> .)
+    END             reduce using rule 43 (empty -> .)
+    ELSE            reduce using rule 43 (empty -> .)
+    ELSIF           reduce using rule 43 (empty -> .)
+    ID              shift and go to state 31
+    WHILE           shift and go to state 34
+    IF              shift and go to state 32
 
-  ! ID              [ reduce using rule 36 (empty -> .) ]
+  ! ID              [ reduce using rule 43 (empty -> .) ]
 
     while_loop                     shift and go to state 27
-    expr                           shift and go to state 36
+    expr                           shift and go to state 38
     state_var_wr                   shift and go to state 28
-    exprs                          shift and go to state 52
-    state_var_rd                   shift and go to state 23
+    exprs                          shift and go to state 53
+    state_var_rd                   shift and go to state 22
+    loc_var_rd                     shift and go to state 29
+    loc_var_wr                     shift and go to state 23
     if_statement                   shift and go to state 26
     control_structure              shift and go to state 24
-    empty                          shift and go to state 38
+    empty                          shift and go to state 37
 
-state 37
+state 39
 
     (12) body -> BODY COLON exprs .
 
@@ -681,825 +812,1100 @@ state 37
     $end            reduce using rule 12 (body -> BODY COLON exprs .)
 
 
-state 38
-
-    (14) exprs -> empty .
-
-    ID              reduce using rule 14 (exprs -> empty .)
-    $end            reduce using rule 14 (exprs -> empty .)
-    ELSIF           reduce using rule 14 (exprs -> empty .)
-    ELSE            reduce using rule 14 (exprs -> empty .)
-    END             reduce using rule 14 (exprs -> empty .)
-
-
-state 39
-
-    (25) bexpr -> bexpr AND . bexpr
-    (25) bexpr -> . bexpr AND bexpr
-    (26) bexpr -> . bexpr OR bexpr
-    (27) bexpr -> . expr EQUALS expr
-    (28) bexpr -> . expr LT expr
-    (29) bexpr -> . expr GT expr
-    (30) bexpr -> . expr LTE expr
-    (31) bexpr -> . expr GTE expr
-    (32) bexpr -> . NOT bexpr
-    (33) bexpr -> . expr
-    (15) expr -> . control_structure
-    (16) expr -> . state_var_rd
-    (17) expr -> . state_var_wr
-    (18) control_structure -> . while_loop
-    (19) control_structure -> . if_statement
-    (34) state_var_rd -> . ID LPAREN params RPAREN
-    (35) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
-    (20) while_loop -> . WHILE bexpr DO exprs END
-    (21) if_statement -> . IF bexpr DO exprs elsif_block
-
-    NOT             shift and go to state 34
-    ID              shift and go to state 30
-    WHILE           shift and go to state 33
-    IF              shift and go to state 31
-
-    while_loop                     shift and go to state 27
-    expr                           shift and go to state 32
-    state_var_wr                   shift and go to state 28
-    state_var_rd                   shift and go to state 23
-    if_statement                   shift and go to state 26
-    control_structure              shift and go to state 24
-    bexpr                          shift and go to state 53
-
 state 40
 
-    (10) preconditions -> bexpr COMMA . preconditions
-    (10) preconditions -> . bexpr COMMA preconditions
+    (10) preconditions -> bexpr AND . preconditions
+    (30) bexpr -> bexpr AND . bexpr
+    (10) preconditions -> . bexpr AND preconditions
     (11) preconditions -> . bexpr
-    (25) bexpr -> . bexpr AND bexpr
-    (26) bexpr -> . bexpr OR bexpr
-    (27) bexpr -> . expr EQUALS expr
-    (28) bexpr -> . expr LT expr
-    (29) bexpr -> . expr GT expr
-    (30) bexpr -> . expr LTE expr
-    (31) bexpr -> . expr GTE expr
-    (32) bexpr -> . NOT bexpr
-    (33) bexpr -> . expr
+    (30) bexpr -> . bexpr AND bexpr
+    (31) bexpr -> . bexpr OR bexpr
+    (32) bexpr -> . expr EQUALS expr
+    (33) bexpr -> . expr LT expr
+    (34) bexpr -> . expr GT expr
+    (35) bexpr -> . expr LTE expr
+    (36) bexpr -> . expr GTE expr
+    (37) bexpr -> . NOT bexpr
+    (38) bexpr -> . expr
     (15) expr -> . control_structure
     (16) expr -> . state_var_rd
     (17) expr -> . state_var_wr
-    (18) control_structure -> . while_loop
-    (19) control_structure -> . if_statement
-    (34) state_var_rd -> . ID LPAREN params RPAREN
-    (35) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
-    (20) while_loop -> . WHILE bexpr DO exprs END
-    (21) if_statement -> . IF bexpr DO exprs elsif_block
+    (18) expr -> . loc_var_rd
+    (19) expr -> . loc_var_wr
+    (20) control_structure -> . while_loop
+    (21) control_structure -> . if_statement
+    (39) state_var_rd -> . ID LPAREN params RPAREN
+    (40) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
+    (41) loc_var_rd -> . ID
+    (42) loc_var_wr -> . ID ASSIGN expr
+    (22) while_loop -> . WHILE bexpr DO exprs END
+    (23) if_statement -> . IF bexpr THEN exprs END
+    (24) if_statement -> . IF bexpr THEN exprs elsif_blocks END
+    (25) if_statement -> . IF bexpr THEN exprs ELSE exprs END
+    (26) if_statement -> . IF bexpr THEN exprs elsif_blocks ELSE exprs END
 
-    NOT             shift and go to state 34
-    ID              shift and go to state 30
-    WHILE           shift and go to state 33
-    IF              shift and go to state 31
+    NOT             shift and go to state 35
+    ID              shift and go to state 31
+    WHILE           shift and go to state 34
+    IF              shift and go to state 32
 
     while_loop                     shift and go to state 27
-    expr                           shift and go to state 32
+    expr                           shift and go to state 33
     state_var_wr                   shift and go to state 28
-    state_var_rd                   shift and go to state 23
-    preconditions                  shift and go to state 54
+    state_var_rd                   shift and go to state 22
+    loc_var_rd                     shift and go to state 29
+    preconditions                  shift and go to state 55
+    loc_var_wr                     shift and go to state 23
     if_statement                   shift and go to state 26
     control_structure              shift and go to state 24
-    bexpr                          shift and go to state 25
+    bexpr                          shift and go to state 54
 
 state 41
 
-    (26) bexpr -> bexpr OR . bexpr
-    (25) bexpr -> . bexpr AND bexpr
-    (26) bexpr -> . bexpr OR bexpr
-    (27) bexpr -> . expr EQUALS expr
-    (28) bexpr -> . expr LT expr
-    (29) bexpr -> . expr GT expr
-    (30) bexpr -> . expr LTE expr
-    (31) bexpr -> . expr GTE expr
-    (32) bexpr -> . NOT bexpr
-    (33) bexpr -> . expr
+    (31) bexpr -> bexpr OR . bexpr
+    (30) bexpr -> . bexpr AND bexpr
+    (31) bexpr -> . bexpr OR bexpr
+    (32) bexpr -> . expr EQUALS expr
+    (33) bexpr -> . expr LT expr
+    (34) bexpr -> . expr GT expr
+    (35) bexpr -> . expr LTE expr
+    (36) bexpr -> . expr GTE expr
+    (37) bexpr -> . NOT bexpr
+    (38) bexpr -> . expr
     (15) expr -> . control_structure
     (16) expr -> . state_var_rd
     (17) expr -> . state_var_wr
-    (18) control_structure -> . while_loop
-    (19) control_structure -> . if_statement
-    (34) state_var_rd -> . ID LPAREN params RPAREN
-    (35) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
-    (20) while_loop -> . WHILE bexpr DO exprs END
-    (21) if_statement -> . IF bexpr DO exprs elsif_block
+    (18) expr -> . loc_var_rd
+    (19) expr -> . loc_var_wr
+    (20) control_structure -> . while_loop
+    (21) control_structure -> . if_statement
+    (39) state_var_rd -> . ID LPAREN params RPAREN
+    (40) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
+    (41) loc_var_rd -> . ID
+    (42) loc_var_wr -> . ID ASSIGN expr
+    (22) while_loop -> . WHILE bexpr DO exprs END
+    (23) if_statement -> . IF bexpr THEN exprs END
+    (24) if_statement -> . IF bexpr THEN exprs elsif_blocks END
+    (25) if_statement -> . IF bexpr THEN exprs ELSE exprs END
+    (26) if_statement -> . IF bexpr THEN exprs elsif_blocks ELSE exprs END
 
-    NOT             shift and go to state 34
-    ID              shift and go to state 30
-    WHILE           shift and go to state 33
-    IF              shift and go to state 31
+    NOT             shift and go to state 35
+    ID              shift and go to state 31
+    WHILE           shift and go to state 34
+    IF              shift and go to state 32
 
     while_loop                     shift and go to state 27
-    expr                           shift and go to state 32
+    expr                           shift and go to state 33
     state_var_wr                   shift and go to state 28
-    state_var_rd                   shift and go to state 23
+    state_var_rd                   shift and go to state 22
+    loc_var_rd                     shift and go to state 29
+    loc_var_wr                     shift and go to state 23
     if_statement                   shift and go to state 26
     control_structure              shift and go to state 24
-    bexpr                          shift and go to state 55
+    bexpr                          shift and go to state 56
 
 state 42
 
-    (34) state_var_rd -> ID LPAREN . params RPAREN
-    (35) state_var_wr -> ID LPAREN . params RPAREN ASSIGN expr
+    (42) loc_var_wr -> ID ASSIGN . expr
+    (15) expr -> . control_structure
+    (16) expr -> . state_var_rd
+    (17) expr -> . state_var_wr
+    (18) expr -> . loc_var_rd
+    (19) expr -> . loc_var_wr
+    (20) control_structure -> . while_loop
+    (21) control_structure -> . if_statement
+    (39) state_var_rd -> . ID LPAREN params RPAREN
+    (40) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
+    (41) loc_var_rd -> . ID
+    (42) loc_var_wr -> . ID ASSIGN expr
+    (22) while_loop -> . WHILE bexpr DO exprs END
+    (23) if_statement -> . IF bexpr THEN exprs END
+    (24) if_statement -> . IF bexpr THEN exprs elsif_blocks END
+    (25) if_statement -> . IF bexpr THEN exprs ELSE exprs END
+    (26) if_statement -> . IF bexpr THEN exprs elsif_blocks ELSE exprs END
+
+    ID              shift and go to state 31
+    WHILE           shift and go to state 34
+    IF              shift and go to state 32
+
+    while_loop                     shift and go to state 27
+    expr                           shift and go to state 57
+    state_var_wr                   shift and go to state 28
+    state_var_rd                   shift and go to state 22
+    loc_var_rd                     shift and go to state 29
+    loc_var_wr                     shift and go to state 23
+    if_statement                   shift and go to state 26
+    control_structure              shift and go to state 24
+
+state 43
+
+    (39) state_var_rd -> ID LPAREN . params RPAREN
+    (40) state_var_wr -> ID LPAREN . params RPAREN ASSIGN expr
     (4) params -> . ID COMMA params
     (5) params -> . ID
     (6) params -> .
 
-    ID              shift and go to state 8
+    ID              shift and go to state 7
     RPAREN          reduce using rule 6 (params -> .)
 
-    params                         shift and go to state 56
-
-state 43
-
-    (21) if_statement -> IF bexpr . DO exprs elsif_block
-    (25) bexpr -> bexpr . AND bexpr
-    (26) bexpr -> bexpr . OR bexpr
-
-    DO              shift and go to state 57
-    AND             shift and go to state 39
-    OR              shift and go to state 41
-
+    params                         shift and go to state 58
 
 state 44
 
-    (29) bexpr -> expr GT . expr
-    (15) expr -> . control_structure
-    (16) expr -> . state_var_rd
-    (17) expr -> . state_var_wr
-    (18) control_structure -> . while_loop
-    (19) control_structure -> . if_statement
-    (34) state_var_rd -> . ID LPAREN params RPAREN
-    (35) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
-    (20) while_loop -> . WHILE bexpr DO exprs END
-    (21) if_statement -> . IF bexpr DO exprs elsif_block
+    (23) if_statement -> IF bexpr . THEN exprs END
+    (24) if_statement -> IF bexpr . THEN exprs elsif_blocks END
+    (25) if_statement -> IF bexpr . THEN exprs ELSE exprs END
+    (26) if_statement -> IF bexpr . THEN exprs elsif_blocks ELSE exprs END
+    (30) bexpr -> bexpr . AND bexpr
+    (31) bexpr -> bexpr . OR bexpr
 
-    ID              shift and go to state 30
-    WHILE           shift and go to state 33
-    IF              shift and go to state 31
+    THEN            shift and go to state 60
+    AND             shift and go to state 59
+    OR              shift and go to state 41
 
-    while_loop                     shift and go to state 27
-    expr                           shift and go to state 58
-    state_var_wr                   shift and go to state 28
-    state_var_rd                   shift and go to state 23
-    if_statement                   shift and go to state 26
-    control_structure              shift and go to state 24
 
 state 45
 
-    (31) bexpr -> expr GTE . expr
+    (34) bexpr -> expr GT . expr
     (15) expr -> . control_structure
     (16) expr -> . state_var_rd
     (17) expr -> . state_var_wr
-    (18) control_structure -> . while_loop
-    (19) control_structure -> . if_statement
-    (34) state_var_rd -> . ID LPAREN params RPAREN
-    (35) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
-    (20) while_loop -> . WHILE bexpr DO exprs END
-    (21) if_statement -> . IF bexpr DO exprs elsif_block
+    (18) expr -> . loc_var_rd
+    (19) expr -> . loc_var_wr
+    (20) control_structure -> . while_loop
+    (21) control_structure -> . if_statement
+    (39) state_var_rd -> . ID LPAREN params RPAREN
+    (40) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
+    (41) loc_var_rd -> . ID
+    (42) loc_var_wr -> . ID ASSIGN expr
+    (22) while_loop -> . WHILE bexpr DO exprs END
+    (23) if_statement -> . IF bexpr THEN exprs END
+    (24) if_statement -> . IF bexpr THEN exprs elsif_blocks END
+    (25) if_statement -> . IF bexpr THEN exprs ELSE exprs END
+    (26) if_statement -> . IF bexpr THEN exprs elsif_blocks ELSE exprs END
 
-    ID              shift and go to state 30
-    WHILE           shift and go to state 33
-    IF              shift and go to state 31
+    ID              shift and go to state 31
+    WHILE           shift and go to state 34
+    IF              shift and go to state 32
 
     while_loop                     shift and go to state 27
-    expr                           shift and go to state 59
+    expr                           shift and go to state 61
     state_var_wr                   shift and go to state 28
-    state_var_rd                   shift and go to state 23
+    state_var_rd                   shift and go to state 22
+    loc_var_rd                     shift and go to state 29
+    loc_var_wr                     shift and go to state 23
     if_statement                   shift and go to state 26
     control_structure              shift and go to state 24
 
 state 46
 
-    (27) bexpr -> expr EQUALS . expr
+    (36) bexpr -> expr GTE . expr
     (15) expr -> . control_structure
     (16) expr -> . state_var_rd
     (17) expr -> . state_var_wr
-    (18) control_structure -> . while_loop
-    (19) control_structure -> . if_statement
-    (34) state_var_rd -> . ID LPAREN params RPAREN
-    (35) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
-    (20) while_loop -> . WHILE bexpr DO exprs END
-    (21) if_statement -> . IF bexpr DO exprs elsif_block
+    (18) expr -> . loc_var_rd
+    (19) expr -> . loc_var_wr
+    (20) control_structure -> . while_loop
+    (21) control_structure -> . if_statement
+    (39) state_var_rd -> . ID LPAREN params RPAREN
+    (40) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
+    (41) loc_var_rd -> . ID
+    (42) loc_var_wr -> . ID ASSIGN expr
+    (22) while_loop -> . WHILE bexpr DO exprs END
+    (23) if_statement -> . IF bexpr THEN exprs END
+    (24) if_statement -> . IF bexpr THEN exprs elsif_blocks END
+    (25) if_statement -> . IF bexpr THEN exprs ELSE exprs END
+    (26) if_statement -> . IF bexpr THEN exprs elsif_blocks ELSE exprs END
 
-    ID              shift and go to state 30
-    WHILE           shift and go to state 33
-    IF              shift and go to state 31
+    ID              shift and go to state 31
+    WHILE           shift and go to state 34
+    IF              shift and go to state 32
 
     while_loop                     shift and go to state 27
-    expr                           shift and go to state 60
+    expr                           shift and go to state 62
     state_var_wr                   shift and go to state 28
-    state_var_rd                   shift and go to state 23
+    state_var_rd                   shift and go to state 22
+    loc_var_rd                     shift and go to state 29
+    loc_var_wr                     shift and go to state 23
     if_statement                   shift and go to state 26
     control_structure              shift and go to state 24
 
 state 47
 
-    (28) bexpr -> expr LT . expr
+    (32) bexpr -> expr EQUALS . expr
     (15) expr -> . control_structure
     (16) expr -> . state_var_rd
     (17) expr -> . state_var_wr
-    (18) control_structure -> . while_loop
-    (19) control_structure -> . if_statement
-    (34) state_var_rd -> . ID LPAREN params RPAREN
-    (35) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
-    (20) while_loop -> . WHILE bexpr DO exprs END
-    (21) if_statement -> . IF bexpr DO exprs elsif_block
+    (18) expr -> . loc_var_rd
+    (19) expr -> . loc_var_wr
+    (20) control_structure -> . while_loop
+    (21) control_structure -> . if_statement
+    (39) state_var_rd -> . ID LPAREN params RPAREN
+    (40) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
+    (41) loc_var_rd -> . ID
+    (42) loc_var_wr -> . ID ASSIGN expr
+    (22) while_loop -> . WHILE bexpr DO exprs END
+    (23) if_statement -> . IF bexpr THEN exprs END
+    (24) if_statement -> . IF bexpr THEN exprs elsif_blocks END
+    (25) if_statement -> . IF bexpr THEN exprs ELSE exprs END
+    (26) if_statement -> . IF bexpr THEN exprs elsif_blocks ELSE exprs END
 
-    ID              shift and go to state 30
-    WHILE           shift and go to state 33
-    IF              shift and go to state 31
+    ID              shift and go to state 31
+    WHILE           shift and go to state 34
+    IF              shift and go to state 32
 
     while_loop                     shift and go to state 27
-    expr                           shift and go to state 61
+    expr                           shift and go to state 63
     state_var_wr                   shift and go to state 28
-    state_var_rd                   shift and go to state 23
+    state_var_rd                   shift and go to state 22
+    loc_var_rd                     shift and go to state 29
+    loc_var_wr                     shift and go to state 23
     if_statement                   shift and go to state 26
     control_structure              shift and go to state 24
 
 state 48
 
-    (30) bexpr -> expr LTE . expr
+    (33) bexpr -> expr LT . expr
     (15) expr -> . control_structure
     (16) expr -> . state_var_rd
     (17) expr -> . state_var_wr
-    (18) control_structure -> . while_loop
-    (19) control_structure -> . if_statement
-    (34) state_var_rd -> . ID LPAREN params RPAREN
-    (35) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
-    (20) while_loop -> . WHILE bexpr DO exprs END
-    (21) if_statement -> . IF bexpr DO exprs elsif_block
+    (18) expr -> . loc_var_rd
+    (19) expr -> . loc_var_wr
+    (20) control_structure -> . while_loop
+    (21) control_structure -> . if_statement
+    (39) state_var_rd -> . ID LPAREN params RPAREN
+    (40) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
+    (41) loc_var_rd -> . ID
+    (42) loc_var_wr -> . ID ASSIGN expr
+    (22) while_loop -> . WHILE bexpr DO exprs END
+    (23) if_statement -> . IF bexpr THEN exprs END
+    (24) if_statement -> . IF bexpr THEN exprs elsif_blocks END
+    (25) if_statement -> . IF bexpr THEN exprs ELSE exprs END
+    (26) if_statement -> . IF bexpr THEN exprs elsif_blocks ELSE exprs END
 
-    ID              shift and go to state 30
-    WHILE           shift and go to state 33
-    IF              shift and go to state 31
+    ID              shift and go to state 31
+    WHILE           shift and go to state 34
+    IF              shift and go to state 32
 
     while_loop                     shift and go to state 27
-    expr                           shift and go to state 62
+    expr                           shift and go to state 64
     state_var_wr                   shift and go to state 28
-    state_var_rd                   shift and go to state 23
+    state_var_rd                   shift and go to state 22
+    loc_var_rd                     shift and go to state 29
+    loc_var_wr                     shift and go to state 23
     if_statement                   shift and go to state 26
     control_structure              shift and go to state 24
 
 state 49
 
-    (20) while_loop -> WHILE bexpr . DO exprs END
-    (25) bexpr -> bexpr . AND bexpr
-    (26) bexpr -> bexpr . OR bexpr
+    (35) bexpr -> expr LTE . expr
+    (15) expr -> . control_structure
+    (16) expr -> . state_var_rd
+    (17) expr -> . state_var_wr
+    (18) expr -> . loc_var_rd
+    (19) expr -> . loc_var_wr
+    (20) control_structure -> . while_loop
+    (21) control_structure -> . if_statement
+    (39) state_var_rd -> . ID LPAREN params RPAREN
+    (40) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
+    (41) loc_var_rd -> . ID
+    (42) loc_var_wr -> . ID ASSIGN expr
+    (22) while_loop -> . WHILE bexpr DO exprs END
+    (23) if_statement -> . IF bexpr THEN exprs END
+    (24) if_statement -> . IF bexpr THEN exprs elsif_blocks END
+    (25) if_statement -> . IF bexpr THEN exprs ELSE exprs END
+    (26) if_statement -> . IF bexpr THEN exprs elsif_blocks ELSE exprs END
 
-    DO              shift and go to state 63
-    AND             shift and go to state 39
-    OR              shift and go to state 41
+    ID              shift and go to state 31
+    WHILE           shift and go to state 34
+    IF              shift and go to state 32
 
+    while_loop                     shift and go to state 27
+    expr                           shift and go to state 65
+    state_var_wr                   shift and go to state 28
+    state_var_rd                   shift and go to state 22
+    loc_var_rd                     shift and go to state 29
+    loc_var_wr                     shift and go to state 23
+    if_statement                   shift and go to state 26
+    control_structure              shift and go to state 24
 
 state 50
 
-    (32) bexpr -> NOT bexpr .
-    (25) bexpr -> bexpr . AND bexpr
-    (26) bexpr -> bexpr . OR bexpr
+    (22) while_loop -> WHILE bexpr . DO exprs END
+    (30) bexpr -> bexpr . AND bexpr
+    (31) bexpr -> bexpr . OR bexpr
 
-  ! shift/reduce conflict for AND resolved as shift
-  ! shift/reduce conflict for OR resolved as shift
-    DO              reduce using rule 32 (bexpr -> NOT bexpr .)
-    COMMA           reduce using rule 32 (bexpr -> NOT bexpr .)
-    BODY            reduce using rule 32 (bexpr -> NOT bexpr .)
-    AND             shift and go to state 39
+    DO              shift and go to state 66
+    AND             shift and go to state 59
     OR              shift and go to state 41
-
-  ! AND             [ reduce using rule 32 (bexpr -> NOT bexpr .) ]
-  ! OR              [ reduce using rule 32 (bexpr -> NOT bexpr .) ]
 
 
 state 51
 
-    (7) task -> TASK COLON ID LPAREN params . RPAREN
+    (37) bexpr -> NOT bexpr .
+    (30) bexpr -> bexpr . AND bexpr
+    (31) bexpr -> bexpr . OR bexpr
 
-    RPAREN          shift and go to state 64
+  ! shift/reduce conflict for AND resolved as shift
+  ! shift/reduce conflict for OR resolved as shift
+    THEN            reduce using rule 37 (bexpr -> NOT bexpr .)
+    BODY            reduce using rule 37 (bexpr -> NOT bexpr .)
+    DO              reduce using rule 37 (bexpr -> NOT bexpr .)
+    AND             shift and go to state 59
+    OR              shift and go to state 41
+
+  ! AND             [ reduce using rule 37 (bexpr -> NOT bexpr .) ]
+  ! OR              [ reduce using rule 37 (bexpr -> NOT bexpr .) ]
 
 
 state 52
 
-    (13) exprs -> expr exprs .
+    (7) task -> TASK COLON ID LPAREN params . RPAREN
 
-    ID              reduce using rule 13 (exprs -> expr exprs .)
-    $end            reduce using rule 13 (exprs -> expr exprs .)
-    ELSIF           reduce using rule 13 (exprs -> expr exprs .)
-    ELSE            reduce using rule 13 (exprs -> expr exprs .)
-    END             reduce using rule 13 (exprs -> expr exprs .)
+    RPAREN          shift and go to state 67
 
 
 state 53
 
-    (25) bexpr -> bexpr AND bexpr .
-    (25) bexpr -> bexpr . AND bexpr
-    (26) bexpr -> bexpr . OR bexpr
+    (13) exprs -> expr exprs .
 
-    DO              reduce using rule 25 (bexpr -> bexpr AND bexpr .)
-    AND             reduce using rule 25 (bexpr -> bexpr AND bexpr .)
-    OR              reduce using rule 25 (bexpr -> bexpr AND bexpr .)
-    COMMA           reduce using rule 25 (bexpr -> bexpr AND bexpr .)
-    BODY            reduce using rule 25 (bexpr -> bexpr AND bexpr .)
-
-  ! AND             [ shift and go to state 39 ]
-  ! OR              [ shift and go to state 41 ]
+    END             reduce using rule 13 (exprs -> expr exprs .)
+    ELSE            reduce using rule 13 (exprs -> expr exprs .)
+    ELSIF           reduce using rule 13 (exprs -> expr exprs .)
+    ID              reduce using rule 13 (exprs -> expr exprs .)
+    $end            reduce using rule 13 (exprs -> expr exprs .)
 
 
 state 54
 
-    (10) preconditions -> bexpr COMMA preconditions .
+    (30) bexpr -> bexpr AND bexpr .
+    (10) preconditions -> bexpr . AND preconditions
+    (11) preconditions -> bexpr .
+    (30) bexpr -> bexpr . AND bexpr
+    (31) bexpr -> bexpr . OR bexpr
 
-    BODY            reduce using rule 10 (preconditions -> bexpr COMMA preconditions .)
+  ! reduce/reduce conflict for BODY resolved using rule 11 (preconditions -> bexpr .)
+    AND             reduce using rule 30 (bexpr -> bexpr AND bexpr .)
+    OR              reduce using rule 30 (bexpr -> bexpr AND bexpr .)
+    BODY            reduce using rule 11 (preconditions -> bexpr .)
+
+  ! BODY            [ reduce using rule 30 (bexpr -> bexpr AND bexpr .) ]
+  ! AND             [ shift and go to state 40 ]
+  ! OR              [ shift and go to state 41 ]
 
 
 state 55
 
-    (26) bexpr -> bexpr OR bexpr .
-    (25) bexpr -> bexpr . AND bexpr
-    (26) bexpr -> bexpr . OR bexpr
+    (10) preconditions -> bexpr AND preconditions .
 
-    DO              reduce using rule 26 (bexpr -> bexpr OR bexpr .)
-    AND             reduce using rule 26 (bexpr -> bexpr OR bexpr .)
-    OR              reduce using rule 26 (bexpr -> bexpr OR bexpr .)
-    COMMA           reduce using rule 26 (bexpr -> bexpr OR bexpr .)
-    BODY            reduce using rule 26 (bexpr -> bexpr OR bexpr .)
-
-  ! AND             [ shift and go to state 39 ]
-  ! OR              [ shift and go to state 41 ]
+    BODY            reduce using rule 10 (preconditions -> bexpr AND preconditions .)
 
 
 state 56
 
-    (34) state_var_rd -> ID LPAREN params . RPAREN
-    (35) state_var_wr -> ID LPAREN params . RPAREN ASSIGN expr
+    (31) bexpr -> bexpr OR bexpr .
+    (30) bexpr -> bexpr . AND bexpr
+    (31) bexpr -> bexpr . OR bexpr
 
-    RPAREN          shift and go to state 65
+    THEN            reduce using rule 31 (bexpr -> bexpr OR bexpr .)
+    AND             reduce using rule 31 (bexpr -> bexpr OR bexpr .)
+    OR              reduce using rule 31 (bexpr -> bexpr OR bexpr .)
+    BODY            reduce using rule 31 (bexpr -> bexpr OR bexpr .)
+    DO              reduce using rule 31 (bexpr -> bexpr OR bexpr .)
+
+  ! AND             [ shift and go to state 59 ]
+  ! OR              [ shift and go to state 41 ]
 
 
 state 57
 
-    (21) if_statement -> IF bexpr DO . exprs elsif_block
-    (13) exprs -> . expr exprs
-    (14) exprs -> . empty
-    (15) expr -> . control_structure
-    (16) expr -> . state_var_rd
-    (17) expr -> . state_var_wr
-    (36) empty -> .
-    (18) control_structure -> . while_loop
-    (19) control_structure -> . if_statement
-    (34) state_var_rd -> . ID LPAREN params RPAREN
-    (35) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
-    (20) while_loop -> . WHILE bexpr DO exprs END
-    (21) if_statement -> . IF bexpr DO exprs elsif_block
+    (42) loc_var_wr -> ID ASSIGN expr .
 
-    ELSIF           reduce using rule 36 (empty -> .)
-    ELSE            reduce using rule 36 (empty -> .)
-    END             reduce using rule 36 (empty -> .)
-    ID              shift and go to state 30
-    WHILE           shift and go to state 33
-    IF              shift and go to state 31
+    AND             reduce using rule 42 (loc_var_wr -> ID ASSIGN expr .)
+    OR              reduce using rule 42 (loc_var_wr -> ID ASSIGN expr .)
+    BODY            reduce using rule 42 (loc_var_wr -> ID ASSIGN expr .)
+    THEN            reduce using rule 42 (loc_var_wr -> ID ASSIGN expr .)
+    DO              reduce using rule 42 (loc_var_wr -> ID ASSIGN expr .)
+    ID              reduce using rule 42 (loc_var_wr -> ID ASSIGN expr .)
+    WHILE           reduce using rule 42 (loc_var_wr -> ID ASSIGN expr .)
+    IF              reduce using rule 42 (loc_var_wr -> ID ASSIGN expr .)
+    $end            reduce using rule 42 (loc_var_wr -> ID ASSIGN expr .)
+    END             reduce using rule 42 (loc_var_wr -> ID ASSIGN expr .)
+    ELSE            reduce using rule 42 (loc_var_wr -> ID ASSIGN expr .)
+    ELSIF           reduce using rule 42 (loc_var_wr -> ID ASSIGN expr .)
+    EQUALS          reduce using rule 42 (loc_var_wr -> ID ASSIGN expr .)
+    LT              reduce using rule 42 (loc_var_wr -> ID ASSIGN expr .)
+    GT              reduce using rule 42 (loc_var_wr -> ID ASSIGN expr .)
+    LTE             reduce using rule 42 (loc_var_wr -> ID ASSIGN expr .)
+    GTE             reduce using rule 42 (loc_var_wr -> ID ASSIGN expr .)
 
-    while_loop                     shift and go to state 27
-    expr                           shift and go to state 36
-    state_var_wr                   shift and go to state 28
-    exprs                          shift and go to state 66
-    state_var_rd                   shift and go to state 23
-    if_statement                   shift and go to state 26
-    control_structure              shift and go to state 24
-    empty                          shift and go to state 38
 
 state 58
 
-    (29) bexpr -> expr GT expr .
+    (39) state_var_rd -> ID LPAREN params . RPAREN
+    (40) state_var_wr -> ID LPAREN params . RPAREN ASSIGN expr
 
-    DO              reduce using rule 29 (bexpr -> expr GT expr .)
-    AND             reduce using rule 29 (bexpr -> expr GT expr .)
-    OR              reduce using rule 29 (bexpr -> expr GT expr .)
-    COMMA           reduce using rule 29 (bexpr -> expr GT expr .)
-    BODY            reduce using rule 29 (bexpr -> expr GT expr .)
+    RPAREN          shift and go to state 68
 
 
 state 59
 
-    (31) bexpr -> expr GTE expr .
+    (30) bexpr -> bexpr AND . bexpr
+    (30) bexpr -> . bexpr AND bexpr
+    (31) bexpr -> . bexpr OR bexpr
+    (32) bexpr -> . expr EQUALS expr
+    (33) bexpr -> . expr LT expr
+    (34) bexpr -> . expr GT expr
+    (35) bexpr -> . expr LTE expr
+    (36) bexpr -> . expr GTE expr
+    (37) bexpr -> . NOT bexpr
+    (38) bexpr -> . expr
+    (15) expr -> . control_structure
+    (16) expr -> . state_var_rd
+    (17) expr -> . state_var_wr
+    (18) expr -> . loc_var_rd
+    (19) expr -> . loc_var_wr
+    (20) control_structure -> . while_loop
+    (21) control_structure -> . if_statement
+    (39) state_var_rd -> . ID LPAREN params RPAREN
+    (40) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
+    (41) loc_var_rd -> . ID
+    (42) loc_var_wr -> . ID ASSIGN expr
+    (22) while_loop -> . WHILE bexpr DO exprs END
+    (23) if_statement -> . IF bexpr THEN exprs END
+    (24) if_statement -> . IF bexpr THEN exprs elsif_blocks END
+    (25) if_statement -> . IF bexpr THEN exprs ELSE exprs END
+    (26) if_statement -> . IF bexpr THEN exprs elsif_blocks ELSE exprs END
 
-    DO              reduce using rule 31 (bexpr -> expr GTE expr .)
-    AND             reduce using rule 31 (bexpr -> expr GTE expr .)
-    OR              reduce using rule 31 (bexpr -> expr GTE expr .)
-    COMMA           reduce using rule 31 (bexpr -> expr GTE expr .)
-    BODY            reduce using rule 31 (bexpr -> expr GTE expr .)
+    NOT             shift and go to state 35
+    ID              shift and go to state 31
+    WHILE           shift and go to state 34
+    IF              shift and go to state 32
 
+    while_loop                     shift and go to state 27
+    expr                           shift and go to state 33
+    state_var_wr                   shift and go to state 28
+    state_var_rd                   shift and go to state 22
+    loc_var_rd                     shift and go to state 29
+    loc_var_wr                     shift and go to state 23
+    if_statement                   shift and go to state 26
+    control_structure              shift and go to state 24
+    bexpr                          shift and go to state 69
 
 state 60
 
-    (27) bexpr -> expr EQUALS expr .
-
-    DO              reduce using rule 27 (bexpr -> expr EQUALS expr .)
-    AND             reduce using rule 27 (bexpr -> expr EQUALS expr .)
-    OR              reduce using rule 27 (bexpr -> expr EQUALS expr .)
-    COMMA           reduce using rule 27 (bexpr -> expr EQUALS expr .)
-    BODY            reduce using rule 27 (bexpr -> expr EQUALS expr .)
-
-
-state 61
-
-    (28) bexpr -> expr LT expr .
-
-    DO              reduce using rule 28 (bexpr -> expr LT expr .)
-    AND             reduce using rule 28 (bexpr -> expr LT expr .)
-    OR              reduce using rule 28 (bexpr -> expr LT expr .)
-    COMMA           reduce using rule 28 (bexpr -> expr LT expr .)
-    BODY            reduce using rule 28 (bexpr -> expr LT expr .)
-
-
-state 62
-
-    (30) bexpr -> expr LTE expr .
-
-    DO              reduce using rule 30 (bexpr -> expr LTE expr .)
-    AND             reduce using rule 30 (bexpr -> expr LTE expr .)
-    OR              reduce using rule 30 (bexpr -> expr LTE expr .)
-    COMMA           reduce using rule 30 (bexpr -> expr LTE expr .)
-    BODY            reduce using rule 30 (bexpr -> expr LTE expr .)
-
-
-state 63
-
-    (20) while_loop -> WHILE bexpr DO . exprs END
+    (23) if_statement -> IF bexpr THEN . exprs END
+    (24) if_statement -> IF bexpr THEN . exprs elsif_blocks END
+    (25) if_statement -> IF bexpr THEN . exprs ELSE exprs END
+    (26) if_statement -> IF bexpr THEN . exprs elsif_blocks ELSE exprs END
     (13) exprs -> . expr exprs
     (14) exprs -> . empty
     (15) expr -> . control_structure
     (16) expr -> . state_var_rd
     (17) expr -> . state_var_wr
-    (36) empty -> .
-    (18) control_structure -> . while_loop
-    (19) control_structure -> . if_statement
-    (34) state_var_rd -> . ID LPAREN params RPAREN
-    (35) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
-    (20) while_loop -> . WHILE bexpr DO exprs END
-    (21) if_statement -> . IF bexpr DO exprs elsif_block
+    (18) expr -> . loc_var_rd
+    (19) expr -> . loc_var_wr
+    (43) empty -> .
+    (20) control_structure -> . while_loop
+    (21) control_structure -> . if_statement
+    (39) state_var_rd -> . ID LPAREN params RPAREN
+    (40) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
+    (41) loc_var_rd -> . ID
+    (42) loc_var_wr -> . ID ASSIGN expr
+    (22) while_loop -> . WHILE bexpr DO exprs END
+    (23) if_statement -> . IF bexpr THEN exprs END
+    (24) if_statement -> . IF bexpr THEN exprs elsif_blocks END
+    (25) if_statement -> . IF bexpr THEN exprs ELSE exprs END
+    (26) if_statement -> . IF bexpr THEN exprs elsif_blocks ELSE exprs END
 
-    END             reduce using rule 36 (empty -> .)
-    ID              shift and go to state 30
-    WHILE           shift and go to state 33
-    IF              shift and go to state 31
+    END             reduce using rule 43 (empty -> .)
+    ELSE            reduce using rule 43 (empty -> .)
+    ELSIF           reduce using rule 43 (empty -> .)
+    ID              shift and go to state 31
+    WHILE           shift and go to state 34
+    IF              shift and go to state 32
 
     while_loop                     shift and go to state 27
-    expr                           shift and go to state 36
+    expr                           shift and go to state 38
     state_var_wr                   shift and go to state 28
-    exprs                          shift and go to state 67
-    state_var_rd                   shift and go to state 23
+    exprs                          shift and go to state 70
+    state_var_rd                   shift and go to state 22
+    loc_var_rd                     shift and go to state 29
+    loc_var_wr                     shift and go to state 23
     if_statement                   shift and go to state 26
     control_structure              shift and go to state 24
-    empty                          shift and go to state 38
+    empty                          shift and go to state 37
+
+state 61
+
+    (34) bexpr -> expr GT expr .
+
+    THEN            reduce using rule 34 (bexpr -> expr GT expr .)
+    AND             reduce using rule 34 (bexpr -> expr GT expr .)
+    OR              reduce using rule 34 (bexpr -> expr GT expr .)
+    BODY            reduce using rule 34 (bexpr -> expr GT expr .)
+    DO              reduce using rule 34 (bexpr -> expr GT expr .)
+
+
+state 62
+
+    (36) bexpr -> expr GTE expr .
+
+    THEN            reduce using rule 36 (bexpr -> expr GTE expr .)
+    AND             reduce using rule 36 (bexpr -> expr GTE expr .)
+    OR              reduce using rule 36 (bexpr -> expr GTE expr .)
+    BODY            reduce using rule 36 (bexpr -> expr GTE expr .)
+    DO              reduce using rule 36 (bexpr -> expr GTE expr .)
+
+
+state 63
+
+    (32) bexpr -> expr EQUALS expr .
+
+    THEN            reduce using rule 32 (bexpr -> expr EQUALS expr .)
+    AND             reduce using rule 32 (bexpr -> expr EQUALS expr .)
+    OR              reduce using rule 32 (bexpr -> expr EQUALS expr .)
+    BODY            reduce using rule 32 (bexpr -> expr EQUALS expr .)
+    DO              reduce using rule 32 (bexpr -> expr EQUALS expr .)
+
 
 state 64
+
+    (33) bexpr -> expr LT expr .
+
+    THEN            reduce using rule 33 (bexpr -> expr LT expr .)
+    AND             reduce using rule 33 (bexpr -> expr LT expr .)
+    OR              reduce using rule 33 (bexpr -> expr LT expr .)
+    BODY            reduce using rule 33 (bexpr -> expr LT expr .)
+    DO              reduce using rule 33 (bexpr -> expr LT expr .)
+
+
+state 65
+
+    (35) bexpr -> expr LTE expr .
+
+    THEN            reduce using rule 35 (bexpr -> expr LTE expr .)
+    AND             reduce using rule 35 (bexpr -> expr LTE expr .)
+    OR              reduce using rule 35 (bexpr -> expr LTE expr .)
+    BODY            reduce using rule 35 (bexpr -> expr LTE expr .)
+    DO              reduce using rule 35 (bexpr -> expr LTE expr .)
+
+
+state 66
+
+    (22) while_loop -> WHILE bexpr DO . exprs END
+    (13) exprs -> . expr exprs
+    (14) exprs -> . empty
+    (15) expr -> . control_structure
+    (16) expr -> . state_var_rd
+    (17) expr -> . state_var_wr
+    (18) expr -> . loc_var_rd
+    (19) expr -> . loc_var_wr
+    (43) empty -> .
+    (20) control_structure -> . while_loop
+    (21) control_structure -> . if_statement
+    (39) state_var_rd -> . ID LPAREN params RPAREN
+    (40) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
+    (41) loc_var_rd -> . ID
+    (42) loc_var_wr -> . ID ASSIGN expr
+    (22) while_loop -> . WHILE bexpr DO exprs END
+    (23) if_statement -> . IF bexpr THEN exprs END
+    (24) if_statement -> . IF bexpr THEN exprs elsif_blocks END
+    (25) if_statement -> . IF bexpr THEN exprs ELSE exprs END
+    (26) if_statement -> . IF bexpr THEN exprs elsif_blocks ELSE exprs END
+
+    END             reduce using rule 43 (empty -> .)
+    ID              shift and go to state 31
+    WHILE           shift and go to state 34
+    IF              shift and go to state 32
+
+    while_loop                     shift and go to state 27
+    expr                           shift and go to state 38
+    state_var_wr                   shift and go to state 28
+    exprs                          shift and go to state 71
+    state_var_rd                   shift and go to state 22
+    loc_var_rd                     shift and go to state 29
+    loc_var_wr                     shift and go to state 23
+    if_statement                   shift and go to state 26
+    control_structure              shift and go to state 24
+    empty                          shift and go to state 37
+
+state 67
 
     (7) task -> TASK COLON ID LPAREN params RPAREN .
 
     PRE             reduce using rule 7 (task -> TASK COLON ID LPAREN params RPAREN .)
 
 
-state 65
-
-    (34) state_var_rd -> ID LPAREN params RPAREN .
-    (35) state_var_wr -> ID LPAREN params RPAREN . ASSIGN expr
-
-    EQUALS          reduce using rule 34 (state_var_rd -> ID LPAREN params RPAREN .)
-    LT              reduce using rule 34 (state_var_rd -> ID LPAREN params RPAREN .)
-    GT              reduce using rule 34 (state_var_rd -> ID LPAREN params RPAREN .)
-    LTE             reduce using rule 34 (state_var_rd -> ID LPAREN params RPAREN .)
-    GTE             reduce using rule 34 (state_var_rd -> ID LPAREN params RPAREN .)
-    AND             reduce using rule 34 (state_var_rd -> ID LPAREN params RPAREN .)
-    OR              reduce using rule 34 (state_var_rd -> ID LPAREN params RPAREN .)
-    COMMA           reduce using rule 34 (state_var_rd -> ID LPAREN params RPAREN .)
-    BODY            reduce using rule 34 (state_var_rd -> ID LPAREN params RPAREN .)
-    DO              reduce using rule 34 (state_var_rd -> ID LPAREN params RPAREN .)
-    ID              reduce using rule 34 (state_var_rd -> ID LPAREN params RPAREN .)
-    WHILE           reduce using rule 34 (state_var_rd -> ID LPAREN params RPAREN .)
-    IF              reduce using rule 34 (state_var_rd -> ID LPAREN params RPAREN .)
-    ELSIF           reduce using rule 34 (state_var_rd -> ID LPAREN params RPAREN .)
-    ELSE            reduce using rule 34 (state_var_rd -> ID LPAREN params RPAREN .)
-    END             reduce using rule 34 (state_var_rd -> ID LPAREN params RPAREN .)
-    $end            reduce using rule 34 (state_var_rd -> ID LPAREN params RPAREN .)
-    ASSIGN          shift and go to state 68
-
-
-state 66
-
-    (21) if_statement -> IF bexpr DO exprs . elsif_block
-    (22) elsif_block -> . ELSIF bexpr DO exprs elsif_block
-    (23) elsif_block -> . ELSE exprs END
-    (24) elsif_block -> . END
-
-    ELSIF           shift and go to state 72
-    ELSE            shift and go to state 71
-    END             shift and go to state 69
-
-    elsif_block                    shift and go to state 70
-
-state 67
-
-    (20) while_loop -> WHILE bexpr DO exprs . END
-
-    END             shift and go to state 73
-
-
 state 68
 
-    (35) state_var_wr -> ID LPAREN params RPAREN ASSIGN . expr
-    (15) expr -> . control_structure
-    (16) expr -> . state_var_rd
-    (17) expr -> . state_var_wr
-    (18) control_structure -> . while_loop
-    (19) control_structure -> . if_statement
-    (34) state_var_rd -> . ID LPAREN params RPAREN
-    (35) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
-    (20) while_loop -> . WHILE bexpr DO exprs END
-    (21) if_statement -> . IF bexpr DO exprs elsif_block
+    (39) state_var_rd -> ID LPAREN params RPAREN .
+    (40) state_var_wr -> ID LPAREN params RPAREN . ASSIGN expr
 
-    ID              shift and go to state 30
-    WHILE           shift and go to state 33
-    IF              shift and go to state 31
+    ID              reduce using rule 39 (state_var_rd -> ID LPAREN params RPAREN .)
+    WHILE           reduce using rule 39 (state_var_rd -> ID LPAREN params RPAREN .)
+    IF              reduce using rule 39 (state_var_rd -> ID LPAREN params RPAREN .)
+    END             reduce using rule 39 (state_var_rd -> ID LPAREN params RPAREN .)
+    ELSE            reduce using rule 39 (state_var_rd -> ID LPAREN params RPAREN .)
+    ELSIF           reduce using rule 39 (state_var_rd -> ID LPAREN params RPAREN .)
+    EQUALS          reduce using rule 39 (state_var_rd -> ID LPAREN params RPAREN .)
+    LT              reduce using rule 39 (state_var_rd -> ID LPAREN params RPAREN .)
+    GT              reduce using rule 39 (state_var_rd -> ID LPAREN params RPAREN .)
+    LTE             reduce using rule 39 (state_var_rd -> ID LPAREN params RPAREN .)
+    GTE             reduce using rule 39 (state_var_rd -> ID LPAREN params RPAREN .)
+    AND             reduce using rule 39 (state_var_rd -> ID LPAREN params RPAREN .)
+    OR              reduce using rule 39 (state_var_rd -> ID LPAREN params RPAREN .)
+    BODY            reduce using rule 39 (state_var_rd -> ID LPAREN params RPAREN .)
+    THEN            reduce using rule 39 (state_var_rd -> ID LPAREN params RPAREN .)
+    DO              reduce using rule 39 (state_var_rd -> ID LPAREN params RPAREN .)
+    $end            reduce using rule 39 (state_var_rd -> ID LPAREN params RPAREN .)
+    ASSIGN          shift and go to state 72
 
-    while_loop                     shift and go to state 27
-    expr                           shift and go to state 74
-    state_var_wr                   shift and go to state 28
-    state_var_rd                   shift and go to state 23
-    if_statement                   shift and go to state 26
-    control_structure              shift and go to state 24
 
 state 69
 
-    (24) elsif_block -> END .
+    (30) bexpr -> bexpr AND bexpr .
+    (30) bexpr -> bexpr . AND bexpr
+    (31) bexpr -> bexpr . OR bexpr
 
-    EQUALS          reduce using rule 24 (elsif_block -> END .)
-    LT              reduce using rule 24 (elsif_block -> END .)
-    GT              reduce using rule 24 (elsif_block -> END .)
-    LTE             reduce using rule 24 (elsif_block -> END .)
-    GTE             reduce using rule 24 (elsif_block -> END .)
-    COMMA           reduce using rule 24 (elsif_block -> END .)
-    AND             reduce using rule 24 (elsif_block -> END .)
-    OR              reduce using rule 24 (elsif_block -> END .)
-    BODY            reduce using rule 24 (elsif_block -> END .)
-    ID              reduce using rule 24 (elsif_block -> END .)
-    WHILE           reduce using rule 24 (elsif_block -> END .)
-    IF              reduce using rule 24 (elsif_block -> END .)
-    $end            reduce using rule 24 (elsif_block -> END .)
-    DO              reduce using rule 24 (elsif_block -> END .)
-    ELSIF           reduce using rule 24 (elsif_block -> END .)
-    ELSE            reduce using rule 24 (elsif_block -> END .)
-    END             reduce using rule 24 (elsif_block -> END .)
+    THEN            reduce using rule 30 (bexpr -> bexpr AND bexpr .)
+    AND             reduce using rule 30 (bexpr -> bexpr AND bexpr .)
+    OR              reduce using rule 30 (bexpr -> bexpr AND bexpr .)
+    BODY            reduce using rule 30 (bexpr -> bexpr AND bexpr .)
+    DO              reduce using rule 30 (bexpr -> bexpr AND bexpr .)
+
+  ! AND             [ shift and go to state 59 ]
+  ! OR              [ shift and go to state 41 ]
 
 
 state 70
 
-    (21) if_statement -> IF bexpr DO exprs elsif_block .
+    (23) if_statement -> IF bexpr THEN exprs . END
+    (24) if_statement -> IF bexpr THEN exprs . elsif_blocks END
+    (25) if_statement -> IF bexpr THEN exprs . ELSE exprs END
+    (26) if_statement -> IF bexpr THEN exprs . elsif_blocks ELSE exprs END
+    (27) elsif_blocks -> . elsif_blocks elsif_block
+    (28) elsif_blocks -> . elsif_block
+    (29) elsif_block -> . ELSIF bexpr THEN exprs
 
-    EQUALS          reduce using rule 21 (if_statement -> IF bexpr DO exprs elsif_block .)
-    LT              reduce using rule 21 (if_statement -> IF bexpr DO exprs elsif_block .)
-    GT              reduce using rule 21 (if_statement -> IF bexpr DO exprs elsif_block .)
-    LTE             reduce using rule 21 (if_statement -> IF bexpr DO exprs elsif_block .)
-    GTE             reduce using rule 21 (if_statement -> IF bexpr DO exprs elsif_block .)
-    DO              reduce using rule 21 (if_statement -> IF bexpr DO exprs elsif_block .)
-    AND             reduce using rule 21 (if_statement -> IF bexpr DO exprs elsif_block .)
-    OR              reduce using rule 21 (if_statement -> IF bexpr DO exprs elsif_block .)
-    COMMA           reduce using rule 21 (if_statement -> IF bexpr DO exprs elsif_block .)
-    BODY            reduce using rule 21 (if_statement -> IF bexpr DO exprs elsif_block .)
-    ID              reduce using rule 21 (if_statement -> IF bexpr DO exprs elsif_block .)
-    WHILE           reduce using rule 21 (if_statement -> IF bexpr DO exprs elsif_block .)
-    IF              reduce using rule 21 (if_statement -> IF bexpr DO exprs elsif_block .)
-    $end            reduce using rule 21 (if_statement -> IF bexpr DO exprs elsif_block .)
-    ELSIF           reduce using rule 21 (if_statement -> IF bexpr DO exprs elsif_block .)
-    ELSE            reduce using rule 21 (if_statement -> IF bexpr DO exprs elsif_block .)
-    END             reduce using rule 21 (if_statement -> IF bexpr DO exprs elsif_block .)
+    END             shift and go to state 73
+    ELSE            shift and go to state 76
+    ELSIF           shift and go to state 74
 
+    elsif_blocks                   shift and go to state 75
+    elsif_block                    shift and go to state 77
 
 state 71
 
-    (23) elsif_block -> ELSE . exprs END
-    (13) exprs -> . expr exprs
-    (14) exprs -> . empty
-    (15) expr -> . control_structure
-    (16) expr -> . state_var_rd
-    (17) expr -> . state_var_wr
-    (36) empty -> .
-    (18) control_structure -> . while_loop
-    (19) control_structure -> . if_statement
-    (34) state_var_rd -> . ID LPAREN params RPAREN
-    (35) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
-    (20) while_loop -> . WHILE bexpr DO exprs END
-    (21) if_statement -> . IF bexpr DO exprs elsif_block
+    (22) while_loop -> WHILE bexpr DO exprs . END
 
-    END             reduce using rule 36 (empty -> .)
-    ID              shift and go to state 30
-    WHILE           shift and go to state 33
-    IF              shift and go to state 31
+    END             shift and go to state 78
 
-    while_loop                     shift and go to state 27
-    expr                           shift and go to state 36
-    state_var_wr                   shift and go to state 28
-    exprs                          shift and go to state 75
-    state_var_rd                   shift and go to state 23
-    if_statement                   shift and go to state 26
-    control_structure              shift and go to state 24
-    empty                          shift and go to state 38
 
 state 72
 
-    (22) elsif_block -> ELSIF . bexpr DO exprs elsif_block
-    (25) bexpr -> . bexpr AND bexpr
-    (26) bexpr -> . bexpr OR bexpr
-    (27) bexpr -> . expr EQUALS expr
-    (28) bexpr -> . expr LT expr
-    (29) bexpr -> . expr GT expr
-    (30) bexpr -> . expr LTE expr
-    (31) bexpr -> . expr GTE expr
-    (32) bexpr -> . NOT bexpr
-    (33) bexpr -> . expr
+    (40) state_var_wr -> ID LPAREN params RPAREN ASSIGN . expr
     (15) expr -> . control_structure
     (16) expr -> . state_var_rd
     (17) expr -> . state_var_wr
-    (18) control_structure -> . while_loop
-    (19) control_structure -> . if_statement
-    (34) state_var_rd -> . ID LPAREN params RPAREN
-    (35) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
-    (20) while_loop -> . WHILE bexpr DO exprs END
-    (21) if_statement -> . IF bexpr DO exprs elsif_block
+    (18) expr -> . loc_var_rd
+    (19) expr -> . loc_var_wr
+    (20) control_structure -> . while_loop
+    (21) control_structure -> . if_statement
+    (39) state_var_rd -> . ID LPAREN params RPAREN
+    (40) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
+    (41) loc_var_rd -> . ID
+    (42) loc_var_wr -> . ID ASSIGN expr
+    (22) while_loop -> . WHILE bexpr DO exprs END
+    (23) if_statement -> . IF bexpr THEN exprs END
+    (24) if_statement -> . IF bexpr THEN exprs elsif_blocks END
+    (25) if_statement -> . IF bexpr THEN exprs ELSE exprs END
+    (26) if_statement -> . IF bexpr THEN exprs elsif_blocks ELSE exprs END
 
-    NOT             shift and go to state 34
-    ID              shift and go to state 30
-    WHILE           shift and go to state 33
-    IF              shift and go to state 31
+    ID              shift and go to state 31
+    WHILE           shift and go to state 34
+    IF              shift and go to state 32
 
     while_loop                     shift and go to state 27
-    expr                           shift and go to state 32
+    expr                           shift and go to state 79
     state_var_wr                   shift and go to state 28
-    state_var_rd                   shift and go to state 23
+    state_var_rd                   shift and go to state 22
+    loc_var_rd                     shift and go to state 29
+    loc_var_wr                     shift and go to state 23
     if_statement                   shift and go to state 26
     control_structure              shift and go to state 24
-    bexpr                          shift and go to state 76
 
 state 73
 
-    (20) while_loop -> WHILE bexpr DO exprs END .
+    (23) if_statement -> IF bexpr THEN exprs END .
 
-    COMMA           reduce using rule 20 (while_loop -> WHILE bexpr DO exprs END .)
-    AND             reduce using rule 20 (while_loop -> WHILE bexpr DO exprs END .)
-    OR              reduce using rule 20 (while_loop -> WHILE bexpr DO exprs END .)
-    BODY            reduce using rule 20 (while_loop -> WHILE bexpr DO exprs END .)
-    DO              reduce using rule 20 (while_loop -> WHILE bexpr DO exprs END .)
-    ID              reduce using rule 20 (while_loop -> WHILE bexpr DO exprs END .)
-    WHILE           reduce using rule 20 (while_loop -> WHILE bexpr DO exprs END .)
-    IF              reduce using rule 20 (while_loop -> WHILE bexpr DO exprs END .)
-    $end            reduce using rule 20 (while_loop -> WHILE bexpr DO exprs END .)
-    ELSIF           reduce using rule 20 (while_loop -> WHILE bexpr DO exprs END .)
-    ELSE            reduce using rule 20 (while_loop -> WHILE bexpr DO exprs END .)
-    END             reduce using rule 20 (while_loop -> WHILE bexpr DO exprs END .)
-    EQUALS          reduce using rule 20 (while_loop -> WHILE bexpr DO exprs END .)
-    LT              reduce using rule 20 (while_loop -> WHILE bexpr DO exprs END .)
-    GT              reduce using rule 20 (while_loop -> WHILE bexpr DO exprs END .)
-    LTE             reduce using rule 20 (while_loop -> WHILE bexpr DO exprs END .)
-    GTE             reduce using rule 20 (while_loop -> WHILE bexpr DO exprs END .)
+    EQUALS          reduce using rule 23 (if_statement -> IF bexpr THEN exprs END .)
+    LT              reduce using rule 23 (if_statement -> IF bexpr THEN exprs END .)
+    GT              reduce using rule 23 (if_statement -> IF bexpr THEN exprs END .)
+    LTE             reduce using rule 23 (if_statement -> IF bexpr THEN exprs END .)
+    GTE             reduce using rule 23 (if_statement -> IF bexpr THEN exprs END .)
+    AND             reduce using rule 23 (if_statement -> IF bexpr THEN exprs END .)
+    OR              reduce using rule 23 (if_statement -> IF bexpr THEN exprs END .)
+    BODY            reduce using rule 23 (if_statement -> IF bexpr THEN exprs END .)
+    ID              reduce using rule 23 (if_statement -> IF bexpr THEN exprs END .)
+    WHILE           reduce using rule 23 (if_statement -> IF bexpr THEN exprs END .)
+    IF              reduce using rule 23 (if_statement -> IF bexpr THEN exprs END .)
+    END             reduce using rule 23 (if_statement -> IF bexpr THEN exprs END .)
+    $end            reduce using rule 23 (if_statement -> IF bexpr THEN exprs END .)
+    ELSE            reduce using rule 23 (if_statement -> IF bexpr THEN exprs END .)
+    ELSIF           reduce using rule 23 (if_statement -> IF bexpr THEN exprs END .)
+    THEN            reduce using rule 23 (if_statement -> IF bexpr THEN exprs END .)
+    DO              reduce using rule 23 (if_statement -> IF bexpr THEN exprs END .)
 
 
 state 74
 
-    (35) state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .
+    (29) elsif_block -> ELSIF . bexpr THEN exprs
+    (30) bexpr -> . bexpr AND bexpr
+    (31) bexpr -> . bexpr OR bexpr
+    (32) bexpr -> . expr EQUALS expr
+    (33) bexpr -> . expr LT expr
+    (34) bexpr -> . expr GT expr
+    (35) bexpr -> . expr LTE expr
+    (36) bexpr -> . expr GTE expr
+    (37) bexpr -> . NOT bexpr
+    (38) bexpr -> . expr
+    (15) expr -> . control_structure
+    (16) expr -> . state_var_rd
+    (17) expr -> . state_var_wr
+    (18) expr -> . loc_var_rd
+    (19) expr -> . loc_var_wr
+    (20) control_structure -> . while_loop
+    (21) control_structure -> . if_statement
+    (39) state_var_rd -> . ID LPAREN params RPAREN
+    (40) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
+    (41) loc_var_rd -> . ID
+    (42) loc_var_wr -> . ID ASSIGN expr
+    (22) while_loop -> . WHILE bexpr DO exprs END
+    (23) if_statement -> . IF bexpr THEN exprs END
+    (24) if_statement -> . IF bexpr THEN exprs elsif_blocks END
+    (25) if_statement -> . IF bexpr THEN exprs ELSE exprs END
+    (26) if_statement -> . IF bexpr THEN exprs elsif_blocks ELSE exprs END
 
-    COMMA           reduce using rule 35 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
-    AND             reduce using rule 35 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
-    OR              reduce using rule 35 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
-    BODY            reduce using rule 35 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
-    DO              reduce using rule 35 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
-    ID              reduce using rule 35 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
-    WHILE           reduce using rule 35 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
-    IF              reduce using rule 35 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
-    ELSIF           reduce using rule 35 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
-    ELSE            reduce using rule 35 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
-    END             reduce using rule 35 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
-    EQUALS          reduce using rule 35 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
-    LT              reduce using rule 35 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
-    GT              reduce using rule 35 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
-    LTE             reduce using rule 35 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
-    GTE             reduce using rule 35 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
-    $end            reduce using rule 35 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
+    NOT             shift and go to state 35
+    ID              shift and go to state 31
+    WHILE           shift and go to state 34
+    IF              shift and go to state 32
 
+    while_loop                     shift and go to state 27
+    expr                           shift and go to state 33
+    state_var_wr                   shift and go to state 28
+    state_var_rd                   shift and go to state 22
+    loc_var_rd                     shift and go to state 29
+    loc_var_wr                     shift and go to state 23
+    if_statement                   shift and go to state 26
+    control_structure              shift and go to state 24
+    bexpr                          shift and go to state 80
 
 state 75
 
-    (23) elsif_block -> ELSE exprs . END
+    (24) if_statement -> IF bexpr THEN exprs elsif_blocks . END
+    (26) if_statement -> IF bexpr THEN exprs elsif_blocks . ELSE exprs END
+    (27) elsif_blocks -> elsif_blocks . elsif_block
+    (29) elsif_block -> . ELSIF bexpr THEN exprs
 
-    END             shift and go to state 77
+    END             shift and go to state 81
+    ELSE            shift and go to state 82
+    ELSIF           shift and go to state 74
 
+    elsif_block                    shift and go to state 83
 
 state 76
 
-    (22) elsif_block -> ELSIF bexpr . DO exprs elsif_block
-    (25) bexpr -> bexpr . AND bexpr
-    (26) bexpr -> bexpr . OR bexpr
-
-    DO              shift and go to state 78
-    AND             shift and go to state 39
-    OR              shift and go to state 41
-
-
-state 77
-
-    (23) elsif_block -> ELSE exprs END .
-
-    EQUALS          reduce using rule 23 (elsif_block -> ELSE exprs END .)
-    LT              reduce using rule 23 (elsif_block -> ELSE exprs END .)
-    GT              reduce using rule 23 (elsif_block -> ELSE exprs END .)
-    LTE             reduce using rule 23 (elsif_block -> ELSE exprs END .)
-    GTE             reduce using rule 23 (elsif_block -> ELSE exprs END .)
-    COMMA           reduce using rule 23 (elsif_block -> ELSE exprs END .)
-    AND             reduce using rule 23 (elsif_block -> ELSE exprs END .)
-    OR              reduce using rule 23 (elsif_block -> ELSE exprs END .)
-    BODY            reduce using rule 23 (elsif_block -> ELSE exprs END .)
-    ID              reduce using rule 23 (elsif_block -> ELSE exprs END .)
-    WHILE           reduce using rule 23 (elsif_block -> ELSE exprs END .)
-    IF              reduce using rule 23 (elsif_block -> ELSE exprs END .)
-    $end            reduce using rule 23 (elsif_block -> ELSE exprs END .)
-    DO              reduce using rule 23 (elsif_block -> ELSE exprs END .)
-    ELSIF           reduce using rule 23 (elsif_block -> ELSE exprs END .)
-    ELSE            reduce using rule 23 (elsif_block -> ELSE exprs END .)
-    END             reduce using rule 23 (elsif_block -> ELSE exprs END .)
-
-
-state 78
-
-    (22) elsif_block -> ELSIF bexpr DO . exprs elsif_block
+    (25) if_statement -> IF bexpr THEN exprs ELSE . exprs END
     (13) exprs -> . expr exprs
     (14) exprs -> . empty
     (15) expr -> . control_structure
     (16) expr -> . state_var_rd
     (17) expr -> . state_var_wr
-    (36) empty -> .
-    (18) control_structure -> . while_loop
-    (19) control_structure -> . if_statement
-    (34) state_var_rd -> . ID LPAREN params RPAREN
-    (35) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
-    (20) while_loop -> . WHILE bexpr DO exprs END
-    (21) if_statement -> . IF bexpr DO exprs elsif_block
+    (18) expr -> . loc_var_rd
+    (19) expr -> . loc_var_wr
+    (43) empty -> .
+    (20) control_structure -> . while_loop
+    (21) control_structure -> . if_statement
+    (39) state_var_rd -> . ID LPAREN params RPAREN
+    (40) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
+    (41) loc_var_rd -> . ID
+    (42) loc_var_wr -> . ID ASSIGN expr
+    (22) while_loop -> . WHILE bexpr DO exprs END
+    (23) if_statement -> . IF bexpr THEN exprs END
+    (24) if_statement -> . IF bexpr THEN exprs elsif_blocks END
+    (25) if_statement -> . IF bexpr THEN exprs ELSE exprs END
+    (26) if_statement -> . IF bexpr THEN exprs elsif_blocks ELSE exprs END
 
-    ELSIF           reduce using rule 36 (empty -> .)
-    ELSE            reduce using rule 36 (empty -> .)
-    END             reduce using rule 36 (empty -> .)
-    ID              shift and go to state 30
-    WHILE           shift and go to state 33
-    IF              shift and go to state 31
+    END             reduce using rule 43 (empty -> .)
+    ID              shift and go to state 31
+    WHILE           shift and go to state 34
+    IF              shift and go to state 32
 
     while_loop                     shift and go to state 27
-    expr                           shift and go to state 36
+    expr                           shift and go to state 38
     state_var_wr                   shift and go to state 28
-    exprs                          shift and go to state 79
-    state_var_rd                   shift and go to state 23
+    exprs                          shift and go to state 84
+    state_var_rd                   shift and go to state 22
+    loc_var_rd                     shift and go to state 29
+    loc_var_wr                     shift and go to state 23
     if_statement                   shift and go to state 26
     control_structure              shift and go to state 24
-    empty                          shift and go to state 38
+    empty                          shift and go to state 37
+
+state 77
+
+    (28) elsif_blocks -> elsif_block .
+
+    END             reduce using rule 28 (elsif_blocks -> elsif_block .)
+    ELSE            reduce using rule 28 (elsif_blocks -> elsif_block .)
+    ELSIF           reduce using rule 28 (elsif_blocks -> elsif_block .)
+
+
+state 78
+
+    (22) while_loop -> WHILE bexpr DO exprs END .
+
+    AND             reduce using rule 22 (while_loop -> WHILE bexpr DO exprs END .)
+    OR              reduce using rule 22 (while_loop -> WHILE bexpr DO exprs END .)
+    BODY            reduce using rule 22 (while_loop -> WHILE bexpr DO exprs END .)
+    THEN            reduce using rule 22 (while_loop -> WHILE bexpr DO exprs END .)
+    DO              reduce using rule 22 (while_loop -> WHILE bexpr DO exprs END .)
+    ID              reduce using rule 22 (while_loop -> WHILE bexpr DO exprs END .)
+    WHILE           reduce using rule 22 (while_loop -> WHILE bexpr DO exprs END .)
+    IF              reduce using rule 22 (while_loop -> WHILE bexpr DO exprs END .)
+    END             reduce using rule 22 (while_loop -> WHILE bexpr DO exprs END .)
+    EQUALS          reduce using rule 22 (while_loop -> WHILE bexpr DO exprs END .)
+    LT              reduce using rule 22 (while_loop -> WHILE bexpr DO exprs END .)
+    GT              reduce using rule 22 (while_loop -> WHILE bexpr DO exprs END .)
+    LTE             reduce using rule 22 (while_loop -> WHILE bexpr DO exprs END .)
+    GTE             reduce using rule 22 (while_loop -> WHILE bexpr DO exprs END .)
+    ELSE            reduce using rule 22 (while_loop -> WHILE bexpr DO exprs END .)
+    ELSIF           reduce using rule 22 (while_loop -> WHILE bexpr DO exprs END .)
+    $end            reduce using rule 22 (while_loop -> WHILE bexpr DO exprs END .)
+
 
 state 79
 
-    (22) elsif_block -> ELSIF bexpr DO exprs . elsif_block
-    (22) elsif_block -> . ELSIF bexpr DO exprs elsif_block
-    (23) elsif_block -> . ELSE exprs END
-    (24) elsif_block -> . END
+    (40) state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .
 
-    ELSIF           shift and go to state 72
-    ELSE            shift and go to state 71
-    END             shift and go to state 69
+    ID              reduce using rule 40 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
+    WHILE           reduce using rule 40 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
+    IF              reduce using rule 40 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
+    END             reduce using rule 40 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
+    AND             reduce using rule 40 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
+    OR              reduce using rule 40 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
+    BODY            reduce using rule 40 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
+    THEN            reduce using rule 40 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
+    DO              reduce using rule 40 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
+    $end            reduce using rule 40 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
+    ELSE            reduce using rule 40 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
+    ELSIF           reduce using rule 40 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
+    EQUALS          reduce using rule 40 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
+    LT              reduce using rule 40 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
+    GT              reduce using rule 40 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
+    LTE             reduce using rule 40 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
+    GTE             reduce using rule 40 (state_var_wr -> ID LPAREN params RPAREN ASSIGN expr .)
 
-    elsif_block                    shift and go to state 80
 
 state 80
 
-    (22) elsif_block -> ELSIF bexpr DO exprs elsif_block .
+    (29) elsif_block -> ELSIF bexpr . THEN exprs
+    (30) bexpr -> bexpr . AND bexpr
+    (31) bexpr -> bexpr . OR bexpr
 
-    EQUALS          reduce using rule 22 (elsif_block -> ELSIF bexpr DO exprs elsif_block .)
-    LT              reduce using rule 22 (elsif_block -> ELSIF bexpr DO exprs elsif_block .)
-    GT              reduce using rule 22 (elsif_block -> ELSIF bexpr DO exprs elsif_block .)
-    LTE             reduce using rule 22 (elsif_block -> ELSIF bexpr DO exprs elsif_block .)
-    GTE             reduce using rule 22 (elsif_block -> ELSIF bexpr DO exprs elsif_block .)
-    COMMA           reduce using rule 22 (elsif_block -> ELSIF bexpr DO exprs elsif_block .)
-    AND             reduce using rule 22 (elsif_block -> ELSIF bexpr DO exprs elsif_block .)
-    OR              reduce using rule 22 (elsif_block -> ELSIF bexpr DO exprs elsif_block .)
-    BODY            reduce using rule 22 (elsif_block -> ELSIF bexpr DO exprs elsif_block .)
-    ID              reduce using rule 22 (elsif_block -> ELSIF bexpr DO exprs elsif_block .)
-    WHILE           reduce using rule 22 (elsif_block -> ELSIF bexpr DO exprs elsif_block .)
-    IF              reduce using rule 22 (elsif_block -> ELSIF bexpr DO exprs elsif_block .)
-    $end            reduce using rule 22 (elsif_block -> ELSIF bexpr DO exprs elsif_block .)
-    DO              reduce using rule 22 (elsif_block -> ELSIF bexpr DO exprs elsif_block .)
-    ELSIF           reduce using rule 22 (elsif_block -> ELSIF bexpr DO exprs elsif_block .)
-    ELSE            reduce using rule 22 (elsif_block -> ELSIF bexpr DO exprs elsif_block .)
-    END             reduce using rule 22 (elsif_block -> ELSIF bexpr DO exprs elsif_block .)
+    THEN            shift and go to state 85
+    AND             shift and go to state 59
+    OR              shift and go to state 41
+
+
+state 81
+
+    (24) if_statement -> IF bexpr THEN exprs elsif_blocks END .
+
+    EQUALS          reduce using rule 24 (if_statement -> IF bexpr THEN exprs elsif_blocks END .)
+    LT              reduce using rule 24 (if_statement -> IF bexpr THEN exprs elsif_blocks END .)
+    GT              reduce using rule 24 (if_statement -> IF bexpr THEN exprs elsif_blocks END .)
+    LTE             reduce using rule 24 (if_statement -> IF bexpr THEN exprs elsif_blocks END .)
+    GTE             reduce using rule 24 (if_statement -> IF bexpr THEN exprs elsif_blocks END .)
+    AND             reduce using rule 24 (if_statement -> IF bexpr THEN exprs elsif_blocks END .)
+    OR              reduce using rule 24 (if_statement -> IF bexpr THEN exprs elsif_blocks END .)
+    BODY            reduce using rule 24 (if_statement -> IF bexpr THEN exprs elsif_blocks END .)
+    ID              reduce using rule 24 (if_statement -> IF bexpr THEN exprs elsif_blocks END .)
+    WHILE           reduce using rule 24 (if_statement -> IF bexpr THEN exprs elsif_blocks END .)
+    IF              reduce using rule 24 (if_statement -> IF bexpr THEN exprs elsif_blocks END .)
+    END             reduce using rule 24 (if_statement -> IF bexpr THEN exprs elsif_blocks END .)
+    $end            reduce using rule 24 (if_statement -> IF bexpr THEN exprs elsif_blocks END .)
+    ELSE            reduce using rule 24 (if_statement -> IF bexpr THEN exprs elsif_blocks END .)
+    ELSIF           reduce using rule 24 (if_statement -> IF bexpr THEN exprs elsif_blocks END .)
+    THEN            reduce using rule 24 (if_statement -> IF bexpr THEN exprs elsif_blocks END .)
+    DO              reduce using rule 24 (if_statement -> IF bexpr THEN exprs elsif_blocks END .)
+
+
+state 82
+
+    (26) if_statement -> IF bexpr THEN exprs elsif_blocks ELSE . exprs END
+    (13) exprs -> . expr exprs
+    (14) exprs -> . empty
+    (15) expr -> . control_structure
+    (16) expr -> . state_var_rd
+    (17) expr -> . state_var_wr
+    (18) expr -> . loc_var_rd
+    (19) expr -> . loc_var_wr
+    (43) empty -> .
+    (20) control_structure -> . while_loop
+    (21) control_structure -> . if_statement
+    (39) state_var_rd -> . ID LPAREN params RPAREN
+    (40) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
+    (41) loc_var_rd -> . ID
+    (42) loc_var_wr -> . ID ASSIGN expr
+    (22) while_loop -> . WHILE bexpr DO exprs END
+    (23) if_statement -> . IF bexpr THEN exprs END
+    (24) if_statement -> . IF bexpr THEN exprs elsif_blocks END
+    (25) if_statement -> . IF bexpr THEN exprs ELSE exprs END
+    (26) if_statement -> . IF bexpr THEN exprs elsif_blocks ELSE exprs END
+
+    END             reduce using rule 43 (empty -> .)
+    ID              shift and go to state 31
+    WHILE           shift and go to state 34
+    IF              shift and go to state 32
+
+    while_loop                     shift and go to state 27
+    expr                           shift and go to state 38
+    state_var_wr                   shift and go to state 28
+    exprs                          shift and go to state 86
+    state_var_rd                   shift and go to state 22
+    loc_var_rd                     shift and go to state 29
+    loc_var_wr                     shift and go to state 23
+    if_statement                   shift and go to state 26
+    control_structure              shift and go to state 24
+    empty                          shift and go to state 37
+
+state 83
+
+    (27) elsif_blocks -> elsif_blocks elsif_block .
+
+    END             reduce using rule 27 (elsif_blocks -> elsif_blocks elsif_block .)
+    ELSE            reduce using rule 27 (elsif_blocks -> elsif_blocks elsif_block .)
+    ELSIF           reduce using rule 27 (elsif_blocks -> elsif_blocks elsif_block .)
+
+
+state 84
+
+    (25) if_statement -> IF bexpr THEN exprs ELSE exprs . END
+
+    END             shift and go to state 87
+
+
+state 85
+
+    (29) elsif_block -> ELSIF bexpr THEN . exprs
+    (13) exprs -> . expr exprs
+    (14) exprs -> . empty
+    (15) expr -> . control_structure
+    (16) expr -> . state_var_rd
+    (17) expr -> . state_var_wr
+    (18) expr -> . loc_var_rd
+    (19) expr -> . loc_var_wr
+    (43) empty -> .
+    (20) control_structure -> . while_loop
+    (21) control_structure -> . if_statement
+    (39) state_var_rd -> . ID LPAREN params RPAREN
+    (40) state_var_wr -> . ID LPAREN params RPAREN ASSIGN expr
+    (41) loc_var_rd -> . ID
+    (42) loc_var_wr -> . ID ASSIGN expr
+    (22) while_loop -> . WHILE bexpr DO exprs END
+    (23) if_statement -> . IF bexpr THEN exprs END
+    (24) if_statement -> . IF bexpr THEN exprs elsif_blocks END
+    (25) if_statement -> . IF bexpr THEN exprs ELSE exprs END
+    (26) if_statement -> . IF bexpr THEN exprs elsif_blocks ELSE exprs END
+
+    END             reduce using rule 43 (empty -> .)
+    ELSE            reduce using rule 43 (empty -> .)
+    ELSIF           reduce using rule 43 (empty -> .)
+    ID              shift and go to state 31
+    WHILE           shift and go to state 34
+    IF              shift and go to state 32
+
+    while_loop                     shift and go to state 27
+    expr                           shift and go to state 38
+    state_var_wr                   shift and go to state 28
+    exprs                          shift and go to state 88
+    state_var_rd                   shift and go to state 22
+    loc_var_rd                     shift and go to state 29
+    loc_var_wr                     shift and go to state 23
+    if_statement                   shift and go to state 26
+    control_structure              shift and go to state 24
+    empty                          shift and go to state 37
+
+state 86
+
+    (26) if_statement -> IF bexpr THEN exprs elsif_blocks ELSE exprs . END
+
+    END             shift and go to state 89
+
+
+state 87
+
+    (25) if_statement -> IF bexpr THEN exprs ELSE exprs END .
+
+    EQUALS          reduce using rule 25 (if_statement -> IF bexpr THEN exprs ELSE exprs END .)
+    LT              reduce using rule 25 (if_statement -> IF bexpr THEN exprs ELSE exprs END .)
+    GT              reduce using rule 25 (if_statement -> IF bexpr THEN exprs ELSE exprs END .)
+    LTE             reduce using rule 25 (if_statement -> IF bexpr THEN exprs ELSE exprs END .)
+    GTE             reduce using rule 25 (if_statement -> IF bexpr THEN exprs ELSE exprs END .)
+    AND             reduce using rule 25 (if_statement -> IF bexpr THEN exprs ELSE exprs END .)
+    OR              reduce using rule 25 (if_statement -> IF bexpr THEN exprs ELSE exprs END .)
+    BODY            reduce using rule 25 (if_statement -> IF bexpr THEN exprs ELSE exprs END .)
+    ID              reduce using rule 25 (if_statement -> IF bexpr THEN exprs ELSE exprs END .)
+    WHILE           reduce using rule 25 (if_statement -> IF bexpr THEN exprs ELSE exprs END .)
+    IF              reduce using rule 25 (if_statement -> IF bexpr THEN exprs ELSE exprs END .)
+    END             reduce using rule 25 (if_statement -> IF bexpr THEN exprs ELSE exprs END .)
+    $end            reduce using rule 25 (if_statement -> IF bexpr THEN exprs ELSE exprs END .)
+    ELSE            reduce using rule 25 (if_statement -> IF bexpr THEN exprs ELSE exprs END .)
+    ELSIF           reduce using rule 25 (if_statement -> IF bexpr THEN exprs ELSE exprs END .)
+    THEN            reduce using rule 25 (if_statement -> IF bexpr THEN exprs ELSE exprs END .)
+    DO              reduce using rule 25 (if_statement -> IF bexpr THEN exprs ELSE exprs END .)
+
+
+state 88
+
+    (29) elsif_block -> ELSIF bexpr THEN exprs .
+
+    END             reduce using rule 29 (elsif_block -> ELSIF bexpr THEN exprs .)
+    ELSE            reduce using rule 29 (elsif_block -> ELSIF bexpr THEN exprs .)
+    ELSIF           reduce using rule 29 (elsif_block -> ELSIF bexpr THEN exprs .)
+
+
+state 89
+
+    (26) if_statement -> IF bexpr THEN exprs elsif_blocks ELSE exprs END .
+
+    EQUALS          reduce using rule 26 (if_statement -> IF bexpr THEN exprs elsif_blocks ELSE exprs END .)
+    LT              reduce using rule 26 (if_statement -> IF bexpr THEN exprs elsif_blocks ELSE exprs END .)
+    GT              reduce using rule 26 (if_statement -> IF bexpr THEN exprs elsif_blocks ELSE exprs END .)
+    LTE             reduce using rule 26 (if_statement -> IF bexpr THEN exprs elsif_blocks ELSE exprs END .)
+    GTE             reduce using rule 26 (if_statement -> IF bexpr THEN exprs elsif_blocks ELSE exprs END .)
+    AND             reduce using rule 26 (if_statement -> IF bexpr THEN exprs elsif_blocks ELSE exprs END .)
+    OR              reduce using rule 26 (if_statement -> IF bexpr THEN exprs elsif_blocks ELSE exprs END .)
+    BODY            reduce using rule 26 (if_statement -> IF bexpr THEN exprs elsif_blocks ELSE exprs END .)
+    ID              reduce using rule 26 (if_statement -> IF bexpr THEN exprs elsif_blocks ELSE exprs END .)
+    WHILE           reduce using rule 26 (if_statement -> IF bexpr THEN exprs elsif_blocks ELSE exprs END .)
+    IF              reduce using rule 26 (if_statement -> IF bexpr THEN exprs elsif_blocks ELSE exprs END .)
+    END             reduce using rule 26 (if_statement -> IF bexpr THEN exprs elsif_blocks ELSE exprs END .)
+    $end            reduce using rule 26 (if_statement -> IF bexpr THEN exprs elsif_blocks ELSE exprs END .)
+    ELSE            reduce using rule 26 (if_statement -> IF bexpr THEN exprs elsif_blocks ELSE exprs END .)
+    ELSIF           reduce using rule 26 (if_statement -> IF bexpr THEN exprs elsif_blocks ELSE exprs END .)
+    THEN            reduce using rule 26 (if_statement -> IF bexpr THEN exprs elsif_blocks ELSE exprs END .)
+    DO              reduce using rule 26 (if_statement -> IF bexpr THEN exprs elsif_blocks ELSE exprs END .)
 
 WARNING: 
 WARNING: Conflicts:
 WARNING: 
-WARNING: shift/reduce conflict for ID in state 22 resolved as shift
-WARNING: shift/reduce conflict for ID in state 36 resolved as shift
-WARNING: shift/reduce conflict for AND in state 50 resolved as shift
-WARNING: shift/reduce conflict for OR in state 50 resolved as shift
+WARNING: shift/reduce conflict for ID in state 21 resolved as shift
+WARNING: shift/reduce conflict for ID in state 38 resolved as shift
+WARNING: shift/reduce conflict for AND in state 51 resolved as shift
+WARNING: shift/reduce conflict for OR in state 51 resolved as shift
+WARNING: reduce/reduce conflict in state 54 resolved using rule (preconditions -> bexpr)
+WARNING: rejected rule (bexpr -> bexpr AND bexpr) in state 54

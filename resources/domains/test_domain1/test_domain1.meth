@@ -1,6 +1,6 @@
 m-opendoor(r, d, l, h):
   task: opendoor(r, d)
-  pre: loc(r) == l, adjacent(l, d), handle(d, h)
+  pre: loc(r) == l && adjacent(l, d) && handle(d, h)
   body:
     while !reachable(r, h) do
       move-close(r, h)

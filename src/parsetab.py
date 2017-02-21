@@ -5,9 +5,9 @@ _tabversion = '3.10'
 
 _lr_method = 'LALR'
 
-_lr_signature = 'leftANDORleftEQUALSLTGTLTEGTETHEN ELSIF DO WHILE GTE PRE TASK RPAREN LTE LT COLON COMMA ASSIGN BODY GT END STRING EQUALS ELSE LPAREN ID IF AND INT FLOAT NOT ORmethods : method methods\n               | empty         method : ID LPAREN params RPAREN COLON task pre bodyparams : ID COMMA params\n              | ID\n              |             task : TASK COLON ID LPAREN params RPARENpre : PRE COLON preconditions\n           | PRE COLON              preconditions : bexpr COMMA preconditions\n                     | bexpr                    body : BODY COLON exprsexprs : expr exprs\n             | empty     expr : control_structure\n            | state_var_rd\n            | state_var_wr     control_structure : while_loop\n                         | if_statementwhile_loop : WHILE bexpr DO exprs ENDif_statement : IF bexpr DO exprs elsif_blockelsif_block : ELSIF bexpr DO exprs elsif_block\n                   | ELSE exprs END\n                   | END                              bexpr : bexpr AND bexpr\n             | bexpr OR bexpr\n             | expr EQUALS expr\n             | expr LT expr\n             | expr GT expr\n             | expr LTE expr\n             | expr GTE expr\n             | NOT bexpr\n             | expr             state_var_rd : ID LPAREN params RPARENstate_var_wr : ID LPAREN params RPAREN ASSIGN exprempty :'
+_lr_signature = 'leftANDORleftEQUALSLTGTLTEGTETHEN ELSIF DO WHILE GTE PRE TASK RPAREN LTE LT COLON COMMA ASSIGN BODY GT END STRING EQUALS ELSE LPAREN ID IF AND INT FLOAT NOT ORmethods : method methods\n               |               method : ID LPAREN params RPAREN COLON task pre bodyparams : ID COMMA params\n              | ID\n              |             task : TASK COLON ID LPAREN params RPARENpre : PRE COLON preconditions\n           | PRE COLON              preconditions : bexpr AND preconditions\n                     | bexpr                    body : BODY COLON exprsexprs : expr exprs\n             | empty     expr : control_structure\n            | state_var_rd\n            | state_var_wr\n            | loc_var_rd\n            | loc_var_wr        control_structure : while_loop\n                         | if_statementwhile_loop : WHILE bexpr DO exprs ENDif_statement : IF bexpr THEN exprs END\n                    | IF bexpr THEN exprs elsif_blocks END\n                    | IF bexpr THEN exprs ELSE exprs END\n                    | IF bexpr THEN exprs elsif_blocks ELSE exprs ENDelsif_blocks : elsif_blocks elsif_block\n                    | elsif_block             elsif_block : ELSIF bexpr THEN exprsbexpr : bexpr AND bexpr\n             | bexpr OR bexpr\n             | expr EQUALS expr\n             | expr LT expr\n             | expr GT expr\n             | expr LTE expr\n             | expr GTE expr\n             | NOT bexpr\n             | expr             state_var_rd : ID LPAREN params RPARENstate_var_wr : ID LPAREN params RPAREN ASSIGN exprloc_var_rd : IDloc_var_wr : ID ASSIGN exprempty :'
     
-_lr_action_items = {'DO':([23,24,26,27,28,32,43,49,50,53,55,58,59,60,61,62,65,69,70,73,74,76,77,80,],[-16,-15,-19,-18,-17,-33,57,63,-32,-25,-26,-29,-31,-27,-28,-30,-34,-24,-21,-20,-35,78,-23,-22,]),'LTE':([23,24,26,27,28,32,65,69,70,73,74,77,80,],[-16,-15,-19,-18,-17,48,-34,-24,-21,-20,-35,-23,-22,]),'WHILE':([20,22,23,24,26,27,28,31,33,34,36,39,40,41,44,45,46,47,48,57,63,65,68,69,70,71,72,73,74,77,78,80,],[33,33,-16,-15,-19,-18,-17,33,33,33,33,33,33,33,33,33,33,33,33,33,33,-34,33,-24,-21,33,33,-20,-35,-23,33,-22,]),'PRE':([13,64,],[16,-7,]),'TASK':([11,],[14,]),'RPAREN':([6,7,8,10,12,35,42,51,56,],[-6,9,-5,-6,-4,-6,-6,64,65,]),'LT':([23,24,26,27,28,32,65,69,70,73,74,77,80,],[-16,-15,-19,-18,-17,47,-34,-24,-21,-20,-35,-23,-22,]),'COMMA':([8,23,24,25,26,27,28,32,50,53,55,58,59,60,61,62,65,69,70,73,74,77,80,],[10,-16,-15,40,-19,-18,-17,-33,-32,-25,-26,-29,-31,-27,-28,-30,-34,-24,-21,-20,-35,-23,-22,]),'COLON':([9,14,16,19,],[11,17,20,22,]),'ASSIGN':([65,],[68,]),'$end':([0,1,2,4,5,18,22,23,24,26,27,28,36,37,38,52,65,69,70,73,74,77,80,],[-36,0,-36,-2,-1,-3,-36,-16,-15,-19,-18,-17,-36,-12,-14,-13,-34,-24,-21,-20,-35,-23,-22,]),'BODY':([15,20,23,24,25,26,27,28,29,32,50,53,54,55,58,59,60,61,62,65,69,70,73,74,77,80,],[19,-9,-16,-15,-11,-19,-18,-17,-8,-33,-32,-25,-10,-26,-29,-31,-27,-28,-30,-34,-24,-21,-20,-35,-23,-22,]),'GT':([23,24,26,27,28,32,65,69,70,73,74,77,80,],[-16,-15,-19,-18,-17,44,-34,-24,-21,-20,-35,-23,-22,]),'END':([23,24,26,27,28,36,38,52,57,63,65,66,67,69,70,71,73,74,75,77,78,79,80,],[-16,-15,-19,-18,-17,-36,-14,-13,-36,-36,-34,69,73,-24,-21,-36,-20,-35,77,-23,-36,69,-22,]),'GTE':([23,24,26,27,28,32,65,69,70,73,74,77,80,],[-16,-15,-19,-18,-17,45,-34,-24,-21,-20,-35,-23,-22,]),'EQUALS':([23,24,26,27,28,32,65,69,70,73,74,77,80,],[-16,-15,-19,-18,-17,46,-34,-24,-21,-20,-35,-23,-22,]),'ELSE':([23,24,26,27,28,36,38,52,57,65,66,69,70,73,74,77,78,79,80,],[-16,-15,-19,-18,-17,-36,-14,-13,-36,-34,71,-24,-21,-20,-35,-23,-36,71,-22,]),'ELSIF':([23,24,26,27,28,36,38,52,57,65,66,69,70,73,74,77,78,79,80,],[-16,-15,-19,-18,-17,-36,-14,-13,-36,-34,72,-24,-21,-20,-35,-23,-36,72,-22,]),'LPAREN':([3,21,30,],[6,35,42,]),'ID':([0,2,6,10,17,18,20,22,23,24,26,27,28,31,33,34,35,36,37,38,39,40,41,42,44,45,46,47,48,52,57,63,65,68,69,70,71,72,73,74,77,78,80,],[3,3,8,8,21,-3,30,30,-16,-15,-19,-18,-17,30,30,30,8,30,-12,-14,30,30,30,8,30,30,30,30,30,-13,30,30,-34,30,-24,-21,30,30,-20,-35,-23,30,-22,]),'IF':([20,22,23,24,26,27,28,31,33,34,36,39,40,41,44,45,46,47,48,57,63,65,68,69,70,71,72,73,74,77,78,80,],[31,31,-16,-15,-19,-18,-17,31,31,31,31,31,31,31,31,31,31,31,31,31,31,-34,31,-24,-21,31,31,-20,-35,-23,31,-22,]),'AND':([23,24,25,26,27,28,32,43,49,50,53,55,58,59,60,61,62,65,69,70,73,74,76,77,80,],[-16,-15,39,-19,-18,-17,-33,39,39,39,-25,-26,-29,-31,-27,-28,-30,-34,-24,-21,-20,-35,39,-23,-22,]),'NOT':([20,31,33,34,39,40,41,72,],[34,34,34,34,34,34,34,34,]),'OR':([23,24,25,26,27,28,32,43,49,50,53,55,58,59,60,61,62,65,69,70,73,74,76,77,80,],[-16,-15,41,-19,-18,-17,-33,41,41,41,-25,-26,-29,-31,-27,-28,-30,-34,-24,-21,-20,-35,41,-23,-22,]),}
+_lr_action_items = {'DO':([22,23,24,26,27,28,29,31,33,50,51,56,57,61,62,63,64,65,68,69,73,78,79,81,87,89,],[-16,-19,-15,-21,-20,-17,-18,-41,-38,66,-37,-31,-42,-34,-36,-32,-33,-35,-39,-30,-23,-22,-40,-24,-25,-26,]),'LPAREN':([3,20,31,],[5,36,43,]),'THEN':([22,23,24,26,27,28,29,31,33,44,51,56,57,61,62,63,64,65,68,69,73,78,79,80,81,87,89,],[-16,-19,-15,-21,-20,-17,-18,-41,-38,60,-37,-31,-42,-34,-36,-32,-33,-35,-39,-30,-23,-22,-40,85,-24,-25,-26,]),'WHILE':([19,21,22,23,24,26,27,28,29,31,32,34,35,38,40,41,42,45,46,47,48,49,57,59,60,66,68,72,73,74,76,78,79,81,82,85,87,89,],[34,34,-16,-19,-15,-21,-20,-17,-18,-41,34,34,34,34,34,34,34,34,34,34,34,34,-42,34,34,34,-39,34,-23,34,34,-22,-40,-24,34,34,-25,-26,]),'PRE':([12,67,],[15,-7,]),'TASK':([10,],[13,]),'RPAREN':([5,6,7,9,11,36,43,52,58,],[-6,8,-5,-6,-4,-6,-6,67,68,]),'LT':([22,23,24,26,27,28,29,31,33,57,68,73,78,79,81,87,89,],[-16,-19,-15,-21,-20,-17,-18,-41,48,-42,-39,-23,-22,-40,-24,-25,-26,]),'COMMA':([7,],[9,]),'COLON':([8,13,15,18,],[10,16,19,21,]),'ASSIGN':([31,68,],[42,72,]),'$end':([0,1,2,4,17,21,22,23,24,26,27,28,29,31,37,38,39,53,57,68,73,78,79,81,87,89,],[-2,0,-2,-1,-3,-43,-16,-19,-15,-21,-20,-17,-18,-41,-14,-43,-12,-13,-42,-39,-23,-22,-40,-24,-25,-26,]),'BODY':([14,19,22,23,24,25,26,27,28,29,30,31,33,51,54,55,56,57,61,62,63,64,65,68,69,73,78,79,81,87,89,],[18,-9,-16,-19,-15,-11,-21,-20,-17,-18,-8,-41,-38,-37,-11,-10,-31,-42,-34,-36,-32,-33,-35,-39,-30,-23,-22,-40,-24,-25,-26,]),'GT':([22,23,24,26,27,28,29,31,33,57,68,73,78,79,81,87,89,],[-16,-19,-15,-21,-20,-17,-18,-41,45,-42,-39,-23,-22,-40,-24,-25,-26,]),'END':([22,23,24,26,27,28,29,31,37,38,53,57,60,66,68,70,71,73,75,76,77,78,79,81,82,83,84,85,86,87,88,89,],[-16,-19,-15,-21,-20,-17,-18,-41,-14,-43,-13,-42,-43,-43,-39,73,78,-23,81,-43,-28,-22,-40,-24,-43,-27,87,-43,89,-25,-29,-26,]),'GTE':([22,23,24,26,27,28,29,31,33,57,68,73,78,79,81,87,89,],[-16,-19,-15,-21,-20,-17,-18,-41,46,-42,-39,-23,-22,-40,-24,-25,-26,]),'EQUALS':([22,23,24,26,27,28,29,31,33,57,68,73,78,79,81,87,89,],[-16,-19,-15,-21,-20,-17,-18,-41,47,-42,-39,-23,-22,-40,-24,-25,-26,]),'ELSE':([22,23,24,26,27,28,29,31,37,38,53,57,60,68,70,73,75,77,78,79,81,83,85,87,88,89,],[-16,-19,-15,-21,-20,-17,-18,-41,-14,-43,-13,-42,-43,-39,76,-23,82,-28,-22,-40,-24,-27,-43,-25,-29,-26,]),'LTE':([22,23,24,26,27,28,29,31,33,57,68,73,78,79,81,87,89,],[-16,-19,-15,-21,-20,-17,-18,-41,49,-42,-39,-23,-22,-40,-24,-25,-26,]),'ID':([0,2,5,9,16,17,19,21,22,23,24,26,27,28,29,31,32,34,35,36,37,38,39,40,41,42,43,45,46,47,48,49,53,57,59,60,66,68,72,73,74,76,78,79,81,82,85,87,89,],[3,3,7,7,20,-3,31,31,-16,-19,-15,-21,-20,-17,-18,-41,31,31,31,7,-14,31,-12,31,31,31,7,31,31,31,31,31,-13,-42,31,31,31,-39,31,-23,31,31,-22,-40,-24,31,31,-25,-26,]),'IF':([19,21,22,23,24,26,27,28,29,31,32,34,35,38,40,41,42,45,46,47,48,49,57,59,60,66,68,72,73,74,76,78,79,81,82,85,87,89,],[32,32,-16,-19,-15,-21,-20,-17,-18,-41,32,32,32,32,32,32,32,32,32,32,32,32,-42,32,32,32,-39,32,-23,32,32,-22,-40,-24,32,32,-25,-26,]),'AND':([22,23,24,25,26,27,28,29,31,33,44,50,51,54,56,57,61,62,63,64,65,68,69,73,78,79,80,81,87,89,],[-16,-19,-15,40,-21,-20,-17,-18,-41,-38,59,59,59,-30,-31,-42,-34,-36,-32,-33,-35,-39,-30,-23,-22,-40,59,-24,-25,-26,]),'ELSIF':([22,23,24,26,27,28,29,31,37,38,53,57,60,68,70,73,75,77,78,79,81,83,85,87,88,89,],[-16,-19,-15,-21,-20,-17,-18,-41,-14,-43,-13,-42,-43,-39,74,-23,74,-28,-22,-40,-24,-27,-43,-25,-29,-26,]),'NOT':([19,32,34,35,40,41,59,74,],[35,35,35,35,35,35,35,35,]),'OR':([22,23,24,25,26,27,28,29,31,33,44,50,51,54,56,57,61,62,63,64,65,68,69,73,78,79,80,81,87,89,],[-16,-19,-15,41,-21,-20,-17,-18,-41,-38,41,41,41,-30,-31,-42,-34,-36,-32,-33,-35,-39,-30,-23,-22,-40,41,-24,-25,-26,]),}
 
 _lr_action = {}
 for _k, _v in _lr_action_items.items():
@@ -16,7 +16,7 @@ for _k, _v in _lr_action_items.items():
       _lr_action[_x][_k] = _y
 del _lr_action_items
 
-_lr_goto_items = {'pre':([13,],[15,]),'body':([15,],[18,]),'task':([11,],[13,]),'methods':([0,2,],[1,5,]),'while_loop':([20,22,31,33,34,36,39,40,41,44,45,46,47,48,57,63,68,71,72,78,],[27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,]),'expr':([20,22,31,33,34,36,39,40,41,44,45,46,47,48,57,63,68,71,72,78,],[32,36,32,32,32,36,32,32,32,58,59,60,61,62,36,36,74,36,32,36,]),'state_var_wr':([20,22,31,33,34,36,39,40,41,44,45,46,47,48,57,63,68,71,72,78,],[28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,]),'exprs':([22,36,57,63,71,78,],[37,52,66,67,75,79,]),'state_var_rd':([20,22,31,33,34,36,39,40,41,44,45,46,47,48,57,63,68,71,72,78,],[23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,]),'params':([6,10,35,42,],[7,12,51,56,]),'bexpr':([20,31,33,34,39,40,41,72,],[25,43,49,50,53,25,55,76,]),'elsif_block':([66,79,],[70,80,]),'preconditions':([20,40,],[29,54,]),'if_statement':([20,22,31,33,34,36,39,40,41,44,45,46,47,48,57,63,68,71,72,78,],[26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,]),'control_structure':([20,22,31,33,34,36,39,40,41,44,45,46,47,48,57,63,68,71,72,78,],[24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,]),'method':([0,2,],[2,2,]),'empty':([0,2,22,36,57,63,71,78,],[4,4,38,38,38,38,38,38,]),}
+_lr_goto_items = {'pre':([12,],[14,]),'body':([14,],[17,]),'task':([10,],[12,]),'methods':([0,2,],[1,4,]),'while_loop':([19,21,32,34,35,38,40,41,42,45,46,47,48,49,59,60,66,72,74,76,82,85,],[27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,]),'elsif_blocks':([70,],[75,]),'expr':([19,21,32,34,35,38,40,41,42,45,46,47,48,49,59,60,66,72,74,76,82,85,],[33,38,33,33,33,38,33,33,57,61,62,63,64,65,33,38,38,79,33,38,38,38,]),'state_var_wr':([19,21,32,34,35,38,40,41,42,45,46,47,48,49,59,60,66,72,74,76,82,85,],[28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,]),'exprs':([21,38,60,66,76,82,85,],[39,53,70,71,84,86,88,]),'state_var_rd':([19,21,32,34,35,38,40,41,42,45,46,47,48,49,59,60,66,72,74,76,82,85,],[22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,]),'loc_var_rd':([19,21,32,34,35,38,40,41,42,45,46,47,48,49,59,60,66,72,74,76,82,85,],[29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,]),'params':([5,9,36,43,],[6,11,52,58,]),'empty':([21,38,60,66,76,82,85,],[37,37,37,37,37,37,37,]),'loc_var_wr':([19,21,32,34,35,38,40,41,42,45,46,47,48,49,59,60,66,72,74,76,82,85,],[23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,]),'elsif_block':([70,75,],[77,83,]),'preconditions':([19,40,],[30,55,]),'if_statement':([19,21,32,34,35,38,40,41,42,45,46,47,48,49,59,60,66,72,74,76,82,85,],[26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,]),'control_structure':([19,21,32,34,35,38,40,41,42,45,46,47,48,49,59,60,66,72,74,76,82,85,],[24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,]),'method':([0,2,],[2,2,]),'bexpr':([19,32,34,35,40,41,59,74,],[25,44,50,51,54,56,69,80,]),}
 
 _lr_goto = {}
 for _k, _v in _lr_goto_items.items():
@@ -27,39 +27,46 @@ del _lr_goto_items
 _lr_productions = [
   ("S' -> methods","S'",1,None,None,None),
   ('methods -> method methods','methods',2,'p_methods','yacc_rules.py',150),
-  ('methods -> empty','methods',1,'p_methods','yacc_rules.py',151),
-  ('method -> ID LPAREN params RPAREN COLON task pre body','method',8,'p_method','yacc_rules.py',163),
-  ('params -> ID COMMA params','params',3,'p_params','yacc_rules.py',179),
-  ('params -> ID','params',1,'p_params','yacc_rules.py',180),
-  ('params -> <empty>','params',0,'p_params','yacc_rules.py',181),
-  ('task -> TASK COLON ID LPAREN params RPAREN','task',6,'p_task','yacc_rules.py',195),
-  ('pre -> PRE COLON preconditions','pre',3,'p_pre','yacc_rules.py',211),
-  ('pre -> PRE COLON','pre',2,'p_pre','yacc_rules.py',212),
-  ('preconditions -> bexpr COMMA preconditions','preconditions',3,'p_precon_list','yacc_rules.py',219),
-  ('preconditions -> bexpr','preconditions',1,'p_precon_list','yacc_rules.py',220),
-  ('body -> BODY COLON exprs','body',3,'p_body','yacc_rules.py',232),
-  ('exprs -> expr exprs','exprs',2,'p_exprs','yacc_rules.py',244),
-  ('exprs -> empty','exprs',1,'p_exprs','yacc_rules.py',245),
+  ('methods -> <empty>','methods',0,'p_methods','yacc_rules.py',151),
+  ('method -> ID LPAREN params RPAREN COLON task pre body','method',8,'p_method','yacc_rules.py',162),
+  ('params -> ID COMMA params','params',3,'p_params','yacc_rules.py',178),
+  ('params -> ID','params',1,'p_params','yacc_rules.py',179),
+  ('params -> <empty>','params',0,'p_params','yacc_rules.py',180),
+  ('task -> TASK COLON ID LPAREN params RPAREN','task',6,'p_task','yacc_rules.py',194),
+  ('pre -> PRE COLON preconditions','pre',3,'p_pre','yacc_rules.py',210),
+  ('pre -> PRE COLON','pre',2,'p_pre','yacc_rules.py',211),
+  ('preconditions -> bexpr AND preconditions','preconditions',3,'p_precon_list','yacc_rules.py',218),
+  ('preconditions -> bexpr','preconditions',1,'p_precon_list','yacc_rules.py',219),
+  ('body -> BODY COLON exprs','body',3,'p_body','yacc_rules.py',231),
+  ('exprs -> expr exprs','exprs',2,'p_exprs','yacc_rules.py',243),
+  ('exprs -> empty','exprs',1,'p_exprs','yacc_rules.py',244),
   ('expr -> control_structure','expr',1,'p_expr','yacc_rules.py',261),
   ('expr -> state_var_rd','expr',1,'p_expr','yacc_rules.py',262),
   ('expr -> state_var_wr','expr',1,'p_expr','yacc_rules.py',263),
+  ('expr -> loc_var_rd','expr',1,'p_expr','yacc_rules.py',264),
+  ('expr -> loc_var_wr','expr',1,'p_expr','yacc_rules.py',265),
   ('control_structure -> while_loop','control_structure',1,'p_control_structure','yacc_rules.py',271),
   ('control_structure -> if_statement','control_structure',1,'p_control_structure','yacc_rules.py',272),
   ('while_loop -> WHILE bexpr DO exprs END','while_loop',5,'p_while_loop','yacc_rules.py',276),
-  ('if_statement -> IF bexpr DO exprs elsif_block','if_statement',5,'p_if_statement','yacc_rules.py',284),
-  ('elsif_block -> ELSIF bexpr DO exprs elsif_block','elsif_block',5,'p_elsif_block','yacc_rules.py',292),
-  ('elsif_block -> ELSE exprs END','elsif_block',3,'p_elsif_block','yacc_rules.py',293),
-  ('elsif_block -> END','elsif_block',1,'p_elsif_block','yacc_rules.py',294),
-  ('bexpr -> bexpr AND bexpr','bexpr',3,'p_bexpr','yacc_rules.py',326),
-  ('bexpr -> bexpr OR bexpr','bexpr',3,'p_bexpr','yacc_rules.py',327),
-  ('bexpr -> expr EQUALS expr','bexpr',3,'p_bexpr','yacc_rules.py',328),
-  ('bexpr -> expr LT expr','bexpr',3,'p_bexpr','yacc_rules.py',329),
-  ('bexpr -> expr GT expr','bexpr',3,'p_bexpr','yacc_rules.py',330),
-  ('bexpr -> expr LTE expr','bexpr',3,'p_bexpr','yacc_rules.py',331),
-  ('bexpr -> expr GTE expr','bexpr',3,'p_bexpr','yacc_rules.py',332),
-  ('bexpr -> NOT bexpr','bexpr',2,'p_bexpr','yacc_rules.py',333),
-  ('bexpr -> expr','bexpr',1,'p_bexpr','yacc_rules.py',334),
-  ('state_var_rd -> ID LPAREN params RPAREN','state_var_rd',4,'p_state_var_rd','yacc_rules.py',349),
-  ('state_var_wr -> ID LPAREN params RPAREN ASSIGN expr','state_var_wr',6,'p_state_var_wr','yacc_rules.py',357),
-  ('empty -> <empty>','empty',0,'p_empty','yacc_rules.py',388),
+  ('if_statement -> IF bexpr THEN exprs END','if_statement',5,'p_if_statement','yacc_rules.py',284),
+  ('if_statement -> IF bexpr THEN exprs elsif_blocks END','if_statement',6,'p_if_statement','yacc_rules.py',285),
+  ('if_statement -> IF bexpr THEN exprs ELSE exprs END','if_statement',7,'p_if_statement','yacc_rules.py',286),
+  ('if_statement -> IF bexpr THEN exprs elsif_blocks ELSE exprs END','if_statement',8,'p_if_statement','yacc_rules.py',287),
+  ('elsif_blocks -> elsif_blocks elsif_block','elsif_blocks',2,'p_elsif_blocks','yacc_rules.py',324),
+  ('elsif_blocks -> elsif_block','elsif_blocks',1,'p_elsif_blocks','yacc_rules.py',325),
+  ('elsif_block -> ELSIF bexpr THEN exprs','elsif_block',4,'p_elsif_block','yacc_rules.py',336),
+  ('bexpr -> bexpr AND bexpr','bexpr',3,'p_bexpr','yacc_rules.py',355),
+  ('bexpr -> bexpr OR bexpr','bexpr',3,'p_bexpr','yacc_rules.py',356),
+  ('bexpr -> expr EQUALS expr','bexpr',3,'p_bexpr','yacc_rules.py',357),
+  ('bexpr -> expr LT expr','bexpr',3,'p_bexpr','yacc_rules.py',358),
+  ('bexpr -> expr GT expr','bexpr',3,'p_bexpr','yacc_rules.py',359),
+  ('bexpr -> expr LTE expr','bexpr',3,'p_bexpr','yacc_rules.py',360),
+  ('bexpr -> expr GTE expr','bexpr',3,'p_bexpr','yacc_rules.py',361),
+  ('bexpr -> NOT bexpr','bexpr',2,'p_bexpr','yacc_rules.py',362),
+  ('bexpr -> expr','bexpr',1,'p_bexpr','yacc_rules.py',363),
+  ('state_var_rd -> ID LPAREN params RPAREN','state_var_rd',4,'p_state_var_rd','yacc_rules.py',380),
+  ('state_var_wr -> ID LPAREN params RPAREN ASSIGN expr','state_var_wr',6,'p_state_var_wr','yacc_rules.py',388),
+  ('loc_var_rd -> ID','loc_var_rd',1,'p_loc_var_rd','yacc_rules.py',396),
+  ('loc_var_wr -> ID ASSIGN expr','loc_var_wr',3,'p_loc_var_wr','yacc_rules.py',403),
+  ('empty -> <empty>','empty',0,'p_empty','yacc_rules.py',425),
 ]
