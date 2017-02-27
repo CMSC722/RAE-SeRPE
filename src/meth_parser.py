@@ -33,8 +33,11 @@ following URL: http://www.dabeaz.com/ply/ply.html#ply_nn1
 _________________
 
 TODO:
-1) have the lexer build a symbol table of tasks, so that we can disambiguate
-    between task invocations and local variable reads
+1) build a symbol table of tasks using the dom-lexer, so we can issue task-invocation
+    instructions
+2) build a symbol table of actions using the dom-lexer, so we can issue action-
+    invocation instructions
+3) create action-invocation productions in this, the method-parser
 """
 
 import ply.yacc as yacc
@@ -112,13 +115,11 @@ task_table = {}         # table mapping task ids to tasks (as dicts)
 
 # initialize the singleton primitives
 e_true = dict(
-    e_type = 'TRUE',
-    arg1 = True
+    e_type = 'TRUE'
 )
 
 e_false = dict(
-    e_type = 'FALSE',
-    arg1 = False
+    e_type = 'FALSE'
 )
 
 """
@@ -249,11 +250,11 @@ def p_exprs(p):
         p[0] = dict(
             e_type = 'SEQ',
             local_variables = p[1].get('local_variables', []) + p[2]['local_variables'],
-            exprs = [p[1]] + p[2]['exprs']
+            exprs = [p[1]] + p2['exprs']
         )
     else:
         p[0] = dict(
-            e_type = None,
+            e_type = 'NOOP',
             local_variables = [],
             exprs = []
         )
@@ -433,3 +434,9 @@ PARSER API
 
 def get_method_table():
     return method_table
+
+def get_task_table():
+    return task-table
+
+def get_task_method_map():
+    return task_method_map
