@@ -1,6 +1,6 @@
 """
 Date: Thu, 9 Feb, 2017
-Last updated: Sat, 18 Feb, 2017
+Last updated: Sat, 27 Feb, 2017
 Author: Samuel Barham
 Organization: University of Maryland, College Park (PhD student)
 
@@ -50,9 +50,18 @@ TODO:
 4) have interpreter disambiguate between state-vars and tasks using the task
     table
 5) add arithmetic in ints and floats to the parser grammar
+6) make environment/state variables a global object, so that planning domain
+    state is preserved after recursive method calls
 """
 
 # import statements here
+from __future__ import print_function   # this is so that print() will be a
+                                        # a function, rather than a statement --
+                                        # in Pytnon 2.x, print() is merely a
+                                        # statement; in Pytnon 3.x, it is an
+                                        # actual function -- which allows us
+                                        # to use it in lambdas, which expect
+                                        # expressions, not statements
 import ply.lex as lex
 import ply.yacc as yacc
 from pydoc import pager     # we'll be using this to produce less-like,
@@ -76,8 +85,8 @@ the lexers and parsers, and the current method-table.
 
 # First we build the lexer and the parser, using the lexing and parsing rules
 # defined in our lexer.py and parser.py files:
-meth_lexer = lex.lex(module=meth_lexer)
-meth_parser = yacc.yacc(module=meth_parser)
+meth_lexer_instance = lex.lex(module=meth_lexer)
+meth_parser_instance = yacc.yacc(module=meth_parser)
 
 # The method table
 method_table = {}
@@ -269,10 +278,10 @@ def e_state_var_rd(instr, **dom_args):  # arg1 (id string), arg2 (list of parame
                                  arguments ({1} rather than {2})".format(id,
                                     arguments.size, task['params'].size))
         task_node = dict(
-            node_type = 'task_node'
-            task_id = id
-            args = arguments
-            task = task
+            node_type =   'task_node',
+            task_id =     id,
+            args =        arguments,
+            task =        task
         )
 
         yield (task_node, dom_args['environment'], dom_args['state_vars'])
@@ -280,7 +289,7 @@ def e_state_var_rd(instr, **dom_args):  # arg1 (id string), arg2 (list of parame
     else:
         state_var = dom_args['state_vars'][id]
         val = state_var[arg2]
-        return (val, dom_args['environment'], dom_args['state_vars'])
+        yield (val, dom_args['environment'], dom_args['state_vars'])
 
 def e_state_var_wr(instr, **dom_args):  # arg1 (id string), arg2 (list of parameter ids), arg3 (expr)
     id = instr['arg1']
@@ -348,12 +357,12 @@ def load_methods(filename, overwrite=True):
     with open(filename, 'r') as f:
         input = f.read()
     # 2) feed the string and the lexer to the parser
-    meth_parser.parse(input, lexer=meth_lexer)
+    meth_parser_instance.parse(input, lexer=meth_lexer)
     # 3) possibly overwrite the old table with this new one -- or not
     if overwrite:
-        method_table = parser.get_method_table()
+        method_table = meth_parser.get_method_table()
     # 3) grab the resulting method table from the parser and return it
-    return parser.get_method_table()
+    return meth_parser.get_method_table()
 
 def add_methods(filename):
     table_addition = load_methods(filename, overwrite=False)
@@ -379,7 +388,7 @@ def load_method_table():
         meth_table = pickle.load(input)
 
 def execute_method(meth_name, environment,
-                   method_table = parser.get_method_table(),
+                   method_table = meth_parser.get_method_table(),
                    action_model = None):
     """
     Looks up the supplied method name in the method table and attempts to
@@ -454,11 +463,11 @@ def execute_method_helper(curr_instr, meth, environment, method_table, action_mo
         'TASK_INVOCATION':  e_task_invocation
     }
 
-    op_sem = instr_table.get(curr_instr.e_type,
-             lambda *args:
-                raise NoSuchInstruction("instruction '{0}' does not exist". \
-                                         format(curr_instr['e_type']))
+    # op_sem = instr_table.get(curr_instr.e_type,
+    #   lambda *args: raise NoSuchInstruction("instruction '{0}' does not exist". \
+    #                                     format(curr_instr['e_type']))
 
+    op_sem = lambda *args: print("I'm an instruction")
     return op_sem(curr_instr, meth, environment, method_table, action_model)
 
 
@@ -486,12 +495,12 @@ def lex_print(filename, paged=True):
     input = ''
     with open(filename, 'r') as f:
         input = f.read()
-    meth_lexer.input(input)
+    meth_lexer_instance.input(input)
 
     # lex the file and aggregate the output
     output = ''
     while True:
-        tok = meth_lexer.token()
+        tok = meth_lexer_instance.token()
         if not tok:
             break
         output += (tok.__repr__() + '\n')
@@ -522,9 +531,9 @@ def parse_print(filename, paged=True, debug=True):
     input = ''
     with open(filename, 'r') as f:
         input = f.read()
-    meth_parser.parse(input, lexer=meth_lexer, tracking=True, debug=debug)
+    meth_parser_instance.parse(input, lexer=meth_lexer_instance, tracking=True, debug=debug)
 
-    method_table = parser.get_method_table()
+    method_table = meth_parser.get_method_table()
     asts_string = json.dumps(method_table, sort_keys=False, indent=4)
 
     # print the output
@@ -547,4 +556,4 @@ function as a module).
 """
 
 print_token_stream("../domains/test_domain1/test_domain1.meth")
-print_asts("../domains/test_domain1/test_domain1.meth", debug=False)
+print_asts("../domains/test_domain1/test_domain1.meth", paged = False, debug=False)

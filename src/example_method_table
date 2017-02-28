@@ -1,0 +1,136 @@
+Method file:
+
+m-opendoor(r, d, l, h):
+  task: opendoor(r, d)
+  pre: loc(r) == l && adjacent(l, d) && handle(d, h)
+  body:
+    while !reachable(r, h) do
+      move-close(r, h)
+    end
+    monitor-status(r, d)
+    if door-status(d) == closed then
+      unlatch(r, d)
+    end
+    throw-wide(r, d)
+    end-monitor-status(r, d)
+
+
+
+Yields:
+
+{
+    "m-opendoor": {
+        "exprs": [
+            {
+                "exprs": {
+                    "local_variables": [],
+                    "exprs": [
+                        {
+                            "arg1": "move-close",
+                            "arg2": [
+                                "r",
+                                "h"
+                            ],
+                            "e_type": "STATE_VAR_RD"
+                        }
+                    ],
+                    "e_type": "SEQ"
+                },
+                "cond": {
+                    "arg1": {
+                        "arg1": "reachable",
+                        "arg2": [
+                            "r",
+                            "h"
+                        ],
+                        "e_type": "STATE_VAR_RD"
+                    },
+                    "e_type": "!"
+                },
+                "e_type": "while"
+            },
+            {
+                "arg1": "monitor-status",
+                "arg2": [
+                    "r",
+                    "d"
+                ],
+                "e_type": "STATE_VAR_RD"
+            },
+            {
+                "blocks": [
+                    {
+                        "local_variables": [],
+                        "exprs": [
+                            {
+                                "arg1": "unlatch",
+                                "arg2": [
+                                    "r",
+                                    "d"
+                                ],
+                                "e_type": "STATE_VAR_RD"
+                            }
+                        ],
+                        "e_type": "SEQ"
+                    }
+                ],
+                "conds": [
+                    {
+                        "arg1": {
+                            "arg1": "door-status",
+                            "arg2": [
+                                "d"
+                            ],
+                            "e_type": "STATE_VAR_RD"
+                        },
+                        "arg2": {
+                            "arg1": "closed",
+                            "e_type": "LOC_VAR_RD"
+                        },
+                        "e_type": "=="
+                    }
+                ],
+                "e_type": "if"
+            },
+            {
+                "arg1": "throw-wide",
+                "arg2": [
+                    "r",
+                    "d"
+                ],
+                "e_type": "STATE_VAR_RD"
+            },
+            {
+                "arg1": "end-monitor-status",
+                "arg2": [
+                    "r",
+                    "d"
+                ],
+                "e_type": "STATE_VAR_RD"
+            }
+        ],
+        "task": {
+            "id": "opendoor",
+            "parameters": [
+                "r",
+                "d"
+            ]
+        },
+        "preconditions": [
+            "arg1",
+            "arg2",
+            "e_type",
+            "arg1",
+            "arg2",
+            "e_type"
+        ],
+        "parameters": [
+            "r",
+            "d",
+            "l",
+            "h"
+        ],
+        "local_variables": [],
+        "id": "m-opendoor"
+    }
+}

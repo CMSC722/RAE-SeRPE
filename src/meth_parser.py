@@ -1,6 +1,6 @@
 """
 Date: Thu, Sat, 18 Feb, 2017
-Last updated: Sat, 18 Feb, 2017
+Last updated: Sat, 27 Feb, 2017
 Author: Samuel Barham
 Organization: University of Maryland, College Park (PhD student)
 
@@ -38,6 +38,10 @@ TODO:
 2) build a symbol table of actions using the dom-lexer, so we can issue action-
     invocation instructions
 3) create action-invocation productions in this, the method-parser
+4) allow state-variables to contain arbitrary nested terms -- i.e., arguments
+    can be other state variables, as in top(pile(c))
+5) allow assignment of state-variables to local variables, as in:
+    d = top(pile(c))
 """
 
 import ply.yacc as yacc
@@ -250,7 +254,7 @@ def p_exprs(p):
         p[0] = dict(
             e_type = 'SEQ',
             local_variables = p[1].get('local_variables', []) + p[2]['local_variables'],
-            exprs = [p[1]] + p2['exprs']
+            exprs = [p[1]] + p[2]['exprs']
         )
     else:
         p[0] = dict(
