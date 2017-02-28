@@ -33,6 +33,7 @@ following URL: http://www.dabeaz.com/ply/ply.html#ply_nn1
 _________________
 
 TODO:
+0) generate the task-method-map
 1) build a symbol table of tasks using the dom-lexer, so we can issue task-invocation
     instructions
 2) build a symbol table of actions using the dom-lexer, so we can issue action-
