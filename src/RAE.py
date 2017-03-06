@@ -9,6 +9,7 @@ def Rae(method_lib, state):
     agenda = set()
     
     #Keep rae running indefinitely or add option for shutting down?
+    # From Sunandita: Can do this based on the output of getTaskEvents(). RAE stops when its empty?
     while True: 
         te_inputs = getTasksEvents()
         
@@ -18,14 +19,16 @@ def Rae(method_lib, state):
             candidates = getCandidates(method_lib, task_event, state)
             
             if not candidates:
-                print "No methods found that address " + task_event
+                print "Failure: No methods found that address " + task_event
                 
             else:
+                #From Sunandita: Can try out different ways to choose the method in future instead of just poping the first one
                 method = candidates.pop(0)
                 tried = set()
                 agenda.add([(task_event, method, 0, tried)]) #Third element is 'i', which we'll ignore for now
         
         #Now we'll progress each stack in the agenda once and only add it back to the agenda if Progress succeeded
+        #From Sunandita: We add a stack back only when stack is not empty and Progress has succeeded. Yes? 
         temp_agenda = set()
         
         for stack in agenda:
@@ -139,7 +142,7 @@ def getCandidates(method_lib, task_event, state):
 
 def Progress(stack):
     '''This method will refine the current stack.
-       Stack is a bunch of method frames of the form: (task_event, method, 0, tried)
+       Stack is a bunch of method frames of the form: (task_event, method, 0, tried) [From Sunandita: use i instead of 0 here]
        and method contains it's name and the current instantiation of its arguments: (method_name, (a1, b1, c1, d1))'''
 
     top_tup = stack.pop()
