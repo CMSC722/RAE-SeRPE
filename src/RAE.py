@@ -44,7 +44,7 @@ def getTasksEvents():
     
     
 def getCandidates(method_lib, task_event, state):
-#This method attempts to unify the given task/event with the state and method library and produces a list of 2 item tuples, which are all the possible methods and their associated instantiations that are consistent with the model
+    ''''This method attempts to unify the given task/event with the state and method library and produces a list of 2 item tuples, which are all the possible methods and their associated instantiations that are consistent with the model'''
    
     candidates = []
     
