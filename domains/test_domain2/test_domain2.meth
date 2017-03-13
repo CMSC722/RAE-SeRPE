@@ -1,0 +1,53 @@
+m1-travelbyfoot(a, x, y):
+  task: travel(a, y)
+  pre: loc(a) == x && dist(x, y) <= 2  
+  body:
+    while !loc(a, y) do
+      walk(a, y)
+    end
+
+m2-travelbytaxi(a, x, y)
+  task: travel(a, y)
+  pre: loc(a) == x 
+  body:
+    calltaxi(a, x)
+    if cash(a) < taxirate(x, y)
+      gotobank(a)
+    end
+    while !loc(a, y) do
+      ridetaxi(x, y)
+    end
+    paydriver(a, x, y)
+
+m-walk(a, x, y)
+  task: walk(a, y)
+  pre: loc(a) == x
+  body:
+    loc(a) == y
+
+m-calltaxi(a, x)
+  task: calltaxi(a, x)
+  pre: loc(a) == x 
+  body:
+    loc(taxi) = x
+
+m-ridetaxi(a, x, y)
+  task: ridetaxi(a,y)
+  pre: loc(a) == x && loc(taxi) == x
+  body:
+    loc(a) = y
+    loc(taxi) = y
+
+m-paydriver(a)
+  task: paytaxi(a)
+  pre: cash(a) >= taxirate(x, y)
+  body:
+    cash(a) -= taxirate(x, y)
+
+m-gotobank(a)
+  task: gotobank(a)
+  pre: 
+  body:
+    cash(a) += 1    
+
+
