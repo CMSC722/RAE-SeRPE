@@ -32,7 +32,10 @@ More information on the PLY module and how it works can be found at the
 following URL: http://www.dabeaz.com/ply/ply.html#ply_nn1
 """
 
-# no imports needed here
+import ply.lex as lex
+import json                 # a better way of getting a pretty print of a dict
+from pydoc import pager     # we'll be using this to produce less-like,
+                            # paged output -- primarily for debugging purposes
 
 """
 TOKENS
@@ -56,10 +59,11 @@ reserved = {
     #'for':      'FOR',
     #'in':       'IN',
     'end':      'END',
-    # boolean operators
-    'not':      'NOT',
+    # binary boolean operators
     'and':      'AND',
     'or':       'OR',
+    # unary operator
+    'not':      'NOT'
 }
 
 # list(set()) is a common means of removing duplicates from a list
@@ -81,11 +85,21 @@ tokens = list(set(reserved.values() + [
     'GTE',
     'LT',
     'GT',
-    # boolean operators
+    # binary boolean operators
     'AND',
     'OR',
+    # binary arithmetic operators
+    'PLUS',
+    'MINUS',
+    'TIMES',
+    'DIVIDED_BY',
+    # unary boolean operator
+    'NOT',
     # assignment operator
-    'ASSIGN'
+    'ASSIGN',
+    # boolean primitives
+    'TRUE',
+    'FALSE'
 ]))
 
 """
@@ -135,13 +149,27 @@ t_GTE =     r'>='
 t_LT =      r'<'
 t_GT =      r'>'
 
-# boolean operators
+# binary arithmetic operators
+t_PLUS =    r'\+'
+t_MINUS =   r'-'
+t_TIMES =   r'\*'
+t_DIVIDED_BY = r'/' # I know it's not the name of the token, but it's a
+                    # good mnemonic, and it makes production rules
+                    # read more naturally
+
+# binary boolean operators
 t_AND =     r'&&'
 t_OR =      r'\|\|'
+
+# unary boolean operator
 t_NOT =     r'!'
 
 # assignment operator
-t_ASSIGN =    '='
+t_ASSIGN =  r'='
+
+# boolean primitives
+t_TRUE =    r'True'
+t_FALSE =   r'False'
 
 # This helper rule defines which lexemes we ignore
 t_ignore = ' \t'
@@ -207,3 +235,56 @@ def find_column(input,token):
         last_cr = 0
         column = (token.lexpos - last_cr) + 1
     return column
+
+"""
+LEXER API
+
+These are some useful methods for sanity-checking basic aspects of the
+lexer. They can be run from the top-level (e.g., at the bottom of this
+file) to get an idea at a glance of whether anything is horribly broken.
+"""
+
+def lex_print(filename, paged=True):
+    """
+    Attempts to open the file specified by the supplied path ('filename'),
+    then reads the file in as a string, lexes it, and prints the lexed output
+    in paged format (if paged is left True) -- or not (if paged is set to
+    False).
+
+    TODO: add error handling -- in particular against the case where the file-
+    name is invalid or the specified file doesn't exist.
+    """
+
+    # try to read the supplied file
+    input = ''
+    with open(filename, 'r') as f:
+        input = f.read()
+    global_meth_lexer_instance.input(input)
+
+    # lex the file and aggregate the output
+    output = ''
+    while True:
+        tok = global_meth_lexer_instance.token()
+        if not tok:
+            break
+        output += (tok.__repr__() + '\n')
+    output += '\n'
+
+    # print the output
+    if paged:
+        pager(output)
+    else:
+        print(output)
+
+# some aliases for the above function, for Ruby-like happiness convenience:
+print_token_stream = lex_print
+
+"""
+Create a global lexer instance.
+Other modules should get their lexer from here, to avoid building
+unnecessary finite automata.
+"""
+global_meth_lexer_instance = lex.lex()
+
+def get_lexer():
+    return global_meth_lexer_instance
