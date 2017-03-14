@@ -1,0 +1,26 @@
+m-play-until-done():
+  task: play-game()
+  body:
+    while !is_done() do
+      do-action()
+    end
+
+m-go-up():
+    task: do-action()
+    body:
+        go-up()
+
+m-go-down():
+    task: do-action()
+    body:
+        go-down()
+
+m-go-left():
+    task: do-action()
+    body:
+        go-left()
+
+m-go-right():
+    task: do-action()
+    body:
+        go-right()

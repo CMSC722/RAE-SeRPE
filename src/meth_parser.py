@@ -306,7 +306,7 @@ def p_expr(p):
     else:
         p[0] = p[1]
 
-# ... nd the same here -- once again for readibility
+# ... and the same here -- once again for readibility
 def p_control_structure(p):
     '''control_structure : while_loop
                          | if_statement'''

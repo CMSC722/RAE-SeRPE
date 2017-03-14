@@ -1,0 +1,15 @@
+go-up()
+    pre: y + 1 < max_y, is_accessible(x, y+1),
+    eff: go_up()
+
+go-down()
+    pre: y - 1 >= 0, is_accessible(x, y-1),
+    eff: go_down()
+
+go-left()
+    pre: x - 1 >= 0, is_accessible(x-1, y)
+    eff: go_left()
+
+go-right()
+    pre: x + 1 < max_x, is_accessible(x+1, y)
+    eff: go_right()
