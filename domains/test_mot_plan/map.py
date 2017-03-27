@@ -4,6 +4,7 @@ class map:
     rooms=[]
     doors={}
     observMatrix={}
+    adjacencyMatrix={}
 
 
     def init(self):
@@ -50,6 +51,22 @@ class map:
             'L':['F','K','J','L']
         }
 
+    def defAdjacencyMatrix(self):
+        self.adjacencyMatrix={
+            'A': [1,0,0,0,0,0,1,0,0,0,0,0],
+            'B': [0,1,0,0,0,0,0,1,0,0,0,0],
+            'C': [0,0,1,0,0,0,0,0,1,0,0,0],
+            'D': [0,0,0,1,0,0,0,0,0,1,1,1],
+            'E': [0,0,0,0,1,0,0,0,0,0,1,0],
+            'F': [0,0,0,0,0,1,0,0,0,0,0,1],
+            'G': [1,0,0,0,0,0,1,1,0,0,0,0],
+            'H': [0,1,0,0,0,0,1,1,1,1,0,0],
+            'I': [0,0,1,0,0,0,0,1,1,1,0,0],
+            'J': [0,0,0,1,0,0,0,1,1,1,1,1],
+            'K': [0,0,0,0,1,0,0,0,0,1,1,1],
+            'L': [0,0,0,0,0,1,0,0,0,1,1,1]
+
+        }
 
     def observeable(self,location1,location2):
         if location1 in self.observMatrix[location2]:

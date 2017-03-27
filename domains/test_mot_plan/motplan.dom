@@ -2,7 +2,6 @@ Variables:
 location = {A,B,C,D,E,F,G,H,I,J,K,L}
 robot = {r1}
 
-
 Ranges:
 loc(r1) = {A,B,C,D,E,F,G,H,I,J,K,L}
 
