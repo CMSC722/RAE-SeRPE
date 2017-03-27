@@ -1,15 +1,54 @@
-go-up()
-    pre: y + 1 < max_y, is_accessible(x, y+1),
-    eff: go_up()
+import pacman
+import textDisplay
+import game
 
-go-down()
-    pre: y - 1 >= 0, is_accessible(x, y-1),
-    eff: go_down()
+class State:
+    pass
 
-go-left()
-    pre: x - 1 >= 0, is_accessible(x-1, y)
-    eff: go_left()
+def init():
+    rules = pacman.ClassicGameRules()
+    gameDisplay = textDisplay.NullGraphics()
+    beQuiet = True
+    catchExceptions = False
+    game = rules.newGame('mediumClassic', 'ReflexAgent', 'RandomGhost', gameDisplay, beQuiet, catchExceptions)
+    state = State()
+    state.game = game
+    return state
 
-go-right()
-    pre: x + 1 < max_x, is_accessible(x+1, y)
-    eff: go_right()
+def is_accessible(state, x, y):
+    return True
+
+def go_up(state):
+    state.game = state.game.state.generateSuccessor(0, game.Directions().NORTH)
+    return state
+
+def go_down(state):
+    state.game = state.game.state.generateSuccessor(0, game.Directions().SOUTH)
+    return state
+
+def go_left(state):
+    state.game = state.game.state.generateSuccessor(0, game.Directions().WEST)
+    return state
+
+def go_right(state):
+    state.game = state.game.state.generateSuccessor(0, game.Directions().EAST)
+    return state
+
+def is_done(state):
+    return state.game.gameOver
+
+# go-up()
+#     pre: y + 1 < max_y, is_accessible(x, y+1),
+#     eff: go_up()
+#
+# go-down()
+#     pre: y - 1 >= 0, is_accessible(x, y-1),
+#     eff: go_down()
+#
+# go-left()
+#     pre: x - 1 >= 0, is_accessible(x-1, y)
+#     eff: go_left()
+#
+# go-right()
+#     pre: x + 1 < max_x, is_accessible(x+1, y)
+#     eff: go_right()

@@ -1,7 +1,11 @@
 *.pyc
 
 .idea
+
 meth_test_tab.py
 dom_test_tab.py
 parsetab.py
 parser.out
+
+.DS_Store
+

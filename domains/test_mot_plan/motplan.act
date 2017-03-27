@@ -1,0 +1,22 @@
+moveloc(r,loc1,loc2)
+    pre: loc(r)=loc1
+    eff: move(loc2)
+
+search(r,loc1):
+    pre:
+    eff: search(loc1)
+
+
+search(r,d): robot searches for door d in its observable areas
+    pre:
+    eff: search(d)
+
+exit(r,d):
+    pre:
+    eff: exit(d)
+
+enter(r,d):
+    pre:
+    eff: enter(d)
+
+naïve-path(r,loc1,loc2): robot returns a naïve path from loc1 to loc2()
