@@ -132,7 +132,7 @@ token represents. Here, the regular expression used to capture the token is
 provided as the function's documentation string.
 """
 
-# ########################## #
+# ########################## ## punctuation
 # Simple token rules follow: #
 # ########################## #
 
@@ -284,6 +284,7 @@ Create a global lexer instance.
 Other modules should get their lexer from here, to avoid building
 unnecessary finite automata.
 """
+# global_meth_lexer_instance = lex.lex(optimize=1,lextab="meth_test_tab")
 global_meth_lexer_instance = lex.lex()
 
 def get_lexer():
