@@ -1,38 +1,8 @@
-import pacman
-import textDisplay
-import game
+Variables:
+game = Game()
 
-class State:
-    pass
+Initial_State:
+score = 0
 
-def init():
-    rules = pacman.ClassicGameRules(timeout=30)
-    gameDisplay = textDisplay.NullGraphics()
-    beQuiet = True
-    catchExceptions = False
-    game = rules.newGame('mediumClassic', 'ReflexAgent', 'RandomGhost', gameDisplay, beQuiet, catchExceptions)
-    state = State()
-    state.game = game
-    return state
-
-def is_accessible(state, x, y):
-    return True
-
-def go_up(state):
-    state.game = state.game.state.generateSuccessor(0, game.Directions().NORTH)
-    return state
-
-def go_down(state):
-    state.game = state.game.state.generateSuccessor(0, game.Directions().SOUTH)
-    return state
-
-def go_left(state):
-    state.game = state.game.state.generateSuccessor(0, game.Directions().WEST)
-    return state
-
-def go_right(state):
-    state.game = state.game.state.generateSuccessor(0, game.Directions().EAST)
-    return state
-
-def is_done(state):
-    return state.game.gameOver
+Goal:
+maximize score
