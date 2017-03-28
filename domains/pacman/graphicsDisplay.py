@@ -13,9 +13,11 @@
 # Pieter Abbeel (pabbeel@cs.berkeley.edu).
 
 
-from graphicsUtils import *
-import math, time
+import math
+import time
+
 from game import Directions
+from graphicsUtils import *
 
 ###########################
 #  GRAPHICS DISPLAY CODE  #
@@ -287,7 +289,7 @@ class PacmanGraphics:
     def getEndpoints(self, direction, position=(0,0)):
         x, y = position
         pos = x - int(x) + y - int(y)
-        width = 30 + 80 * math.sin(math.pi* pos)
+        width = 30 + 80 * math.sin(math.pi * pos)
 
         delta = width / 2
         if (direction == 'West'):

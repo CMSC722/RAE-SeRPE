@@ -819,6 +819,6 @@ we'll use such code for debugging purposes, since this file is intended to
 function as a module).
 """
 
-# meth_lexer.print_token_stream("../domains/test_domain1/test_domain1.meth")
+# dom_lexer.print_token_stream("../domains/simple_domain/simple_domain.dom")
 # meth_parser.print_asts("../domains/test_domain1/test_domain1.meth", \
 #                        paged = False, debug=False)

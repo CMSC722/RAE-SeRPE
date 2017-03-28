@@ -14,6 +14,15 @@
     by the interpreter on its own execution state
   * changed all op_sem evaluation helper methods to return None (implicitly), to make clear
     the fact that their return values are no longer being used
+- Added an Interpreter mode to accomodate RAE, which needs to step through
+  method execution line by line
+  * this is complicated by the fact that the interpreter is executing byte-code-
+    like instructions, which exist at a much finer level of granularity than
+    lines of domain-specific code
+  * the solution was to add a RAE mode which, when activated, causes the e_seq
+    evaluation method to issues line-by-line progress nodes to the eval()
+    generator; thus, in iterating over a method, RAE is given a finer-grained
+    control over method execution
 
 - started porting documentation over to the wiki
   * there is much more work to be done on this front
@@ -21,8 +30,12 @@
 - started implementing the dom lexer
 
 - started fixing the preconditions in the meth_parser
+  * however, tonight's meeting suggested new possibilities for handling
+    method-level preconditions, the most promising of which was the
+    implementation of preconditions as python functions -- but this design
+    decision has yet to be fully agreed-upon
 
-TODO:
+STILL TODO:
 - add check in e_seq to see whether next instr is not a control structure
 - discuss precondition representation with Matt and Gavin
 - discuss domain representation with Matt and Gavin

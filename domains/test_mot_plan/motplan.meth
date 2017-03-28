@@ -1,0 +1,38 @@
+m-move-to-room(r,loc1,loc2)
+    task: move-to-room(r,loc2)
+	    pre: loc2 is empty
+    body:
+        if(search(r,loc2)=true)
+            exit-room(r,loc1)
+		    move(r,loc1,loc2)
+		    enter-room(r,loc2)
+	    else
+		    move-towards(r,loc1,loc2)
+
+m-enter-room(r,loc1,d,loc2)
+    task: enter-room(r,d,loc2)
+	    pre:
+    body:
+        if(search(r,d)):
+		    enter(r,d)
+
+m-exit-room(r,loc1,d,loc2)
+    task: exit-room(r,d,loc2)
+	    pre:
+    body:
+        if(search(r,d)):
+            exit(r,d)
+
+move-towards(r,loc1,loc2)
+    task: move-towards(r,loc2)
+	    pre: path to loc2 exists
+    body:
+        t=naïve-path(r,loc1,loc2)
+        if(t=empty)
+	        return fail
+        else:
+	        while(t!=empty)
+		        if(search(r, poll(t))
+			    move(r,loc1,pop(t))
+		    else:
+			    move-towards(r,loc1,pop(t))

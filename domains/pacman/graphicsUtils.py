@@ -13,13 +13,9 @@
 # Pieter Abbeel (pabbeel@cs.berkeley.edu).
 
 
-import sys
-import math
-import random
-import string
-import time
-import types
 import Tkinter
+import sys
+import time
 
 _Windows = sys.platform == 'win32'  # True if on Win95/98/NT
 

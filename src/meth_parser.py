@@ -621,7 +621,7 @@ def parse_print(filename, paged=True, debug=True):
 print_asts = parse_print
 parser_print = parse_print
 
-def load_methods(self, filename, overwrite=True):
+def load_methods(filename, overwrite=True):
     """
     This method, given a path to a .meth file, reads it in, parses it,
     constructs a method table in METH Bytecode, and finally *returns* the method
@@ -654,12 +654,12 @@ def load_methods(self, filename, overwrite=True):
     # 3) in either case return the new method table
     return new_table
 
-def add_methods(self, filename):
+def add_methods(filename):
     table_addition = load_methods(filename, overwrite=False)
     method_table.update(table_addition)
     return method_table
 
-def save_method_table(self):
+def save_method_table():
     """
     This function writes the in-memory method-table to file, so that it
     needn't be re-generated next time. This may be useful for large and com-
@@ -668,7 +668,7 @@ def save_method_table(self):
     with open('method_table.pkl', 'wb') as output:
         pickle.dump(meth_table, output, pickle.HIGHEST_PROTOCOL)
 
-def load_method_table(self):
+def load_method_table():
     """
     This function reads the in-memory method-table from file, so that it
     needn't be re-generated. This may be useful for large and com-
