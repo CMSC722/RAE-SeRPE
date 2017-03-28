@@ -49,6 +49,7 @@ import unittest
 import interpreter
 import meth_parser
 import json
+import copy
 
 """
 TEST SETUP
@@ -63,7 +64,31 @@ component functionality.
 """
 
 
-""" INTERPRETER EVAL TESTS """
+"""
+INTERPRETER SEMANTICS: EXPRESSIONS
+
+The following four test cases exercise the interpreter's semantics for
+*expressions* -- that is, those syntactic constructions that do not alter the
+environment, but which do produce (reduce to) a value. Within the context
+of our domain-specific language for methods, expressions can reduce to one of
+four value types: Int(eger), Float(ing point number), (Character) String, or
+Boolean. There is, additionally, a fifth type of value which we call, after
+Python, the None type. In our Python implementation of the language, these
+five types are represented, respectively, by the strings:
+    'val_int',
+    'val_float',
+    'val_str',
+    'val_bool',
+    'val_none'
+
+In fact, in our language, which is represented with an expression grammar,
+even statements reduce to values -- specifically, control statements reduce
+to the None type, and variable reads and writes reduce to the value being read
+from or written to the variable (whether that be a local variable or a state
+variable). However, the values produced by statements are typically thrown
+away, and it is their effect on execution flow and program state (through
+modification of the environment) that is most important.
+"""
 
 class EvalPrimitives(unittest.TestCase):
     int_instr = dict(
@@ -83,7 +108,7 @@ class EvalPrimitives(unittest.TestCase):
 
     id_instr = dict(
         e_type = "E_LOC_VAR_RD",
-        arg1 = "x"
+        arg1 = 'x'
     )
 
     id_instr_env = dict(
@@ -589,12 +614,277 @@ class EvalSimpleMethod(unittest.TestCase):
                                                             val = 15.283
                                                          ), environment, {}))
 
-    #TODO: write a test that exercises the interpreter's semantics for
-    #TODO: *statements* -- that is, syntactic constructs that *could* alter
-    #TODO: the environment, or that traditionally don't return a value -- as
-    #TODO: 'if', 'while', 'seq', 'assign', 'loc/state_var_rd/wr'
-    def test_eval_stmt_meth(self):
-        True
+"""
+INTERPRETER SEMANTICS: STATEMENTS
+
+The following three test cases exercise the interpreter's semantics for
+*statements* -- that is, those syntactic constructs that *could* alter the
+environment, or that traditionally don't return a value -- as 'if', 'while',
+'seq', 'assign', 'loc_var_rd/wr' and 'state_var_rd/wr.'
+
+As noted in the overall documentation for the expression-semantic unit tests
+(which see above), in our language (as in Ruby) even statements reduce to
+values, though the values produced by statements are typically thrown
+away, and it is their effect on execution flow and program state (through
+modification of the environment) that is their most important characteristic.
+
+However, it is generally worth noting that, in our language, control statements
+reduce to the None type, and variable reads and writes reduce to the value being
+read from or written to the variable (whether that be a local variable or a
+state variable).
+"""
+
+class EvalControlStatements(unittest.TestCase):
+    # environments (they correspond by number to the conditions below --
+    # an environment and a condition with a corresponding number are such that
+    # the environment makes the condition true or false, according as the name
+    # of the condition indicates that it ought to evaluate to true or false)
+    env_1 = dict(
+        i = 5,
+        j = 10,
+        t = True,
+        f = False
+    )
+    env_2 = dict(
+        s1 = "string1",
+        s1_copy = "string1",
+        s2 = "string2",
+        t = True,
+        f = False
+    )
+    env_3 = dict(
+        i = 5,
+        j = 10,
+        x = 5.5,
+        y = 10.5,
+        s1 = "string1",
+        s1_copy = "string1",
+        s2 = "string2",
+        t = True,
+        f = False
+    )
+
+    # a method to construct local variable primitives
+    def make_loc_var_instr(self, id):
+        dict(
+            e_type = "E_LOC_VAR_RD",
+            arg1 = id
+        )
+
+    # conditions, to be used in testing control statements
+    simple_cond_true = dict(
+        e_type = "E_TRUE",
+        val = True
+    )
+    simple_cond_false = dict(
+        e_type = "E_FALSE",
+        val = False
+    )
+    simple_cond_true_1 = dict(
+        e_type = "E_GT",
+        arg1 = dict(
+            e_type = "E_LOC_VAR_RD",
+            arg1 = 'j'
+        ),
+        arg2 = dict(
+            e_type = "E_LOC_VAR_RD",
+            arg1 = 'i'
+        )
+    )
+    simple_cond_false_1 = dict(
+        e_type = "E_LTE",
+        arg1 = dict(
+            e_type = "E_LOC_VAR_RD",
+            arg1 = 'j'
+        ),
+        arg2 = dict(
+            e_type = "E_LOC_VAR_RD",
+            arg1 = 'i'
+        )
+    )
+    simple_cond_true_2 = dict(
+        e_type = "E_EQUALS",
+        arg1 = dict(
+            e_type = "E_LOC_VAR_RD",
+            arg1 = 's1'
+        ),
+        arg2 = dict(
+            e_type = "E_LOC_VAR_RD",
+            arg1 = 's1_copy'
+        )
+    )
+    simple_cond_false_2 = dict(
+        e_type = "E_EQUALS",
+        arg1 = dict(
+            e_type = "E_LOC_VAR_RD",
+            arg1 = 's1'
+        ),
+        arg2 = dict(
+            e_type = "E_LOC_VAR_RD",
+            arg1 = 's2'
+        )
+    )
+    simple_cond_true_3 = dict(
+        e_type = "E_OR",
+        arg1 = dict(
+            e_type = "E_LTE",
+            arg1 = dict(
+                e_type = "E_LOC_VAR_RD",
+                arg1 = 'x'
+            ),
+            arg2 = dict(
+                e_type = "E_LOC_VAR_RD",
+                arg1 = 'y'
+            )
+        ),
+        arg2 = simple_cond_false_2
+    )
+    simple_cond_false_3 = dict(
+        e_type = "E_OR",
+        arg1 = dict(
+            e_type = "E_GTE",
+            arg1 = dict(
+                e_type = "E_LOC_VAR_RD",
+                arg1 = 'x'
+            ),
+            arg2 = dict(
+                e_type = "E_LOC_VAR_RD",
+                arg1 = 'y'
+            )
+        ),
+        arg2 = simple_cond_false_2
+    )
+
+    complex_cond_true = dict(
+        e_type = "E_AND",
+        arg1 = dict(
+            e_type = "E_NOT",
+            arg1 = simple_cond_false_3
+        ),
+        arg2 = simple_cond_true_3
+    )
+    complex_cond_false = dict(
+        e_type = "E_AND",
+        arg1 = dict(
+            e_type = "E_NOT",
+            arg1 = simple_cond_true_3
+        ),
+        arg2 = dict(
+            e_type = "E_AND",
+            arg1 = simple_cond_false_1,
+            arg2 = dict(
+                e_type = "E_AND",
+                arg1 = simple_cond_false_2,
+                arg2 = simple_cond_false_3
+            )
+        )
+    )
+
+    # blocks
+    block_1 = dict(
+        e_type = "E_LOC_VAR_WR",
+        arg1 = 'i',
+        arg2 = dict(
+            e_type = "E_SUB",
+            arg1 = dict(
+                e_type = "E_LOC_VAR_RD",
+                arg1 = 'i'
+            ),
+            arg2 = dict(
+                e_type = "E_INT",
+                val = 1
+            )
+        )
+    )
+
+    # a function for building if-statements out of conditions and blocks
+    def make_if_instr(self, conds, blocks):
+        if len(conds) != len(blocks):
+            raise ValueError("The number of conditions does not match the \
+                              number of blocks")
+        return dict(
+            e_type = "E_IF",
+            conds = conds,
+            blocks = blocks
+        )
+
+    # code blocks -- they all change the environment in various ways, which is
+    # how we'll determine whether or not the control statements are directing
+    # execution flow correctly
+
+    # finally, the tests:
+    def test_if(self):
+        # first make local copies of the environments before we mutate them
+        _env_1 = copy.copy(self.env_1)
+
+        '''first a simple (true) if with no alternate branches'''
+        old_env = copy.copy(_env_1)
+        new_env = copy.copy(old_env)
+        new_env['i'] = old_env['i'] - 1
+
+        if_instr_1 = self.make_if_instr([self.simple_cond_true_1], [self.block_1])
+        (res, test_env, _) = empty_interpreter_instance.eval(if_instr_1, _env_1, {}, {})
+
+        self.assertEqual(res['val'], new_env['i']) # test the stmt returns the
+                                                   # correct value as result
+        self.assertEqual(test_env, new_env) # test that the stmt correctly
+                                            # modified the environment
+
+        # restore the environment
+        _env_1 = old_env
+
+        '''now a simple (false) if with no alternate branches'''
+        if_instr_2 = self.make_if_instr([self.simple_cond_false_1], [self.block_1])
+        (res, test_env, _) = empty_interpreter_instance.eval(if_instr_2, _env_1, {}, {})
+
+        self.assertEqual(res['val'], None) # test the stmt returns the
+                                                   # correct value as result
+        self.assertEqual(test_env, old_env) # test that the stmt correctly (didn't)
+                                            # modify the environment
+
+        # restore the environment
+        _env_1 = old_env
+
+    def test_if_else(self):
+        pass
+
+    def test_if_elif(self):
+        pass
+
+    def test_if_elif_else(self):
+        pass
+
+    def test_while_false(self):
+        pass
+
+    def test_while_true(self):
+        pass
+
+# class EvalLocalVariableStatements(unittest.TestCase):
+
+# class EvalStateVariableStatements(unittest.TestCase):
+
+"""
+INTERPRETER API: DECISION NODES
+
+The following three test cases exercise the interpreter's semantics for
+*statements* -- that is, those syntactic constructs that *could* alter the
+environment, or that traditionally don't return a value -- as 'if', 'while',
+'seq', 'assign', 'loc_var_rd/wr' and 'state_var_rd/wr.'
+
+As noted in the overall documentation for the expression-semantic unit tests
+(which see above), in our language (as in Ruby) even statements reduce to
+values, though the values produced by statements are typically thrown
+away, and it is their effect on execution flow and program state (through
+modification of the environment) that is their most important characteristic.
+
+However, it is generally worth noting that, in our language, control statements
+reduce to the None type, and variable reads and writes reduce to the value being
+read from or written to the variable (whether that be a local variable or a
+state variable).
+"""
+
+# class EvalDecisionNodeProduction(unittest.TestCase):
 
 
 if __name__ == '__main__':

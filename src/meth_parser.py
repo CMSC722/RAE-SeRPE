@@ -1,6 +1,6 @@
 """
 Date: Thu, Sat, 18 Feb, 2017
-Last updated: Sat, 6 Mar, 2017
+Last updated: Mon, 27 Mar, 2017
 Author: Samuel Barham
 Organization: University of Maryland, College Park (PhD student)
 
@@ -236,19 +236,17 @@ PRODUCTIONS FOR PRECONDITIONS
 
 def p_pre(p):
     'pre : PRE COLON preconditions'
-    if len(p) == 4:
-        p[0] = p[3]
-    else:
-        p[0] = list()
+    p[0] = p[3]
 
+# NB: the bexpr2prec utility is defined at the bottom of the file
 def p_precon_list(p):
     '''preconditions : bexpr AND preconditions
                      | bexpr
                      |                        '''
     if len(p) == 4:
-        p[0] = [p[1]] + p[3]
+        p[0] = [bexpr2prec(p[1])] + p[3]
     elif len(p) == 2:
-        p[0] = [p[1]]
+        p[0] = [bexpr2prec(p[1])]
     else:
         p[0] = list()
 
@@ -549,6 +547,35 @@ def p_error(p):
 # def p_empty(p):
 #    'empty :'
 #    pass
+
+"""
+UTILITY FUNCTIONS
+"""
+
+def bexpr2prec(bexpr):
+    '''recall that this is what a bexpr looks like:
+        bexpr : bexpr AND bexpr
+              | bexpr OR bexpr
+              | expr EQUALS expr
+              | expr LT expr
+              | expr GT expr
+              | expr LTE expr
+              | expr GTE expr
+              | NOT bexpr
+              | true
+              | false
+              | state_var_rd
+       and that an expr looks like this
+        expr : LPAREN expr RPAREN
+             | control_structure
+             | bexpr
+             | aexpr
+             | string
+             | state_var_rd
+             | state_var_wr
+             | loc_var_rd
+             | loc_var_wr        '''
+    pass
 
 """
 PARSER API

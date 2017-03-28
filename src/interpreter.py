@@ -42,14 +42,11 @@ Finally, some ideas that we might consider future TODO's:
 
 __________________
 TODO:
-0) finish the seq/control statement instrs
 1) write the dom-lexer and dom-parser that generate the state-variable tables
     and domain descriptions used by the interpreter and other planning components.
 2) do num 3 above
-3) add parens to exprs in the parser meth grammar
 4) have interpreter disambiguate between state-vars and tasks using the task
     table
-5) add arithmetic in ints and floats to the parser grammar
 6) make environment/state variables a global object, so that planning domain
     state is preserved after recursive method calls
 """
@@ -74,21 +71,6 @@ import json                 # a better way of getting a pretty print of a dict
 import cPickle as pickle    # for serializing objects to file -- in our case,
                             # we'll want to be persisting our method tables
 
-
-"""
-GLOBALS
-
-The following are variables used across the interpreter module -- namely,
-the lexers and parsers, and the current method-table.
-"""
-
-# First we build the lexer and the parser, using the lexing and parsing rules
-# defined in our lexer.py and parser.py files:
-# meth_lexer_instance = meth_lexer.get_lexer() # lex.lex(module=meth_lexer)
-# meth_parser_instance = meth_parser.get_parser() # yacc.yacc(module=meth_parser)
-
-# The method table
-# method_table = {}
 
 """
 EXPRESSION TYPES
@@ -130,11 +112,19 @@ e_types = dict(
     e_loc_var_wr =      'LOC_VAR_WR'        # arg1 (id string), arg2 (expr)
 )
 
+"""
+SINGLETON VALUES
+"""
+
+val_none = dict(
+    v_type = 'val_none',
+    val = None
+)
 
 """
 AUXILIARY CLASSES
 
-For now, we'll just put errors here that the interpreter needs to raise.
+For now, we'll just put here any errors that the interpreter may need to raise.
 Perhaps, at a later date, we may wish to factor these out into a separate
 file.
 """
@@ -146,6 +136,12 @@ class NoMethodTable(Exception):
         return repr(self.value)
 
 class MethodNotFound(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
+class NoMethodSupplied(Exception):
     def __init__(self, value):
         self.value = value
     def __str__(self):
@@ -175,29 +171,25 @@ treating it as if it were a list of decision-tree nodes.
 
 class Interpreter:
     def __init__(self, method = {}, environment = {},
-                 state_vars = {}, action_model = None):
+                 state_vars = {}, action_model = None,
+                 mode = 'SeRPE'):
         self.method = method
         self.environment = environment
         self.state_vars = state_vars
         self.action_model = action_model
-        self.decision_nodes = []
-        self.res = self.execute_method(self.method, self.environment, \
-                                  self.state_vars, self.action_model)
-        self.current_index = 0
+        self.new_decision_node = False
+        self.decision_node = None
+        self.ret = None
+        self.state = 'READY' # can be READY, EXECUTING, FINISHED, or ERROR
+        self.mode = mode # can be SeRPE or RAE
 
     def __iter__(self):
-        return self
-
-    def __next__(self):
-        current_node = self.decision_nodes[current_index] if len(self.decision_nodes) > 0 else None
-        if current_node:
-            self.current_index += 1
-            return current_node
-        else:
-            raise StopIteration
+        return self.execute_method(self.method, self.environment, \
+                                  self.state_vars, self.action_model)
 
     def __str__(self):
         return json.dumps(self.decision_nodes, sort_keys=False, indent=3)
+
 
     #NOTE: THIS DOCUMENTATION NEEDS TO BE REWRITTEN IN LIGHT OF RECENT CHANGES
     """
@@ -210,17 +202,12 @@ class Interpreter:
     """
 
     def execute_method(self, method, environment, state_vars, action_model):
-        #print("***LOOK HERE***")
-        #print("object 'method' is as follows:")
-        #print("\t" + json.dumps(method, sort_keys=False, indent=2))
         if method:
             first_instr = method['exprs']
             return self.eval(first_instr, environment=environment,
                              state_vars=state_vars, action_model=action_model)
         else:
-            print("WARNING:\tno valid method specified for execution")
-            print("\t\treturning null result")
-            return (None, environment, state_vars)
+            raise NoMethodSupplied("No valid method specified for execution")
 
     def execute_method_name(self, method_name, environment,
                        method_table = meth_parser.get_method_table(),
@@ -305,9 +292,16 @@ class Interpreter:
             'E_TASK_INVOCATION':  self.e_task_invocation
         }.get(curr_instr['e_type'], self._raise_no_such_instruction)
 
-        return op_sem(curr_instr, environment=environment,
-                                  state_vars=state_vars,
-                                  action_model=action_model)
+        # before proceeding with execusion, check if there are any new
+        # decision nodes to yield
+        if self.new_decision_node:
+            self.new_decision_node = False
+            yield self.decision_node
+
+        # continue recursing on the AST
+        op_sem(curr_instr, environment=environment,
+                           state_vars=state_vars,
+                           action_model=action_model)
 
 
     """
@@ -324,7 +318,11 @@ class Interpreter:
 
         # noop
     def e_noop(self, instr, environment, state_vars, action_model):      # [no arguments]
-        return (None, environment, state_vars)
+        self.state = 'FINISHED'
+        if self.ret:
+            pass
+        else:
+            self.ret = (None, environment, state_vars)
 
 
     """
@@ -334,63 +332,81 @@ class Interpreter:
     def e_seq(self, instr, environment, state_vars, action_model):
         this_instr = instr['arg1']
         next_instr = instr['arg2']
-        (res, environment, state_vars) = self.eval(this_instr,
-                                                 environment=environment,
-                                                 state_vars=state_vars,
-                                                 action_model=action_model)
-        if next_instr['e_type'] == 'E_NOOP':
-            # end of sequence, return value of last expression:
-            return (res, environment, state_vars)
-        else:
-            # else sequence continues, so keep evaluating
-            return self.eval(next_instr, environment=environment,
-                                         state_vars=state_vars,
-                                         action_model=action_model)
+        self.eval(this_instr, environment=environment,
+                              state_vars=state_vars,
+                             action_model=action_model)
+        (res, environment, state_vars) = self.ret
+
+        if self.mode == 'RAE' && not self.new_decision_node:
+            self.new_decision_node = True
+            self.decision_node = dict(
+                                    node_type =   'progress_node',
+                                    environment = environment,
+                                    state_vars = state_vars
+                                 )
+
+        self.eval(next_instr, environment=environment,
+                              state_vars=state_vars,
+                              action_model=action_model)
 
     def e_while(self, instr, environment, state_vars, action_model):
         cond = instr['cond']
         block = instr['block']
-        (cond_val, _, _) = self.eval(cond, environment=environment,
+        (cond_res, _, _) = self.eval(cond, environment=environment,
                                            state_vars=state_vars,
                                            action_model=action_model)
-        ret = None
-        while cond_val:
-            (ret, state_vars, state_vars) = \
-                               self.eval(block, environment=environment,
-                                                state_vars=state_vars,
-                                                action_model=action_model)
-            (cond_val, _, _) = self.eval(cond, environment=environment,
-                                               state_vars=state_vars,
-                                               action_model=action_model)
-        return (ret, state_vars, state_vars)
+        ret = val_none
+        while cond_res['val']:
+            self.eval(block, environment=environment,
+                             state_vars=state_vars,
+                             action_model=action_model)
+            (ret, environment, state_vars) = self.ret
+            self.eval(cond, environment=environment,
+                            state_vars=state_vars,
+                            action_model=action_model)
+            (cond_res, _, _) = self.ret
+
+        self.ret = (ret, environment, state_vars)
 
     def e_if(self, instr, environment, state_vars, action_model):
         cond_list = instr['conds']
         block_list = instr['blocks']
+        i = 0
         for cond, block in zip(cond_list, block_list):
-            (val, _, _) = self.eval(cond, environment=environment,
-                                          state_vars=state_vars,
-                                          action_model=action_model)
-            if val:
-                return self.eval(block, environment=environment,
-                                        state_vars=state_vars,
-                                        action_model=action_model)
+            i = i + 1
+            # print("\ncond {0} is: ".format(i) + json.dumps(cond, sort_keys=False, indent=3) + "\n")
+            self.eval(cond, environment=environment,
+                            state_vars=state_vars,
+                            action_model=action_model)
+            (res, _, _) = self.ret
+            # print("\nevaluated cond {0} with res: ".format(i) + json.dumps(res, sort_keys=False, indent=3) + "\n")
+            if res['val']:
+                # print("\nreturning from if: " + json.dumps(res, sort_keys=False, indent=3) + "\n")
+                self.eval(block, environment=environment,
+                                 state_vars=state_vars,
+                                 action_model=action_model)
+                pass
+
+        # print("\nreturning from if: " + json.dumps(val_none, sort_keys=False, indent=3) + "\n")
+        self.ret = (val_none, environment, state_vars)
 
         # binary (here only boolean) operators
     def e_and(self, instr, environment, state_vars, action_model):
         l_expr = instr['arg1']
         r_expr = instr['arg2']
-        (l_res, _, _) = self.eval(l_expr,
-                                   environment=environment,
-                                   state_vars=state_vars,
-                                   action_model=action_model)
-        (r_res, _, _) = self.eval(r_expr,
-                                   environment=environment,
-                                   state_vars=state_vars,
-                                   action_model=action_model)
+
+        self.eval(l_expr, environment=environment,
+                          state_vars=state_vars,
+                          action_model=action_model)
+        (l_res, _, _) = self.ret
+        self.eval(r_expr, environment=environment,
+                          state_vars=state_vars,
+                          action_model=action_model)
+        (r_res, _, _) = self.ret
+
         if l_res['v_type'] == 'val_bool' and r_res['v_type'] == 'val_bool':
             l_operand, r_operand = l_res['val'], r_res['val']
-            return (dict(
+            self.ret = (dict(
                             v_type = 'val_bool',
                             val = l_operand and r_operand
                         ), environment, state_vars)
@@ -401,17 +417,19 @@ class Interpreter:
     def e_or(self, instr, environment, state_vars, action_model):
         l_expr = instr['arg1']
         r_expr = instr['arg2']
-        (l_res, _, _) = self.eval(l_expr,
-                                   environment=environment,
-                                   state_vars=state_vars,
-                                   action_model=action_model)
-        (r_res, _, _) = self.eval(r_expr,
-                                   environment=environment,
-                                   state_vars=state_vars,
-                                   action_model=action_model)
+
+        self.eval(l_expr, environment=environment,
+                          state_vars=state_vars,
+                          action_model=action_model)
+        (l_res, _, _) = self.ret
+        self.eval(r_expr, environment=environment,
+                          state_vars=state_vars,
+                          action_model=action_model)
+        (r_res, _, _) = self.ret
+
         if l_res['v_type'] == 'val_bool' and r_res['v_type'] == 'val_bool':
             l_operand, r_operand = l_res['val'], r_res['val']
-            return (dict(
+            self.ret = (dict(
                             v_type = 'val_bool',
                             val = l_operand or r_operand
                         ), environment, state_vars)
@@ -422,18 +440,19 @@ class Interpreter:
     def e_equals(self, instr, environment, state_vars, action_model):
         l_expr = instr['arg1']
         r_expr = instr['arg2']
-        (l_res, _, _) = self.eval(l_expr,
-                                   environment=environment,
-                                   state_vars=state_vars,
-                                   action_model=action_model)
-        (r_res, _, _) = self.eval(r_expr,
-                                   environment=environment,
-                                   state_vars=state_vars,
-                                   action_model=action_model)
+
+        self.eval(l_expr, environment=environment,
+                          state_vars=state_vars,
+                          action_model=action_model)
+        (l_res, _, _) = self.ret
+        self.eval(r_expr, environment=environment,
+                          state_vars=state_vars,
+                          action_model=action_model)
+        (r_res, _, _) = self.ret
 
         if l_res['v_type'] == r_res['v_type']:
             l_operand, r_operand = l_res['val'], r_res['val']
-            return (dict(
+            self.ret = (dict(
                             v_type = 'val_bool',
                             val = l_operand == r_operand
                         ), environment, state_vars)
@@ -444,17 +463,19 @@ class Interpreter:
     def e_lt(self, instr, environment, state_vars, action_model):
         l_expr = instr['arg1']
         r_expr = instr['arg2']
-        (l_res, _, _) = self.eval(l_expr,
-                                   environment=environment,
-                                   state_vars=state_vars,
-                                   action_model=action_model)
-        (r_res, _, _) = self.eval(r_expr,
-                                   environment=environment,
-                                   state_vars=state_vars,
-                                   action_model=action_model)
+
+        self.eval(l_expr, environment=environment,
+                          state_vars=state_vars,
+                          action_model=action_model)
+        (l_res, _, _) = self.ret
+        self.eval(r_expr, environment=environment,
+                          state_vars=state_vars,
+                          action_model=action_model)
+        (r_res, _, _) = self.ret
+
         if l_res['v_type'] == 'val_num' and r_res['v_type'] == 'val_num':
             l_operand, r_operand = l_res['val'], r_res['val']
-            return (dict(
+            self.ret = (dict(
                             v_type = 'val_bool',
                             val = l_operand < r_operand
                         ), environment, state_vars)
@@ -465,17 +486,19 @@ class Interpreter:
     def e_gt(self, instr, environment, state_vars, action_model):
         l_expr = instr['arg1']
         r_expr = instr['arg2']
-        (l_res, _, _) = self.eval(l_expr,
-                                   environment=environment,
-                                   state_vars=state_vars,
-                                   action_model=action_model)
-        (r_res, _, _) = self.eval(r_expr,
-                                   environment=environment,
-                                   state_vars=state_vars,
-                                   action_model=action_model)
+
+        self.eval(l_expr, environment=environment,
+                          state_vars=state_vars,
+                          action_model=action_model)
+        (l_res, _, _) = self.ret
+        self.eval(r_expr, environment=environment,
+                          state_vars=state_vars,
+                          action_model=action_model)
+        (r_res, _, _) = self.ret
+
         if l_res['v_type'] == 'val_num' and r_res['v_type'] == 'val_num':
             l_operand, r_operand = l_res['val'], r_res['val']
-            return (dict(
+            self.ret = (dict(
                             v_type = 'val_bool',
                             val = l_operand > r_operand
                         ), environment, state_vars)
@@ -486,17 +509,19 @@ class Interpreter:
     def e_lte(self, instr, environment, state_vars, action_model):
         l_expr = instr['arg1']
         r_expr = instr['arg2']
-        (l_res, _, _) = self.eval(l_expr,
-                                   environment=environment,
-                                   state_vars=state_vars,
-                                   action_model=action_model)
-        (r_res, _, _) = self.eval(r_expr,
-                                   environment=environment,
-                                   state_vars=state_vars,
-                                   action_model=action_model)
+
+        self.eval(l_expr, environment=environment,
+                          state_vars=state_vars,
+                          action_model=action_model)
+        (l_res, _, _) = self.ret
+        self.eval(r_expr, environment=environment,
+                          state_vars=state_vars,
+                          action_model=action_model)
+        (r_res, _, _) = self.ret
+
         if l_res['v_type'] == 'val_num' and r_res['v_type'] == 'val_num':
             l_operand, r_operand = l_res['val'], r_res['val']
-            return (dict(
+            self.ret = (dict(
                             v_type = 'val_bool',
                             val = l_operand <= r_operand
                         ), environment, state_vars)
@@ -507,15 +532,19 @@ class Interpreter:
     def e_gte(self, instr, environment, state_vars, action_model):
         l_expr = instr['arg1']
         r_expr = instr['arg2']
-        (l_res, _, _) = self.eval(l_expr, environment=environment,
-                                           state_vars=state_vars,
-                                           action_model=action_model)
-        (r_res, _, _) = self.eval(r_expr, environment=environment,
-                                           state_vars=state_vars,
-                                           action_model=action_model)
+
+        self.eval(l_expr, environment=environment,
+                          state_vars=state_vars,
+                          action_model=action_model)
+        (l_res, _, _) = self.ret
+        self.eval(r_expr, environment=environment,
+                          state_vars=state_vars,
+                          action_model=action_model)
+        (r_res, _, _) = self.ret
+
         if l_res['v_type'] == 'val_num' and r_res['v_type'] == 'val_num':
             l_operand, r_operand = l_res['val'], r_res['val']
-            return (dict(
+            self.ret = (dict(
                             v_type = 'val_bool',
                             val = l_operand >= r_operand
                         ), environment, state_vars)
@@ -526,11 +555,14 @@ class Interpreter:
         # unary operators
     def e_not(self, instr, environment, state_vars, action_model):
         expr = instr['arg1']
-        (res, _, _) = self.eval(expr, environment=environment,
-                                   state_vars=state_vars,
-                                   action_model=action_model)
+
+        self.eval(expr, environment=environment,
+                        state_vars=state_vars,
+                        action_model=action_model)
+        (res, _, _) = self.ret
+
         if res['v_type'] == 'val_bool':
-            return (dict(
+            self.ret = (dict(
                             v_type = 'val_bool',
                             val = not res['val']
                         ), environment, state_vars)
@@ -540,25 +572,25 @@ class Interpreter:
 
         # primitive values
     def e_true(self, instr, environment, state_vars, action_model):
-        return (dict(
+        self.ret = (dict(
                         v_type = 'val_bool',
                         val = True
                     ), environment, state_vars)
 
     def e_false(self, instr, environment, state_vars, action_model):
-        return (dict(
+        self.ret = (dict(
                         v_type = 'val_bool',
                         val = False
                     ), environment, state_vars)
 
     def e_int(self, instr, environment, state_vars, action_model):
-        return (dict(
+        self.ret = (dict(
                         v_type = 'val_num',
                         val = instr['val']
                     ), environment, state_vars)
 
     def e_float(self, instr, environment, state_vars, action_model):
-        return (dict(
+        self.ret = (dict(
                         v_type = 'val_num',
                         val = instr['val']
                     ), environment, state_vars)
@@ -566,15 +598,19 @@ class Interpreter:
     def e_add(self, instr, environment, state_vars, action_model):
         l_expr = instr['arg1']
         r_expr = instr['arg2']
-        (l_res, _, _) = self.eval(l_expr, environment=environment,
-                                   state_vars=state_vars,
-                                   action_model=action_model)
-        (r_res, _, _) = self.eval(r_expr, environment=environment,
-                                           state_vars=state_vars,
-                                           action_model=action_model)
+
+        self.eval(l_expr, environment=environment,
+                          state_vars=state_vars,
+                          action_model=action_model)
+        (l_res, _, _) = self.ret
+        self.eval(r_expr, environment=environment,
+                          state_vars=state_vars,
+                          action_model=action_model)
+        (r_res, _, _) = self.ret
+
         if l_res['v_type'] == 'val_num' and r_res['v_type'] == 'val_num':
             l_operand, r_operand = l_res['val'], r_res['val']
-            return (dict(
+            self.ret = (dict(
                             v_type = 'val_num',
                             val = l_operand + r_operand
                         ), environment, state_vars)
@@ -585,15 +621,19 @@ class Interpreter:
     def e_sub(self, instr, environment, state_vars, action_model):
         l_expr = instr['arg1']
         r_expr = instr['arg2']
-        (l_res, _, _) = self.eval(l_expr, environment=environment,
-                                           state_vars=state_vars,
-                                           action_model=action_model)
-        (r_res, _, _) = self.eval(r_expr, environment=environment,
-                                           state_vars=state_vars,
-                                           action_model=action_model)
+
+        self.eval(l_expr, environment=environment,
+                          state_vars=state_vars,
+                          action_model=action_model)
+        (l_res, _, _) = self.ret
+        self.eval(r_expr, environment=environment,
+                          state_vars=state_vars,
+                          action_model=action_model)
+        (r_res, _, _) = self.ret
+
         if l_res['v_type'] == 'val_num' and r_res['v_type'] == 'val_num':
             l_operand, r_operand = l_res['val'], r_res['val']
-            return (dict(
+            self.ret = (dict(
                             v_type = 'val_num',
                             val = l_operand - r_operand
                         ), environment, state_vars)
@@ -604,15 +644,19 @@ class Interpreter:
     def e_mul(self, instr, environment, state_vars, action_model):
         l_expr = instr['arg1']
         r_expr = instr['arg2']
-        (l_res, _, _) = self.eval(l_expr, environment=environment,
-                                           state_vars=state_vars,
-                                           action_model=action_model)
-        (r_res, _, _) = self.eval(r_expr, environment=environment,
-                                           state_vars=state_vars,
-                                           action_model=action_model)
+
+        self.eval(l_expr, environment=environment,
+                          state_vars=state_vars,
+                          action_model=action_model)
+        (l_res, _, _) = self.ret
+        self.eval(r_expr, environment=environment,
+                          state_vars=state_vars,
+                          action_model=action_model)
+        (r_res, _, _) = self.ret
+
         if l_res['v_type'] == 'val_num' and r_res['v_type'] == 'val_num':
             l_operand, r_operand = l_res['val'], r_res['val']
-            return (dict(
+            self.ret = (dict(
                             v_type = 'val_num',
                             val = l_operand * r_operand
                         ), environment, state_vars)
@@ -623,15 +667,19 @@ class Interpreter:
     def e_div(self, instr, environment, state_vars, action_model):
         l_expr = instr['arg1']
         r_expr = instr['arg2']
-        (l_res, _, _) = self.eval(l_expr, environment=environment,
-                                           state_vars=state_vars,
-                                           action_model=action_model)
-        (r_res, _, _) = self.eval(r_expr, environment=environment,
-                                           state_vars=state_vars,
-                                           action_model=action_model)
+
+        self.eval(l_expr, environment=environment,
+                          state_vars=state_vars,
+                          action_model=action_model)
+        (l_res, _, _) = self.ret
+        self.eval(r_expr, environment=environment,
+                          state_vars=state_vars,
+                          action_model=action_model)
+        (r_res, _, _) = self.ret
+
         if l_res['v_type'] == 'val_num' and r_res['v_type'] == 'val_num':
             l_operand, r_operand = l_res['val'], r_res['val']
-            return (dict(
+            self.ret = (dict(
                             v_type = 'val_num',
                             val = l_operand / r_operand
                         ), environment, state_vars)
@@ -640,7 +688,7 @@ class Interpreter:
                              must be of type numerical")
 
     def e_string(self, instr, environment, state_vars, action_model):
-        return (dict(
+        self.ret = (dict(
                         v_type = 'val_str',
                         val = instr['val']
                     ), environment, state_vars)
@@ -658,12 +706,18 @@ class Interpreter:
     # ALSO: note the task_node dictionary format -- we'll want to confirm that this
     # is the way we want to represent a task-node, and then apply a similar format
     # to the action-nodes if and once we begin to generate them
+    def _eval_helper(arg, environment, state_vars, action_model):
+        self._eval_helper(arg, environment, state_vars, action_model)
+        (res, _, _) = self.ret
+        return res
+
     def e_state_var_rd(self, instr, environment, state_vars, action_model):  # arg1 (id string), arg2 (list of parameter ids)
         id = instr['arg1']
         arguments = instr['arg2']
-        evaluated_arguments = [self.eval(arg, environment,
+        evaluated_arguments = tuple([self._eval_helper(arg, environment,
                                          state_vars, action_model)['val'] \
-                               for arg in arguments]
+                                     for arg in arguments])
+
 
         # check if it's a task
         task_table = meth_parser.get_task_table()
@@ -683,8 +737,9 @@ class Interpreter:
                 state_vars = state_vars
             )
 
-            self.decision_nodes.append(task_node)
-            return (task_node, environment, state_vars)
+            self.decision_node = task_node
+            self.new_decision_node = True
+            self.ret = (val_none, environment, state_vars)
 
         else:
             val = state_vars[id][evaluated_arguments]
@@ -697,7 +752,7 @@ class Interpreter:
             elif isinstance(val, bool):
                 v_type = 'val_bool'
 
-            return (dict(
+            self.ret = (dict(
                             v_type = v_type,
                             val = val
                         ), environment, state_vars)
@@ -705,12 +760,14 @@ class Interpreter:
     def e_state_var_wr(self, instr, environment, state_vars, action_model):  # arg1 (id string), arg2 (list of parameter ids), arg3 (expr)
         id = instr['arg1']
         arguments = instr['arg2']
-        (res, _, state_vars) = self.eval(instr['arg3'], environment=environment,
-                                                        state_vars=state_vars,
-                                                        action_model=action_model)
+
+        self.eval(instr['arg3'], environment=environment,
+                                 state_vars=state_vars,
+                                 action_model=action_model)
+        (res, _, state_vars) = self.ret
 
         state_vars[id][arguments] = res['val']
-        return (res, environment, state_vars)
+        self.ret = (res, environment, state_vars)
 
     def e_loc_var_rd(self, instr, environment, state_vars, action_model):    # arg1 (id string)
         id = instr['arg1']
@@ -724,18 +781,21 @@ class Interpreter:
         elif isinstance(val, bool):
             v_type = 'val_bool'
 
-        return (dict(
+        self.ret = (dict(
                         v_type = v_type,
                         val = val
                     ), environment, state_vars)
 
     def e_loc_var_wr(self, instr, environment, state_vars, action_model):    # arg1 (id string), arg2 (expr)
         id = instr['arg1']
-        (res, _, _) = self.eval(instr['arg2'], environment=environment,
-                                            state_vars=state_vars,
-                                            action_model=action_model)
-        environment[id] = val['val']
-        return (res, environment, state_vars)
+
+        self.eval(instr['arg2'], environment=environment,
+                                 state_vars=state_vars,
+                                 action_model=action_model)
+        (res, _, _) = self.ret
+
+        environment[id] = res['val']
+        self.ret = (res, environment, state_vars)
 
 
     """

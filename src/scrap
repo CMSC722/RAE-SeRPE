@@ -1,2 +1,11 @@
 # USE THIS FILE FOR SCRATCH WORK #
 # DELETE THE CONTENTS WHEN FINISHED, LEAVING ONLY THESE INSTRUCTIONS #
+
+602 + 679 + 291 + 765 + 7 + 13
+
+<gurobi include>  = /Library/gurobi702/mac64/include
+<gurobi mex file> = /Users/sbarham/Documents/MATLAB/gurobi_mex_v1.61/gurobi_mex.c
+<gurobi lib>      = /Library/gurobi702/mac64/lib
+<gurobi lib file> = /Library/gurobi702/mac64/lib/libgurobi70
+
+mex -O -I"/Library/gurobi702/mac64/include" "/Users/sbarham/Documents/MATLAB/gurobi_mex_v1.61/gurobi_mex.c" -L"/Library/gurobi702/mac64/lib" -lgurobi70 -lut -largeArrayDims

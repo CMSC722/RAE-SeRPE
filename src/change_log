@@ -1,0 +1,36 @@
+- changed eval into a generator
+  * changed the Interpreter's __iter__ method to return eval(...) -- which,
+    of course, returns a generator object
+  * changed the decision_nodes list into a decision_node variable, and added
+    a flag that eval can use to check for the presence of a new decision_node,
+    which it then yields before proceeding with execution -- this prevents
+    state from being corrupted, as it was before
+  * added a self.ret field to the Interpreter class, which represents the return
+    value of the last eval() operation, since eval() is now a generator, and
+    cannot be used recursively within op_sem evaluation functions.
+  * added a self.state field in order to mark whether or not execution of the
+    method's code is complete or not; if it is, then self.ret will represent
+    the return value of the method as a whole. This will allow for reflection
+    by the interpreter on its own execution state
+  * changed all op_sem evaluation helper methods to return None (implicitly), to make clear
+    the fact that their return values are no longer being used
+
+- started porting documentation over to the wiki
+  * there is much more work to be done on this front
+
+- started implementing the dom lexer
+
+- started fixing the preconditions in the meth_parser
+
+TODO:
+- add check in e_seq to see whether next instr is not a control structure
+- discuss precondition representation with Matt and Gavin
+- discuss domain representation with Matt and Gavin
+- write .act reader
+- write .cmd reader
+- write documentation for .cmd and .act files (this will be very brief)
+- write documentation for .meth file
+- write documentation for .meth DSL
+- write documentation for .dom file
+- write documentation for domain data structures -- state variables, rigid
+  relations, object sets, etc.: everything read in from a .dom file
