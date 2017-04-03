@@ -1,6 +1,7 @@
 from logpy.facts import (Relation, fact)
 from unification.variable import var
 from logpy.core import (isvar, eq, EarlyGoalError, lany, everyg, lallgreedy, run)
+from interpreter import *
 
 def Rae(method_lib, state):
     '''This is the main method for RAE, which will loop infinitely as it expects to receive tasks/events and refine a set
@@ -10,6 +11,7 @@ def Rae(method_lib, state):
     
     #Keep rae running indefinitely or add option for shutting down?
     # From Sunandita: Can do this based on the output of getTaskEvents(). RAE stops when its empty?
+	#Can't it be given inputs at arbitrary times?
     while True: 
         te_inputs = getTasksEvents()
         
@@ -25,14 +27,15 @@ def Rae(method_lib, state):
                 #From Sunandita: Can try out different ways to choose the method in future instead of just poping the first one
                 method = candidates.pop(0)
                 tried = set()
-                agenda.add([(task_event, method, 0, tried)]) #Third element is 'i', which we'll ignore for now
+                agenda.add([(task_event, method, None, tried)]) #Third element is 'i' normally, but we'll use an Interpreter generator object instead
         
         #Now we'll progress each stack in the agenda once and only add it back to the agenda if Progress succeeded
         #From Sunandita: We add a stack back only when stack is not empty and Progress has succeeded. Yes? 
+		#Return None if Progress does not succeed
         temp_agenda = set()
         
         for stack in agenda:
-            stack = Progress(stack)
+            Progress(method_lib, state, stack)
             
             if stack:
                 temp_agenda.add(stack)
@@ -140,20 +143,95 @@ def getCandidates(method_lib, task_event, state):
 
 
 
-def Progress(stack):
+def Progress(method_lib, state, stack):
     '''This method will refine the current stack.
-       Stack is a bunch of method frames of the form: (task_event, method, 0, tried) [From Sunandita: use i instead of 0 here]
+       Stack is a bunch of method frames of the form: (task_event, method, i, tried, Interpreter)
        and method contains it's name and the current instantiation of its arguments: (method_name, (a1, b1, c1, d1))'''
 
-    top_tup = stack.pop()
-    pass
+    top_tup = stack[len(stack) - 1]
+    
+    task_event = top_tup[0]
+    method = top_tup[1]
+	interp = top_tup[2]
+    tried = top_tup[3]
+    
+    #We're going to run the entire method for now instead of using the line pointer 'i'
+	#We'll keep track of the Interpreter object that will lazily yield the branch nodes
+    if not interp:
+		interp = Interpreter(method_lib[method[0]], {}, {}, {}) '''This needs to be given the correct inputs when that's sorted'''
+    
+    next_node = interp.next()
+	
+	#All the return cases of the interpreter
+	if next_node #is assignment?
+		#UPDATE STATE HERE
+		stack[len(stack) - 1] = (task_event, method, interp, tried)
+		return
+	
+	elif next_node #is command?
+		#TRIGGER COMMAND HERE
+		stack[len(stack) - 1] = (task_event, method, interp, tried)
+		return
+	
+	elif next_node #is failure?
+		Retry(stack)
+		return
+	
+	elif not next_node #is finished? Catch the StopIteration exception?
+		stack.pop()
+		return
+	
+	elif next_node #is task?
+		#GET TASK FROM NODE HERE
+		candidates = getCandidates(method_lib, 'task_event_primed', state)
+		if not candidates:
+			Retry(stack)
+		else:
+			method_primed = candidates.pop(0)
+            tried_primed = set()
+			stack.append(('task_event_primed', method_primed, None, tried_primed))
+		return
+	
+	
+	#Should not get here
+	print "ERROR: Unexpected node type: " + str(next_node)
+	return
 
 
 
 
 def Retry(stack):
     '''This method will retry other methods that applied to the task. It acts the backtracker'''
-    pass
+    top_tup = stack.pop()
+    
+    task_event = top_tup[0]
+    method = top_tup[1]
+	interp = top_tup[2]
+    tried = top_tup[3]
+	
+	tried.add(method)
+	
+	candidates = getCandidates(method_lib, task_event state)
+	
+	#Can again choose better way to decide candidate here
+	choice = None
+	while candidates and not choice:
+		choice = candidates.pop(0)
+		if choice in tried:
+			choice = None
+	
+	#Put this new method on the stack to be tried
+	if choice:
+		stack.append((task_event, choice, None, tried))
+	
+	#Retry underlying task if this one completely failed. If no stack left, let it disappear from agenda
+	else:
+		if stack:
+			Retry(stack)
+		else:
+			print "Failed to accomplish " + task_event
+			
+	return
 
 
 
