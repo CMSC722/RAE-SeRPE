@@ -1,3 +1,41 @@
+========================
+=        INPUT         =
+========================
+
+Objects:
+docks = {d1, d2}
+robots = {r1, r2}
+cargo = {c1, c2, c3}
+piles = {p1, p2, p3, p4}
+
+Rigid relations:
+adjacent = {(d1, d2)}
+on-dock = {(p1, d1), (p2, d1), (p3, d2), (p4, d2)}
+
+/*
+State-variable ranges:
+on-robot(robots) = cargo + {nil}
+loc(robots|cargo|piles) = docks
+in-pile(cargo) = piles
+*/
+
+Initial state:
+loc(r1) = d1
+loc(r2) = d2
+in-pile(c1) = p1
+in-pile(c2) = p2
+in-pile(c3) = p3
+on-robot(r1) = nil
+on-robot(r2) = nil
+
+Goal:
+in-pile(c3) = p4
+
+
+========================
+=       RESULT         =
+========================
+
 {
   'rigid_rels':
     {
