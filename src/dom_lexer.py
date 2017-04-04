@@ -42,75 +42,149 @@ More information on the PLY module and how it works can be found at the
 following URL: http://www.dabeaz.com/ply/ply.html#ply_nn1
 """
 
+import ply.lex as lex
+import re
+import json                 # a better way of getting a pretty print of a dict
+from pydoc import pager     # we'll be using this to produce less-like,
+                            # paged output -- primarily for debugging purposes
+
+header_flag = False
 
 """
 TOKEN LIST
 """
 
+reserved = {
+    # privileged data types
+    'int':      'INT',
+    'float':    'FLOAT',
+    'bool':     'BOOL',
+    'nil':      'NIL'
+}
 
-"""
-FLAGS
-"""
-
-objects_flag = False    # we're in the 'objects' section of the file
-rigid_flag = False      # we're in the 'rigid relations' section of the file
-state_flag = False      # we're in the 'state-variable ranges' section of the file
-s0_flag = False         # we're in the 'initial state' section of the file
-goal_flag = False       # we're in the 'goal' section of the file
-
-def all_false():
-    objects_flag = False
-    rigid_rels_flag = False
-    state_vars_flag = False
-    s0_flag = False
-    goal_flag = Flase
+tokens = reserved.values() + [
+    # headers
+    'OBJ',
+    'RIG',
+    'SVS',
+    'S0',
+    'GOAL',
+    # identifiers
+    'ID',
+    # punctuation
+    'LPAREN',
+    'RPAREN',
+    'LBRACK',
+    'RBRACK',
+    'COLON',
+    'COMMA',
+    # relational operators
+    'EQUALS',
+    # boolean primitives
+    'TRUE',
+    'FALSE'
+]
 
 
 """
 TOKENS
 """
+# # headers
+t_OBJ   =   r'(O|o)bjects'
+t_RIG   =   r'(R|r)igid\W+(R|r)elations'
+t_SVS   =   r'(S|s)tate(-|\W+)(V|v)ariable.*'
+t_S0    =   r'(I|i)nitial.*:='
+t_GOAL  =   r'(G|g)oal.*'
 
+# punctuation
+t_LPAREN =  r'\('
+t_RPAREN =  r'\)'
+t_LBRACK =  r'\{'
+t_RBRACK =  r'\}'
+t_COMMA =   r','
 
+# relational operators
+t_EQUALS =  r'='
 
+# boolean primitives
+t_TRUE =    r'True'
+t_FALSE =   r'False'
+
+# This helper rule defines which lexemes we ignore
+t_ignore = ' \t'
 
 """
 RULES
 """
+# identifiers (optional tick at end now allowed) --
+# but also catches headers, which can look just like identifiers (since we're
+# being so lenient with how headers are allowed to be written -- with or
+# without capital letters, with optional spaces in between words, etc.)
+def t_ID(t):
+    r'[a-zA-Z_][a-zA-Z_0-9-]*\'?'
 
-def t_objects(t):
-    r'(O|o)bjects:'
-    all_false()
-    objects_flag = True
+    global header_flag
+    if header_flag:
+        return
+
+    obj_re =    re.compile(r'(O|o)bjects')
+    rig_re =    re.compile(r'(R|r)igid')
+    svs_re =    re.compile(r'(S|s)tate')
+    s0_re =     re.compile(r'(I|i)nitial')
+    goal_re =   re.compile(r'(G|g)oal')
+
+    # print("t.value = " + t.value + "\n")
+    # print("re match = " + repr(obj_re.match(t.value)) + "\n")
+
+    if obj_re.match(t.value):
+        header_flag = True
+        t.type = 'OBJ'
+        print()
+    elif rig_re.match(t.value):
+        header_flag = True
+        t.type = 'RIG'
+    elif svs_re.match(t.value):
+        header_flag = True
+        t.type = 'SVS'
+    elif s0_re.match(t.value):
+        header_flag = True
+        t.type = 'S0'
+    elif goal_re.match(t.value):
+        header_flag = True
+        t.type = 'GOAL'
+    else:
+        t.type = reserved.get(t.value, 'ID')
+
+    return t
+
+def t_COLON(t):
+    r':'
+    global header_flag
+    header_flag = False
+    return t
+
+def t_INT(t):
+    r'[-+]?0|([1-9]\d*)'
+    t.value = int(t.value)
+    return t
+
+def t_FLOAT(t):
+    r'([-+]?0?|([1-9]\d*))\.?\d+'
+    t.value = float(t.value)
+    return t
+
+def t_ONE_LINE_COMMENT(t):
+    r'(\#.*$)|(//.*$)'
     pass
 
-def t_rigid_rels(t):
-    r'(R|r)igid\W+(R|r)elations:'
-    all_false()
-    objects_flag = True
+def t_MULTI_LINE_COMMENT(t):
+    r'/\*(.|[\n\r])*?\*/'
     pass
-
-def t_state_vars(t):
-    r'(S|s)tate(-|\W+)(V|v)ariable.*:'
-    all_false()
-    objects_flag = True
-    pass
-
-def t_s0(t):
-    r'(I|i)nitial.*:'
-    all_false()
-    objects_flag = True
-    pass
-
-def t_goal(t):
-    r'(G|g)oal.*:'
-    all_false()
-    objects_flag = True
-    pass
-
 
 """
 HELPER FUNCTIONS
 """
+
 # This allows us to track line numbers.
 # Since it's not a rule -- but rather a kind of helper -- we do not capitalize
 # it's identifier.
@@ -124,6 +198,15 @@ def t_error(t):
     print("Illegal character '%s'" % t.value[0])
     t.lexer.skip(1)
 
+# EOF handling rule
+# def t_eof(t):
+#     # Get more input (Example)
+#     more = raw_input('... ')
+#     if more:
+#         self.lexer.input(more)
+#         return self.lexer.token()
+#     return None
+
 def find_column(input,token):
     """
     This helper function computes the column at which the current token begins.
@@ -136,24 +219,84 @@ def find_column(input,token):
         column = (token.lexpos - last_cr) + 1
     return column
 
-'''
-EXAMPLE FILE:
+"""
+LEXER API
 
+These are some useful methods for sanity-checking basic aspects of the
+lexer. They can be run from the top-level (e.g., at the bottom of this
+file) to get an idea at a glance of whether anything is horribly broken.
+"""
+
+def dom_lex_print(filename='', file_text='', paged=True):
+    """
+    Attempts to open the file specified by the supplied path ('filename'),
+    then reads the file in as a string, lexes it, and prints the lexed output
+    in paged format (if paged is left True) -- or not (if paged is set to
+    False).
+
+    TODO: add error handling -- in particular against the case where the file-
+    name is invalid or the specified file doesn't exist.
+    """
+
+    # try to read the supplied file
+    input = ''
+    if not (filename == ''):
+        with open(filename, 'r') as f:
+            input = f.read()
+    else:
+        input = file_text
+
+    global_dom_lexer_instance.input(input)
+
+    # lex the file and aggregate the output
+    output = ''
+    while True:
+        tok = global_dom_lexer_instance.token()
+        if not tok:
+            break
+        output += (tok.__repr__() + '\n')
+    output += '\n'
+
+    # print the output
+    if paged:
+        pager(output)
+    else:
+        print(output)
+
+# some aliases for the above function, for Ruby-like happiness convenience:
+print_token_stream = dom_lex_print
+
+"""
+Create a global lexer instance.
+Other modules should get their lexer from here, to avoid building
+unnecessary finite automata.
+"""
+global_dom_lexer_instance = lex.lex()
+
+def get_dom_lexer():
+    return global_dom_lexer_instance
+
+"""
+And here we test the thing ...
+"""
+
+test_file = """
 Objects:
-misc = {nil}
-dock = {d1, d2}
-robot = {r1, r2}
+docks = {d1, d2}
+robots = {r1, r2}
 cargo = {c1, c2, c3}
-pile = {p1, p2, p3, p4}
+piles = {p1, p2, p3, p4}
 
 Rigid relations:
 adjacent = {(d1, d2)}
 on-dock = {(p1, d1), (p2, d1), (p3, d2), (p4, d2)}
 
+/*
 State-variable ranges:
-on-robot(_) = {c1, c2, c3, nil}
-loc(_) = {d1, d2}
-in-pile(_) = {p1, p2, p3, p4}
+on-robot(robots) = cargo + {nil}
+loc(robots|cargo|piles) = docks
+in-pile(cargo) = piles
+*/
 
 Initial state:
 loc(r1) = d1
@@ -166,4 +309,6 @@ on-robot(r2) = nil
 
 Goal:
 in-pile(c3) = p4
-'''
+"""
+
+# print_token_stream(file_text=test_file)

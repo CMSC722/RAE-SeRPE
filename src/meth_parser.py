@@ -529,9 +529,6 @@ def p_loc_var_wr(p):
         arg2 = p[3]
     )
 
-# numerical expressions:
-
-
 # the error-handling function:
 def p_error(p):
     if p:
