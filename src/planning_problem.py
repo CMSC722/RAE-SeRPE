@@ -19,11 +19,11 @@ methods, action models, execution platform commands, and problem specification.
 
 import zipfile
 # import dom_lexer            # this is the module where we've specified the dom-file lexer rules
-import dom_parser           # this is the module where we've specified the dom-file parser rules
+import parsing.dom_parser           # this is the module where we've specified the dom-file parser rules
 # import meth_lexer           # this is the module where we've specified the method-file lexer rules
-import meth_parser          # this is the module where we've specified the method-file parser rules
-import action_parser
-import command_parser
+import parsing.meth_parser          # this is the module where we've specified the method-file parser rules
+import parsing.action_parser
+import parsing.command_parser
 
 class PlanningProblem:
     def __init__(path_to_zip):
