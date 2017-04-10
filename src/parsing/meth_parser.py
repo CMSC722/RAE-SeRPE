@@ -235,20 +235,29 @@ PRODUCTIONS FOR PRECONDITIONS
 '''
 
 def p_pre(p):
-    'pre : PRE COLON preconditions'
-    p[0] = p[3]
+    'pre : PRE COLON PYTHON_CODE'
+    p[0] = dict(
+        pre_code = p[3]
+    )
+    try:
+        exec p[3] in p[0]
+    except:
+        error_fun = "def precondition(): raise Exception(\"The provided precondition code " \
+                    "failed to compile, likely due to a syntax error. Please find the " \
+                    "problematic code listed below:\n\" + pre_code)"
+        exec error_fun in p[0]
 
 # NB: the bexpr2prec utility is defined at the bottom of the file
-def p_precon_list(p):
-    '''preconditions : bexpr AND preconditions
-                     | bexpr
-                     |                        '''
-    if len(p) == 4:
-        p[0] = [bexpr2prec(p[1])] + p[3]
-    elif len(p) == 2:
-        p[0] = [bexpr2prec(p[1])]
-    else:
-        p[0] = list()
+# def p_precon_list(p):
+#     '''preconditions : bexpr AND preconditions
+#                      | bexpr
+#                      |                        '''
+#     if len(p) == 4:
+#         p[0] = [bexpr2prec(p[1])] + p[3]
+#     elif len(p) == 2:
+#         p[0] = [bexpr2prec(p[1])]
+#     else:
+#         p[0] = list()
 
 
 '''

@@ -106,7 +106,19 @@ tokens = list(set(reserved.values() + [
     # boolean primitives
     'TRUE',
     'FALSE'
+    # terrible software design decision
+    'PYTHON_CODE'
 ]))
+
+# a lexer state indicating that the portion of the string currently being
+# lexed is native python code that must be grouped together in a single,
+# monolithic token
+states = (
+    ('python_code', 'exclusive')
+)
+
+# a global variable indicating we've seen the PRE keyword:
+_SEEN_PRE = False
 
 """
 LEXER RULES
@@ -184,6 +196,20 @@ t_ignore = ' \t'
 # Token action rules follow: #
 # ########################## #
 
+# Match the "PRE" keyword and enter native-python state
+def t_begin_python_code(t):
+    r'=BEGIN'
+    t.lexer.code_start = t.lexer.lexpos     # Record the starting position
+    t.lexer.begin('python_code')            # Enter 'ccode' state
+
+def t_end_python_code(t):
+    r'=END'
+    t.value = t.lexer.lexdata[t.lexer.code_start:t.lexer.lexpos+1]
+    t.value = "def precondition():\n" + t.value
+    t.type = "PYTHON_CODE"
+    t.lexer.lineno += t.value.count('\n')
+    t.lexer.begin('INITIAL')
+    return t
 
 # This function identifies keywords and issues the appropriate
 # tokens (e.g., 'body' => 'BODY', or ',' => 'COMMA') -- *or*, if
@@ -191,6 +217,7 @@ t_ignore = ' \t'
 # 'some_var' => 'ID').
 def t_ID(t):
     r'[a-zA-Z_][a-zA-Z_0-9-]*'
+    if
     t.type = reserved.get(t.value, 'ID') # if it's not a keyword, it's an ID
     return t
 

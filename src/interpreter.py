@@ -63,7 +63,8 @@ import ply.lex as lex
 import ply.yacc as yacc
 from pydoc import pager     # we'll be using this to produce less-like,
                             # paged output -- primarily for debugging purposes
-import dom_lexer            # this is the module where we've specified the dom-file lexer rules
+# import dom_lexer            # this is the module where we've specified the dom-file lexer rules
+# import dom_parser           # this is the module where we've specified the dom-file parser rules
 import meth_lexer           # this is the module where we've specified the method-file lexer rules
 import meth_parser          # this is the module where we've specified the method-file parser rules
 # import pprint             # python's pretty-printer for arbitrary data
@@ -247,7 +248,7 @@ class Interpreter:
         """
         # no method table yet
         if not method_table:
-            raise NoMethodTable("Either the method table you supplied is empty, "
+            raise NoMethodTable("Either the method table you supplied is empty, " \
                                  "or it is nil, or no .meth file has been parsed yet")
 
         # no such method
