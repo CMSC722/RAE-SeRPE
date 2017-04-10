@@ -10,3 +10,5 @@ loc(r1) = A
 
 Goal:
 loc(r1) = L
+
+Actions - return state of the environment

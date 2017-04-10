@@ -2,6 +2,8 @@ from logpy.facts import (Relation, fact)
 from unification.variable import var
 from logpy.core import (isvar, eq, EarlyGoalError, lany, everyg, lallgreedy, run)
 from interpreter import *
+from importlib import import_module
+import os,sys,inspect
 
 def Rae(method_lib, state):
     '''This is the main method for RAE, which will loop infinitely as it expects to receive tasks/events and refine a set
@@ -152,50 +154,50 @@ def Progress(method_lib, state, stack):
     
     task_event = top_tup[0]
     method = top_tup[1]
-	interp = top_tup[2]
+    interp = top_tup[2]
     tried = top_tup[3]
     
     #We're going to run the entire method for now instead of using the line pointer 'i'
 	#We'll keep track of the Interpreter object that will lazily yield the branch nodes
     if not interp:
-		interp = Interpreter(method_lib[method[0]], {}, {}, {}) '''This needs to be given the correct inputs when that's sorted'''
+        interp = Interpreter(method_lib[method[0]], {}, {}, {}) #This needs to be given the correct inputs when that's sorted
     
     next_node = interp.next()
 	
 	#All the return cases of the interpreter
-	if next_node #is assignment?
-		#UPDATE STATE HERE
-		stack[len(stack) - 1] = (task_event, method, interp, tried)
-		return
+    if next_node: #is assignment?
+        #UPDATE STATE HERE
+        stack[len(stack) - 1] = (task_event, method, interp, tried)
+        return
+        
+    elif next_node: #is command?
+        #TRIGGER COMMAND HERE
+        stack[len(stack) - 1] = (task_event, method, interp, tried)
+        return
 	
-	elif next_node #is command?
-		#TRIGGER COMMAND HERE
-		stack[len(stack) - 1] = (task_event, method, interp, tried)
-		return
+    elif next_node: #is failure?
+        Retry(stack)
+        return
 	
-	elif next_node #is failure?
-		Retry(stack)
-		return
+    elif not next_node: #is finished? Catch the StopIteration exception?
+        stack.pop()
+        return
 	
-	elif not next_node #is finished? Catch the StopIteration exception?
-		stack.pop()
-		return
-	
-	elif next_node #is task?
-		#GET TASK FROM NODE HERE
-		candidates = getCandidates(method_lib, 'task_event_primed', state)
-		if not candidates:
-			Retry(stack)
-		else:
-			method_primed = candidates.pop(0)
+    elif next_node: #is task?
+        #GET TASK FROM NODE HERE
+        candidates = getCandidates(method_lib, 'task_event_primed', state)
+        if not candidates:
+            Retry(stack)
+        else:
+            method_primed = candidates.pop(0)
             tried_primed = set()
-			stack.append(('task_event_primed', method_primed, None, tried_primed))
-		return
+            stack.append(('task_event_primed', method_primed, None, tried_primed))
+        return
 	
 	
-	#Should not get here
-	print "ERROR: Unexpected node type: " + str(next_node)
-	return
+    #Should not get here
+    print "ERROR: Unexpected node type: " + str(next_node)
+    return
 
 
 
@@ -206,32 +208,32 @@ def Retry(stack):
     
     task_event = top_tup[0]
     method = top_tup[1]
-	interp = top_tup[2]
+    interp = top_tup[2]
     tried = top_tup[3]
 	
-	tried.add(method)
+    tried.add(method)
 	
-	candidates = getCandidates(method_lib, task_event state)
+    candidates = getCandidates(method_lib, task_event, state)
 	
-	#Can again choose better way to decide candidate here
-	choice = None
-	while candidates and not choice:
-		choice = candidates.pop(0)
-		if choice in tried:
-			choice = None
+    #Can again choose better way to decide candidate here
+    choice = None
+    while candidates and not choice:
+        choice = candidates.pop(0)
+        if choice in tried:
+            choice = None
 	
-	#Put this new method on the stack to be tried
-	if choice:
-		stack.append((task_event, choice, None, tried))
+    #Put this new method on the stack to be tried
+    if choice:
+        stack.append((task_event, choice, None, tried))
 	
-	#Retry underlying task if this one completely failed. If no stack left, let it disappear from agenda
-	else:
-		if stack:
-			Retry(stack)
-		else:
-			print "Failed to accomplish " + task_event
-			
-	return
+    #Retry underlying task if this one completely failed. If no stack left, let it disappear from agenda
+    else:
+        if stack:
+            Retry(stack)
+        else:
+            print "Failed to accomplish " + task_event
+            
+    return
 
 
 
@@ -259,3 +261,14 @@ method_lib = {
 task_event = ('get-cargo', ('r1', 'c1'))
     
 print "Test Candidates: " + str(getCandidates(method_lib, task_event, state))
+
+
+#Example of importing and using actions here:
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0,parentdir) 
+
+file_path = 'domains.simple_domain'
+a_mod = import_module('.actions', file_path)
+
+#bool = a_mod.actionDict['pickupCargo']({}, None, None, None)
