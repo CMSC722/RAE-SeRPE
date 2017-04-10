@@ -338,7 +338,7 @@ class Interpreter:
                              action_model=action_model)
         (res, environment, state_vars) = self.ret
 
-        if self.mode == 'RAE' && not self.new_decision_node:
+        if self.mode == 'RAE' and not self.new_decision_node:
             self.new_decision_node = True
             self.decision_node = dict(
                                     node_type =   'progress_node',
