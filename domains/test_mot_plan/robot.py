@@ -2,11 +2,10 @@ import map
 
 class robot:
     location=''
-    temp = map.map()
-
+    arena=map.map()
     def __init__(self,loc,currMap):
         self.location=loc
-        self.temp=currMap
+        self.arena=currMap
 
     def move(self,loc):
         print 'Moved from location: ' + self.location + ' to location : ' + loc
@@ -30,8 +29,20 @@ class robot:
         print 'Exited Room : ' + self.location + ' and Entered Hallway : ' +  loc
         self.location=loc
 
-
     def currLoc(self):
         print self.location
 
-    # def naivepath(self,loc2):
+    def naivePath(self,start,goal):
+        return min(list(self.naivePathHelper(start, goal)), key=len)
+
+    def naivePathHelper(self,start, goal):
+        graph=self.arena.observMatrix
+        stack = [(start, [start])]
+        while stack:
+            (vertex, path) = stack.pop()
+            for next in graph[vertex] - set(path):
+                if next == goal:
+                    yield path + [next]
+                else:
+                    pass
+                stack.append((next, path + [next]))

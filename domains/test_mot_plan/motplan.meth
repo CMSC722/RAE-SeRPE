@@ -1,6 +1,6 @@
 m-move-to-room(r,loc1,loc2)
     task: move-to-room(r,loc2)
-	    pre: loc2 is empty
+	    pre: loc(r)=loc1
     body:
         if(search(r,loc2)=true)
             exit-room(r,loc1)
@@ -25,14 +25,14 @@ m-exit-room(r,loc1,d,loc2)
 
 move-towards(r,loc1,loc2)
     task: move-towards(r,loc2)
-	    pre: path to loc2 exists
+	    pre: currLoc(r)=loc1
     body:
         t=naïve-path(r,loc1,loc2)
         if(t=empty)
 	        return fail
         else:
 	        while(t!=empty)
-		        if(search(r, poll(t))
-			    move(r,loc1,pop(t))
+		        if(search(r, poll(t)):
+			        move(r,loc1,pop(t))
 		    else:
 			    move-towards(r,loc1,pop(t))

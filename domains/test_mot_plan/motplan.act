@@ -20,3 +20,6 @@ enter(r,d):
     eff: enter(d)
 
 naïve-path(r,loc1,loc2): robot returns a naïve path from loc1 to loc2()
+
+
+add a state as the first variable

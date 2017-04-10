@@ -7,10 +7,11 @@ class map:
     adjacencyMatrix={}
 
 
-    def init(self):
+    def __init__(self):
         self.defDoors()
         self.defObservMatrix()
         self.defRooms()
+        self.defAdjacencyMatrix()
 
     def defRooms(self):
         self.rooms=['A','B','C','D','E','F']
@@ -37,18 +38,18 @@ class map:
 
     def defObservMatrix(self):
         self.observMatrix={
-            'A':['A','G'],
-            'B':['B','H'],
-            'C':['C','I'],
-            'D':['D','J','K','L'],
-            'E':['E','K'],
-            'F':['F','L'],
-            'G':['A','G','H'],
-            'H':['B','H','G','I','J'],
-            'I':['C','H','I','J'],
-            'J':['D','J','H','I','K','L'],
-            'K':['E','L','J','K'],
-            'L':['F','K','J','L']
+            'A':set(['A','G']),
+            'B':set(['B','H']),
+            'C':set(['C','I']),
+            'D':set(['D','J','K','L']),
+            'E':set(['E','K']),
+            'F':set(['F','L']),
+            'G':set(['A','G','H']),
+            'H':set(['B','H','G','I','J']),
+            'I':set(['C','H','I','J']),
+            'J':set(['D','J','H','I','K','L']),
+            'K':set(['E','L','J','K']),
+            'L':set(['F','K','J','L'])
         }
 
     def defAdjacencyMatrix(self):
@@ -73,11 +74,4 @@ class map:
             return True
         else:
             return False
-
-    # def naivePath(self,location1, location2):
-
-
-
-
-
 
