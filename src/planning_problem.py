@@ -96,7 +96,9 @@ class PlanningProblem:
         if type(obj) == dict:
             string = string + '%s{' % ((nested_level) * spacing) + '\n'
             for k, v in obj.items():
-                if hasattr(v, '__iter__'):
+                if k == '__builtins__':
+                    continue
+                elif hasattr(v, '__iter__'):
                     string = string + '%s%s:' % ((nested_level + 1) * spacing, k) + '\n'
                     string = string + self.dump(v, nested_level + 1) + '\n'
                 else:
