@@ -16,16 +16,26 @@ It exposes a single function, parse() (the function new_module is meant to be
 private to this module).
 """
 
-def parse(filename):
-     # try to read the supplied file
-     input = ''
-     with open(filename, 'r') as f:
-         input = f.read()
+def parse(filename, name):
+    """
+    filename is the path to the module that we're trying to load
+    name is the name we'd like the module, once created, to have --
+    it should be either:
+        actions
+    or
+        commands
+    """
+    import inspect
 
-    module = new_module(input, 'actions', True)
-    functions = inspect.getmembers(action_module, inspect.isfunction)
+    # try to read the supplied file
+    input = ''
+    with open(filename, 'r') as f:
+        input = f.read()
 
-    return action_models
+    module = _new_module(input, name, True)
+    functions = inspect.getmembers(module, inspect.isfunction)
+
+    return functions
 
 
 def _new_module(code, name, add_to_sys_modules=False):

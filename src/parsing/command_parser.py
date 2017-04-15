@@ -21,4 +21,4 @@ private to this module).
 import fun_map
 
 def parse(filename):
-     return fun_map.parse(filename)
+     return fun_map.parse(filename, 'commands')

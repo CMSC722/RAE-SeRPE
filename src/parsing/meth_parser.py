@@ -49,12 +49,13 @@ TODO:
 import ply.yacc as yacc
 from meth_lexer import tokens
 from meth_lexer import get_lexer
+from meth_lexer import print_token_stream
 import json                     # a better way of getting a pretty print of a dict
                                 # from interpreter.py import meth_parser
 from pydoc import pager         # we'll be using this to produce less-like,
                                 # paged output -- primarily for debugging purposes
 
-DEBUG = False
+DEBUG = True
 
 """
 METHODS, TASKS, PRECONDITIONS, and INSTRUCTIONS: REPRESENTATION
@@ -188,7 +189,7 @@ def p_methods(p):
         # method_table = p[0]
 
 def p_method(p):
-    'method : ID LPAREN params RPAREN COLON task pre body'
+    'method : METHOD ID LPAREN params RPAREN COLON task pre body'
     # create a dictionary representing the 'method' nonterminal's value
     p[0] = dict(
         id = p[1],
@@ -239,13 +240,15 @@ def p_pre(p):
     p[0] = dict(
         pre_code = p[3]
     )
+    print("\n\nHERE 1\n\n")
     try:
         exec p[3] in p[0]
     except:
-        error_fun = "def precondition(): raise Exception(\"The provided precondition code " \
+        error_fun = "def preconditions(state_variables): raise Exception(\"The provided precondition code " \
                     "failed to compile, likely due to a syntax error. Please find the " \
                     "problematic code listed below:\n\" + pre_code)"
         exec error_fun in p[0]
+    print("\n\nHERE 2\n\n")
 
 # NB: the bexpr2prec utility is defined at the bottom of the file
 # def p_precon_list(p):
@@ -699,6 +702,7 @@ def parse(filename):
         input = f.read()
 
     # lex and parse the file text
+    print_token_stream(filename)
     meth_parser_instance.parse(input, lexer=meth_lexer_instance, \
                                       tracking=True, debug=DEBUG)
 

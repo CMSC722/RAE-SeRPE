@@ -1,0 +1,20 @@
+method m_start(n):
+  task: t_start(n)
+  pre:
+  =BEGIN
+def preconditions(_):
+  print("Evaluating m_start(n) preconditions.\n")
+  =END
+  body:
+    m = n + 3
+    t_print_result(m)
+
+method m_print_result(n):
+  task: t_print_result(n)
+  pre:
+  =BEGIN
+def preconditions(_):
+  print("Evaluating m_print_result(n) preconditions.\n")
+  =END
+  body:
+    print_result(n)

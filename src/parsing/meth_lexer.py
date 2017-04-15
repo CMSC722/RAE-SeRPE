@@ -51,6 +51,8 @@ by ply.lex for validation purposes, by ply.yacc to identify valid terminals.
 """
 
 reserved = {
+    # method delimiter
+    'method':   'METHOD',
     # statement delimiters
     'task':     'TASK',
     'pre':      'PRE',
@@ -105,7 +107,7 @@ tokens = list(set(reserved.values() + [
     'ASSIGN',
     # boolean primitives
     'TRUE',
-    'FALSE'
+    'FALSE',
     # terrible software design decision
     'PYTHON_CODE'
 ]))
@@ -114,11 +116,8 @@ tokens = list(set(reserved.values() + [
 # lexed is native python code that must be grouped together in a single,
 # monolithic token
 states = (
-    ('python_code', 'exclusive')
+    ('pythoncode', 'exclusive'),
 )
-
-# a global variable indicating we've seen the PRE keyword:
-_SEEN_PRE = False
 
 """
 LEXER RULES
@@ -150,7 +149,29 @@ token represents. Here, the regular expression used to capture the token is
 provided as the function's documentation string.
 """
 
-# ########################## ## punctuation
+# literals = ['%']
+
+# MODE SWITCHING RULES
+# Match the "=BEGIN" keyword and enter native-python state
+def t_begin_pythoncode(t):
+    r'=BEGIN'
+    t.lexer.code_start = t.lexer.lexpos     # Record the starting position
+    t.lexer.begin('pythoncode')            # Enter 'ccode' state
+
+def t_pythoncode_error(t):
+    t.lexer.skip(1)
+
+# Match the "=END" keyword and re-enter meth-file DSL state
+def t_pythoncode_end(t):
+    r'=END'
+    t.type = "PYTHON_CODE"
+    t.value = t.lexer.lexdata[t.lexer.code_start:t.lexer.lexpos+1]
+    t.value = "def precondition():\n" + t.value
+    t.lexer.lineno += t.value.count('\n')
+    t.lexer.begin('INITIAL')
+    return t
+
+# ########################## #
 # Simple token rules follow: #
 # ########################## #
 
@@ -196,28 +217,12 @@ t_ignore = ' \t'
 # Token action rules follow: #
 # ########################## #
 
-# Match the "PRE" keyword and enter native-python state
-def t_begin_python_code(t):
-    r'=BEGIN'
-    t.lexer.code_start = t.lexer.lexpos     # Record the starting position
-    t.lexer.begin('python_code')            # Enter 'ccode' state
-
-def t_end_python_code(t):
-    r'=END'
-    t.value = t.lexer.lexdata[t.lexer.code_start:t.lexer.lexpos+1]
-    t.value = "def precondition():\n" + t.value
-    t.type = "PYTHON_CODE"
-    t.lexer.lineno += t.value.count('\n')
-    t.lexer.begin('INITIAL')
-    return t
-
 # This function identifies keywords and issues the appropriate
 # tokens (e.g., 'body' => 'BODY', or ',' => 'COMMA') -- *or*, if
 # no such keyword has been defined, assumes the token is an (e.g.,
 # 'some_var' => 'ID').
 def t_ID(t):
     r'[a-zA-Z_][a-zA-Z_0-9-]*'
-    if
     t.type = reserved.get(t.value, 'ID') # if it's not a keyword, it's an ID
     return t
 

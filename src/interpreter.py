@@ -172,21 +172,21 @@ treating it as if it were a list of decision-tree nodes.
 
 class Interpreter:
     def __init__(self, method = {}, environment = {},
-                 state_vars = {}, action_model = None,
+                 state_vars = {}, task_table = {}, action_table = {},
                  mode = 'SeRPE'):
         self.method = method
         self.environment = environment
         self.state_vars = state_vars
-        self.action_model = action_model
+        self.task_table = task_table
+        self.action_table = action_table
+        self.mode = mode # can be SeRPE or RAE
         self.new_decision_node = False
         self.decision_node = None
         self.ret = None
         self.state = 'READY' # can be READY, EXECUTING, FINISHED, or ERROR
-        self.mode = mode # can be SeRPE or RAE
 
     def __iter__(self):
-        return self.execute_method(self.method, self.environment, \
-                                  self.state_vars, self.action_model)
+        return self.execute_method(self.method, self.environment, self.state_vars)
 
     def __str__(self):
         return json.dumps(self.decision_nodes, sort_keys=False, indent=3)
@@ -202,17 +202,16 @@ class Interpreter:
     which generates a method-table; or one must already
     """
 
-    def execute_method(self, method, environment, state_vars, action_model):
+    def execute_method(self, method, environment, state_vars):
         if method:
             first_instr = method['exprs']
             return self.eval(first_instr, environment=environment,
-                             state_vars=state_vars, action_model=action_model)
+                             state_vars=state_vars)
         else:
             raise NoMethodSupplied("No valid method specified for execution")
 
     def execute_method_name(self, method_name, environment,
-                       method_table = meth_parser.get_method_table(),
-                       action_model = None):
+                       method_table = meth_parser.get_method_table()):
         """
         Looks up the supplied method name in the method table and attempts to
         execute the corresponding byte-code sequence. If the method is not found,
@@ -257,13 +256,13 @@ class Interpreter:
             raise MethodNotFound("No such method exists: '{0}'".format(method_name))
 
         # method table and method exist -- execute method
-        return execute_method(method, environment, state_vars, action_model)
+        return execute_method(method, environment, state_vars)
 
-    def _raise_no_such_instruction(self, curr_instr, environment, state_vars, action_model):
+    def _raise_no_such_instruction(self, curr_instr, environment, state_vars):
         raise NoSuchInstruction("instruction '{0}' does not exist". \
                                  format(curr_instr['e_type']))
 
-    def eval(self, curr_instr, environment, state_vars, action_model):
+    def eval(self, curr_instr, environment, state_vars):
         op_sem = {
             'E_NOOP':         self.e_noop,
             'E_SEQ':          self.e_seq,
@@ -301,8 +300,7 @@ class Interpreter:
 
         # continue recursing on the AST
         op_sem(curr_instr, environment=environment,
-                           state_vars=state_vars,
-                           action_model=action_model)
+                           state_vars=state_vars)
 
 
     """
@@ -318,7 +316,7 @@ class Interpreter:
     """
 
         # noop
-    def e_noop(self, instr, environment, state_vars, action_model):      # [no arguments]
+    def e_noop(self, instr, environment, state_vars):      # [no arguments]
         self.state = 'FINISHED'
         if self.ret:
             pass
@@ -330,12 +328,11 @@ class Interpreter:
     IMPORTANT NOTE
     """
         # sequence and control statement instructions
-    def e_seq(self, instr, environment, state_vars, action_model):
+    def e_seq(self, instr, environment, state_vars):
         this_instr = instr['arg1']
         next_instr = instr['arg2']
         self.eval(this_instr, environment=environment,
-                              state_vars=state_vars,
-                             action_model=action_model)
+                              state_vars=state_vars)
         (res, environment, state_vars) = self.ret
 
         if self.mode == 'RAE' && not self.new_decision_node:
@@ -347,29 +344,25 @@ class Interpreter:
                                  )
 
         self.eval(next_instr, environment=environment,
-                              state_vars=state_vars,
-                              action_model=action_model)
+                              state_vars=state_vars)
 
-    def e_while(self, instr, environment, state_vars, action_model):
+    def e_while(self, instr, environment, state_vars):
         cond = instr['cond']
         block = instr['block']
         (cond_res, _, _) = self.eval(cond, environment=environment,
-                                           state_vars=state_vars,
-                                           action_model=action_model)
+                                           state_vars=state_vars)
         ret = val_none
         while cond_res['val']:
             self.eval(block, environment=environment,
-                             state_vars=state_vars,
-                             action_model=action_model)
+                             state_vars=state_vars)
             (ret, environment, state_vars) = self.ret
             self.eval(cond, environment=environment,
-                            state_vars=state_vars,
-                            action_model=action_model)
+                            state_vars=state_vars)
             (cond_res, _, _) = self.ret
 
         self.ret = (ret, environment, state_vars)
 
-    def e_if(self, instr, environment, state_vars, action_model):
+    def e_if(self, instr, environment, state_vars):
         cond_list = instr['conds']
         block_list = instr['blocks']
         i = 0
@@ -377,32 +370,28 @@ class Interpreter:
             i = i + 1
             # print("\ncond {0} is: ".format(i) + json.dumps(cond, sort_keys=False, indent=3) + "\n")
             self.eval(cond, environment=environment,
-                            state_vars=state_vars,
-                            action_model=action_model)
+                            state_vars=state_vars)
             (res, _, _) = self.ret
             # print("\nevaluated cond {0} with res: ".format(i) + json.dumps(res, sort_keys=False, indent=3) + "\n")
             if res['val']:
                 # print("\nreturning from if: " + json.dumps(res, sort_keys=False, indent=3) + "\n")
                 self.eval(block, environment=environment,
-                                 state_vars=state_vars,
-                                 action_model=action_model)
+                                 state_vars=state_vars)
                 pass
 
         # print("\nreturning from if: " + json.dumps(val_none, sort_keys=False, indent=3) + "\n")
         self.ret = (val_none, environment, state_vars)
 
         # binary (here only boolean) operators
-    def e_and(self, instr, environment, state_vars, action_model):
+    def e_and(self, instr, environment, state_vars):
         l_expr = instr['arg1']
         r_expr = instr['arg2']
 
         self.eval(l_expr, environment=environment,
-                          state_vars=state_vars,
-                          action_model=action_model)
+                          state_vars=state_vars)
         (l_res, _, _) = self.ret
         self.eval(r_expr, environment=environment,
-                          state_vars=state_vars,
-                          action_model=action_model)
+                          state_vars=state_vars)
         (r_res, _, _) = self.ret
 
         if l_res['v_type'] == 'val_bool' and r_res['v_type'] == 'val_bool':
@@ -415,17 +404,15 @@ class Interpreter:
             raise TypeError("Error near logical 'and' ('&&'): both operand expressions \
                              must be of type boolean")
 
-    def e_or(self, instr, environment, state_vars, action_model):
+    def e_or(self, instr, environment, state_vars):
         l_expr = instr['arg1']
         r_expr = instr['arg2']
 
         self.eval(l_expr, environment=environment,
-                          state_vars=state_vars,
-                          action_model=action_model)
+                          state_vars=state_vars)
         (l_res, _, _) = self.ret
         self.eval(r_expr, environment=environment,
-                          state_vars=state_vars,
-                          action_model=action_model)
+                          state_vars=state_vars)
         (r_res, _, _) = self.ret
 
         if l_res['v_type'] == 'val_bool' and r_res['v_type'] == 'val_bool':
@@ -438,17 +425,15 @@ class Interpreter:
             raise TypeError("Error near logical 'or' ('||'): both operand expressions \
                              must be of type boolean")
 
-    def e_equals(self, instr, environment, state_vars, action_model):
+    def e_equals(self, instr, environment, state_vars):
         l_expr = instr['arg1']
         r_expr = instr['arg2']
 
         self.eval(l_expr, environment=environment,
-                          state_vars=state_vars,
-                          action_model=action_model)
+                          state_vars=state_vars)
         (l_res, _, _) = self.ret
         self.eval(r_expr, environment=environment,
-                          state_vars=state_vars,
-                          action_model=action_model)
+                          state_vars=state_vars)
         (r_res, _, _) = self.ret
 
         if l_res['v_type'] == r_res['v_type']:
@@ -461,17 +446,15 @@ class Interpreter:
             raise TypeError("Error near '==': both operand expressions \
                              must be of the same type")
 
-    def e_lt(self, instr, environment, state_vars, action_model):
+    def e_lt(self, instr, environment, state_vars):
         l_expr = instr['arg1']
         r_expr = instr['arg2']
 
         self.eval(l_expr, environment=environment,
-                          state_vars=state_vars,
-                          action_model=action_model)
+                          state_vars=state_vars)
         (l_res, _, _) = self.ret
         self.eval(r_expr, environment=environment,
-                          state_vars=state_vars,
-                          action_model=action_model)
+                          state_vars=state_vars)
         (r_res, _, _) = self.ret
 
         if l_res['v_type'] == 'val_num' and r_res['v_type'] == 'val_num':
@@ -484,17 +467,15 @@ class Interpreter:
             raise TypeError("Error near '<': both operand expressions \
                              must be of type numeric")
 
-    def e_gt(self, instr, environment, state_vars, action_model):
+    def e_gt(self, instr, environment, state_vars):
         l_expr = instr['arg1']
         r_expr = instr['arg2']
 
         self.eval(l_expr, environment=environment,
-                          state_vars=state_vars,
-                          action_model=action_model)
+                          state_vars=state_vars)
         (l_res, _, _) = self.ret
         self.eval(r_expr, environment=environment,
-                          state_vars=state_vars,
-                          action_model=action_model)
+                          state_vars=state_vars)
         (r_res, _, _) = self.ret
 
         if l_res['v_type'] == 'val_num' and r_res['v_type'] == 'val_num':
@@ -507,17 +488,15 @@ class Interpreter:
             raise TypeError("Error near '>': both operand expressions \
                              must be of type numeric")
 
-    def e_lte(self, instr, environment, state_vars, action_model):
+    def e_lte(self, instr, environment, state_vars):
         l_expr = instr['arg1']
         r_expr = instr['arg2']
 
         self.eval(l_expr, environment=environment,
-                          state_vars=state_vars,
-                          action_model=action_model)
+                          state_vars=state_vars)
         (l_res, _, _) = self.ret
         self.eval(r_expr, environment=environment,
-                          state_vars=state_vars,
-                          action_model=action_model)
+                          state_vars=state_vars)
         (r_res, _, _) = self.ret
 
         if l_res['v_type'] == 'val_num' and r_res['v_type'] == 'val_num':
@@ -530,17 +509,15 @@ class Interpreter:
             raise TypeError("Error near '<=': both operand expressions \
                              must be of type numeric")
 
-    def e_gte(self, instr, environment, state_vars, action_model):
+    def e_gte(self, instr, environment, state_vars):
         l_expr = instr['arg1']
         r_expr = instr['arg2']
 
         self.eval(l_expr, environment=environment,
-                          state_vars=state_vars,
-                          action_model=action_model)
+                          state_vars=state_vars)
         (l_res, _, _) = self.ret
         self.eval(r_expr, environment=environment,
-                          state_vars=state_vars,
-                          action_model=action_model)
+                          state_vars=state_vars)
         (r_res, _, _) = self.ret
 
         if l_res['v_type'] == 'val_num' and r_res['v_type'] == 'val_num':
@@ -554,12 +531,11 @@ class Interpreter:
                              must be of type numeric")
 
         # unary operators
-    def e_not(self, instr, environment, state_vars, action_model):
+    def e_not(self, instr, environment, state_vars):
         expr = instr['arg1']
 
         self.eval(expr, environment=environment,
-                        state_vars=state_vars,
-                        action_model=action_model)
+                        state_vars=state_vars)
         (res, _, _) = self.ret
 
         if res['v_type'] == 'val_bool':
@@ -572,41 +548,39 @@ class Interpreter:
                              must be of type boolean")
 
         # primitive values
-    def e_true(self, instr, environment, state_vars, action_model):
+    def e_true(self, instr, environment, state_vars):
         self.ret = (dict(
                         v_type = 'val_bool',
                         val = True
                     ), environment, state_vars)
 
-    def e_false(self, instr, environment, state_vars, action_model):
+    def e_false(self, instr, environment, state_vars):
         self.ret = (dict(
                         v_type = 'val_bool',
                         val = False
                     ), environment, state_vars)
 
-    def e_int(self, instr, environment, state_vars, action_model):
+    def e_int(self, instr, environment, state_vars):
         self.ret = (dict(
                         v_type = 'val_num',
                         val = instr['val']
                     ), environment, state_vars)
 
-    def e_float(self, instr, environment, state_vars, action_model):
+    def e_float(self, instr, environment, state_vars):
         self.ret = (dict(
                         v_type = 'val_num',
                         val = instr['val']
                     ), environment, state_vars)
 
-    def e_add(self, instr, environment, state_vars, action_model):
+    def e_add(self, instr, environment, state_vars):
         l_expr = instr['arg1']
         r_expr = instr['arg2']
 
         self.eval(l_expr, environment=environment,
-                          state_vars=state_vars,
-                          action_model=action_model)
+                          state_vars=state_vars)
         (l_res, _, _) = self.ret
         self.eval(r_expr, environment=environment,
-                          state_vars=state_vars,
-                          action_model=action_model)
+                          state_vars=state_vars)
         (r_res, _, _) = self.ret
 
         if l_res['v_type'] == 'val_num' and r_res['v_type'] == 'val_num':
@@ -619,17 +593,15 @@ class Interpreter:
             raise TypeError("Error near '+': both operand expressions \
                              must be of type numerical")
 
-    def e_sub(self, instr, environment, state_vars, action_model):
+    def e_sub(self, instr, environment, state_vars):
         l_expr = instr['arg1']
         r_expr = instr['arg2']
 
         self.eval(l_expr, environment=environment,
-                          state_vars=state_vars,
-                          action_model=action_model)
+                          state_vars=state_vars)
         (l_res, _, _) = self.ret
         self.eval(r_expr, environment=environment,
-                          state_vars=state_vars,
-                          action_model=action_model)
+                          state_vars=state_vars)
         (r_res, _, _) = self.ret
 
         if l_res['v_type'] == 'val_num' and r_res['v_type'] == 'val_num':
@@ -642,17 +614,15 @@ class Interpreter:
             raise TypeError("Error near '-': both operand expressions \
                              must be of type numerical")
 
-    def e_mul(self, instr, environment, state_vars, action_model):
+    def e_mul(self, instr, environment, state_vars):
         l_expr = instr['arg1']
         r_expr = instr['arg2']
 
         self.eval(l_expr, environment=environment,
-                          state_vars=state_vars,
-                          action_model=action_model)
+                          state_vars=state_vars)
         (l_res, _, _) = self.ret
         self.eval(r_expr, environment=environment,
-                          state_vars=state_vars,
-                          action_model=action_model)
+                          state_vars=state_vars)
         (r_res, _, _) = self.ret
 
         if l_res['v_type'] == 'val_num' and r_res['v_type'] == 'val_num':
@@ -665,17 +635,15 @@ class Interpreter:
             raise TypeError("Error near '*': both operand expressions \
                              must be of type numerical")
 
-    def e_div(self, instr, environment, state_vars, action_model):
+    def e_div(self, instr, environment, state_vars):
         l_expr = instr['arg1']
         r_expr = instr['arg2']
 
         self.eval(l_expr, environment=environment,
-                          state_vars=state_vars,
-                          action_model=action_model)
+                          state_vars=state_vars)
         (l_res, _, _) = self.ret
         self.eval(r_expr, environment=environment,
-                          state_vars=state_vars,
-                          action_model=action_model)
+                          state_vars=state_vars)
         (r_res, _, _) = self.ret
 
         if l_res['v_type'] == 'val_num' and r_res['v_type'] == 'val_num':
@@ -688,7 +656,7 @@ class Interpreter:
             raise TypeError("Error near '/': both operand expressions \
                              must be of type numerical")
 
-    def e_string(self, instr, environment, state_vars, action_model):
+    def e_string(self, instr, environment, state_vars):
         self.ret = (dict(
                         v_type = 'val_str',
                         val = instr['val']
@@ -699,50 +667,41 @@ class Interpreter:
     """
     THE FOLLOWING COMMENT IS IMPORTANT AND CONTAINS AN IMPLICIT TODO
     """
-    # NOTE: we disambiguate between a state-variable read and a task invocation
-    # within the body of this method -- this is a bit kludgie, and we may wish
-    # to later rely on a symbol-table constructed by the dom-lexer (which doesn't
-    # yet exist) to disambiguate this within the parser and issue separate byte-code
-    # instructions; but for now, this will at least work.
-    # ALSO: note the task_node dictionary format -- we'll want to confirm that this
-    # is the way we want to represent a task-node, and then apply a similar format
-    # to the action-nodes if and once we begin to generate them
-    def _eval_helper(arg, environment, state_vars, action_model):
-        self._eval_helper(arg, environment, state_vars, action_model)
+    # NOTE: we disambiguate between a state-variable read, a task invocation,
+    # and an action invocation within the body of this method -- this is a bit
+    # kludgie, and we may wish to later rely on a symbol-table constructed by
+    # the dom-lexer (which doesn't yet exist) to disambiguate this within the
+    # parser and issue separate byte-code instructions; but for now, this will
+    # at least work.
+    def _eval_helper(arg, environment, state_vars):
+        self._eval_helper(arg, environment, state_vars)
         (res, _, _) = self.ret
         return res
 
-    def e_state_var_rd(self, instr, environment, state_vars, action_model):  # arg1 (id string), arg2 (list of parameter ids)
+    def e_state_var_rd(self, instr, environment, state_vars):  # arg1 (id string), arg2 (list of parameter ids)
         id = instr['arg1']
         arguments = instr['arg2']
         evaluated_arguments = tuple([self._eval_helper(arg, environment,
-                                         state_vars, action_model)['val'] \
+                                         state_vars)['val'] \
                                      for arg in arguments])
 
-
-        # check if it's a task
-        task_table = meth_parser.get_task_table()
-        task = task_table.get(id, None)
-
-        if task:
+        if id in self.task_table:
             if not arguments.size == task['params'].size:
                 raise SemanticError("Task {0} invoked with improper number of \
                                      arguments ({1} rather than {2})".format(id,
                                         arguments.size, task['params'].size))
-            task_node = dict(
-                node_type =   'task_node',
-                task_id =     id,
-                args =        evaluated_arguments,
-                task =        task,
-                environment = environment,
-                state_vars = state_vars
-            )
+            task_node = ('TASK', id, evaluated_arguments)
 
             self.decision_node = task_node
             self.new_decision_node = True
             self.ret = (val_none, environment, state_vars)
+        elif id in self.action_table:
+            action_node = ('ACTION', id, evaluated_arguments)
 
-        else:
+            self.decision_node = action_node
+            self.new_decision_node = True
+            self.ret = (val_none, environment, state_vars)
+        else: # it's a state variable (we hope)
             val = state_vars[id][evaluated_arguments]
 
             v_type = 'val_none'
@@ -758,19 +717,18 @@ class Interpreter:
                             val = val
                         ), environment, state_vars)
 
-    def e_state_var_wr(self, instr, environment, state_vars, action_model):  # arg1 (id string), arg2 (list of parameter ids), arg3 (expr)
+    def e_state_var_wr(self, instr, environment, state_vars):  # arg1 (id string), arg2 (list of parameter ids), arg3 (expr)
         id = instr['arg1']
         arguments = instr['arg2']
 
         self.eval(instr['arg3'], environment=environment,
-                                 state_vars=state_vars,
-                                 action_model=action_model)
+                                 state_vars=state_vars)
         (res, _, state_vars) = self.ret
 
         state_vars[id][arguments] = res['val']
         self.ret = (res, environment, state_vars)
 
-    def e_loc_var_rd(self, instr, environment, state_vars, action_model):    # arg1 (id string)
+    def e_loc_var_rd(self, instr, environment, state_vars):    # arg1 (id string)
         id = instr['arg1']
         val = environment[id]
 
@@ -787,12 +745,11 @@ class Interpreter:
                         val = val
                     ), environment, state_vars)
 
-    def e_loc_var_wr(self, instr, environment, state_vars, action_model):    # arg1 (id string), arg2 (expr)
+    def e_loc_var_wr(self, instr, environment, state_vars):    # arg1 (id string), arg2 (expr)
         id = instr['arg1']
 
         self.eval(instr['arg2'], environment=environment,
-                                 state_vars=state_vars,
-                                 action_model=action_model)
+                                 state_vars=state_vars)
         (res, _, _) = self.ret
 
         environment[id] = res['val']
@@ -804,11 +761,11 @@ class Interpreter:
     """
     # NOTE: these have yet to be implemented
         # the equivalent of function invocation
-    def e_task_invocation(self, instr, environment, state_vars, action_model):
+    def e_task_invocation(self, instr, environment, state_vars):
         pass
 
         # native python function invocation (interface with agent/environment)
-    def e_action_invocation(self, instr, environment, state_vars, action_model):
+    def e_action_invocation(self, instr, environment, state_vars):
         pass
 
 
