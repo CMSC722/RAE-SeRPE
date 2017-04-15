@@ -35,7 +35,7 @@ def parse(filename, name):
     module = _new_module(input, name, True)
     functions = inspect.getmembers(module, inspect.isfunction)
 
-    return functions
+    return dict(functions)
 
 
 def _new_module(code, name, add_to_sys_modules=False):
