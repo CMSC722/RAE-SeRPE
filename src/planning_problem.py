@@ -17,6 +17,7 @@ stores the reulting Python representations of the planning domain, refinement
 methods, action models, execution platform commands, and problem specification.
 """
 
+import os
 import sys
 import zipfile
 import parsing.dom_parser as dom_parser
@@ -32,6 +33,7 @@ class PlanningProblem:
         self.commands = {}
         with zipfile.ZipFile(path_to_zip, 'r') as archive:
             for member in archive.namelist():
+                member = os.path.abspath(os.path.join(path_to_zip, os.pardir)) + "/" + member
                 if member.endswith('.meth'):
                     print("\n*******************************\n")
                     print("Processing .meth file: " + member + "\n")

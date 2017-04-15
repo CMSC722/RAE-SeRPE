@@ -1,7 +1,4 @@
-import meth_parser
-import pprint
-
-# Q about SeRPE and DFS: should first valid solution be used? Current use of DFS tends toward this
+import planning_problem
 
 # None return used as failure representation (?)
 
@@ -26,10 +23,7 @@ def progressToFinish(refine_methods, action_templates, state, task, m):
   # how much of logic in SeRPE pseudocode is handled by interpreter?
   # TODO: fill in based on interpreter API
 
-# Later to be python script parameters instead of hardcoded
-table = meth_parser.load_methods("../domains/test_domain1/test_domain1.meth")
-#table = meth_parser.load_methods("../domains/simple_domain/simple_domain.meth")
-pp = pprint.PrettyPrinter()
-pp.pprint(table)
+planningProblem = planning_problem.PlanningProblem("./parsing/trivial_pp.zip");
+print(planningProblem)
 
 SeRPE([], [], None, None)
