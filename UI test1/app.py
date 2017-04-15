@@ -1,6 +1,7 @@
 """
 This file is part of the flask+d3 Hello World project.
 """
+
 import json
 import flask
 import numpy as np
@@ -38,8 +39,7 @@ def data(ndata=100):
     return json.dumps([{"_id": i, "x": x[i], "y": y[i], "area": A[i],
         "color": c[i]}
         for i in range(ndata)])
-
-
+    #get csv file and return it as /data
 if __name__ == "__main__":
     import os
 
