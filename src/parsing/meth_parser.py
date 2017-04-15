@@ -55,7 +55,7 @@ import json                     # a better way of getting a pretty print of a di
 from pydoc import pager         # we'll be using this to produce less-like,
                                 # paged output -- primarily for debugging purposes
 
-DEBUG = True
+DEBUG = False
 
 """
 METHODS, TASKS, PRECONDITIONS, and INSTRUCTIONS: REPRESENTATION
@@ -173,7 +173,6 @@ def p_methods(p):
     '''methods : method methods
                |               '''
 
-
     if len(p) == 3:
         method_id = p[1]['id']
         method_table_addition = dict()
@@ -182,7 +181,11 @@ def p_methods(p):
         method_table[method_id] = p[1]
         # print("method_table after:\t" + json.dumps(method_table, sort_keys=False, indent=3))
 
-        p[0] = p[2].update(method_table_addition)
+        # print("p[2] = " + repr(p[2]))
+        # print("p[0] = " + repr(p[0]))
+
+        p[2].update(method_table_addition)
+        p[0] = p[2]
         # method_table = p[0]
     else:
         p[0] = dict()
@@ -192,16 +195,16 @@ def p_method(p):
     'method : METHOD ID LPAREN params RPAREN COLON task pre body'
     # create a dictionary representing the 'method' nonterminal's value
     p[0] = dict(
-        id = p[1],
-        parameters = p[3],
-        task = p[6],
-        preconditions = p[7],
+        id = p[2],
+        parameters = p[4],
+        task = p[7],
+        preconditions = p[8],
         # local_variables = p[8]['local_variables'],
-        exprs = p[8]['exprs']
+        exprs = p[9]['exprs']
     )
     # now add this method to the relevant task's method list in the
     # task-method-map:
-    task_method_map[p[6]['id']].append(p[1])
+    # task_method_map[p[7]['id']].append(p[1])
 
 # productions for parameter lists
 def p_params(p):
@@ -228,8 +231,8 @@ def p_task(p):
     )
     # now add entries in the task-table and the task-method-map as appropriate:
     task_table[p[0]['id']] = p[0]
-    if not p[0]['id'] in task_method_map:
-        task_method_map[p[3]] = list()
+    # if not p[0]['id'] in task_method_map:
+    #    task_method_map[p[3]] = list()
 
 '''
 PRODUCTIONS FOR PRECONDITIONS
@@ -240,15 +243,13 @@ def p_pre(p):
     p[0] = dict(
         pre_code = p[3]
     )
-    print("\n\nHERE 1\n\n")
     try:
         exec p[3] in p[0]
     except:
-        error_fun = "def preconditions(state_variables): raise Exception(\"The provided precondition code " \
-                    "failed to compile, likely due to a syntax error. Please find the " \
-                    "problematic code listed below:\n\" + pre_code)"
+        error_fun = "def preconditions(state_variables): raise Exception(\"The provided precondition code " + \
+                    "failed to compile, likely due to a syntax error. Please find the " + \
+                    "problematic code listed below:\\n\" + pre_code)"
         exec error_fun in p[0]
-    print("\n\nHERE 2\n\n")
 
 # NB: the bexpr2prec utility is defined at the bottom of the file
 # def p_precon_list(p):
@@ -604,7 +605,7 @@ def get_task_table():
     return task_table
 
 def get_task_method_map():
-    return task_method_map
+    return {} # task_method_map
 
 def parse_print(filename, paged=True, debug=True):
     """
@@ -706,7 +707,7 @@ def parse(filename):
     meth_parser_instance.parse(input, lexer=meth_lexer_instance, \
                                       tracking=True, debug=DEBUG)
 
-    return (method_table, task_table, task_method_map)
+    return (method_table, task_table, {}) #task_method_map)
 
 """
 Create a global parser instance.

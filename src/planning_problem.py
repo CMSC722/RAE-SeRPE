@@ -34,40 +34,30 @@ class PlanningProblem:
             for member in archive.namelist():
                 if member.endswith('.meth'):
                     print("\n*******************************\n")
-                    print("Processing .meth file: " + member + "\n\n")
-
+                    print("Processing .meth file: " + member + "\n")
                     (_method_table, _task_table, _task_method_map) = \
                         meth_parser.parse(member)
                     self.method_table.update(_method_table)
                     self.task_table.update(_task_table)
                     self.task_method_map.update(_task_method_map)
-
                     print("Completed processing .meth file: " + member)
                     print("\n*******************************\n")
                 elif member.endswith('.dom'):
                     print("\n*******************************\n")
-                    print("\nProcessing .dom_lex file: " + member + "\n\n")
-
+                    print("\nProcessing .dom_lex file: " + member + "\n")
                     self.domain = dom_parser.parse(filename=member)
-
                     print("\nCompleted processing .dom file: " + member)
                     print("\n*******************************\n")
                 elif member.endswith('.act'):
                     print("\n*******************************\n")
-                    print("Processing .act file: " + member + "\n\n")
-
+                    print("Processing .act file: " + member + "\n")
                     self.action_models = action_parser.parse(member)
-                    print("self.action_models isa " + repr(type(self.action_models)))
-
                     print("\nCompleted processing .act file: " + member)
                     print("\n*******************************\n")
                 elif member.endswith('.cmd'):
                     print("\n*******************************\n")
-                    print("Processing .cmd file: " + member + "\n\n")
-
+                    print("Processing .cmd file: " + member + "\n")
                     self.commands = command_parser.parse(member)
-                    print("self.commands isa " + repr(type(self.action_models)))
-
                     print("\nCompleted processing .cmd file: " + member)
                     print("\n*******************************\n")
 

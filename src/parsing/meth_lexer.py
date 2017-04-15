@@ -165,7 +165,7 @@ def t_pythoncode_error(t):
 def t_pythoncode_end(t):
     r'=END'
     t.type = "PYTHON_CODE"
-    t.value = t.lexer.lexdata[t.lexer.code_start:t.lexer.lexpos+1]
+    t.value = t.lexer.lexdata[t.lexer.code_start:t.lexer.lexpos-2]
     t.value = "def precondition():\n" + t.value
     t.lexer.lineno += t.value.count('\n')
     t.lexer.begin('INITIAL')
