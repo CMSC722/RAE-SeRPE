@@ -703,7 +703,7 @@ def parse(filename):
         input = f.read()
 
     # lex and parse the file text
-    print_token_stream(filename)
+    # print_token_stream(filename)
     meth_parser_instance.parse(input, lexer=meth_lexer_instance, \
                                       tracking=True, debug=DEBUG)
 
