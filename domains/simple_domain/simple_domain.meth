@@ -1,12 +1,19 @@
-m1-get-cargo(r, c, d, p):
+method m1-get-cargo(r, c, d, p):
   task: get-cargo(c)
-  pre: loc(r) == d && on-dock(p, d) && in-pile(c) == p && on-robot(r) == nil
+  =BEGIN
+def preconditions(state):
+  state['state_vars'][loc][(r,)] == d and state[on-dock] == (p, d) and state[in-pile(c)] == p and state[on-robot(r)] == None
+  =END
   body:
     pickupCargo(r, c, p)
     
-m1-put-cargo(r, c, d, p):
+method m1-put-cargo(r, c, d, p):
   task: put-cargo(c, p)
   pre: loc(r) == d && on-dock(p, d) && on-robot(r) == c
+  =BEGIN
+def preconditions(state):
+  state[loc(r)] == d and state[on-dock] == (p, d) and state[on-robot(r)] == c
+  =END
   body:
     putCargo(r, c, p)
     

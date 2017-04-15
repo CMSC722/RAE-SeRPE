@@ -5,9 +5,10 @@ from interpreter import *
 from importlib import import_module
 import os,sys,inspect
 
-def Rae(method_lib, state):
+def Rae(method_lib, command_lib, state):
     '''This is the main method for RAE, which will loop infinitely as it expects to receive tasks/events and refine a set
-       of methods into a plan to complete these tasks/events with the Progress and Retry functions.'''
+       of methods into a plan to complete these tasks/events with the Progress and Retry functions.
+       task_event is a tuple of the form: (task_name, (arg1, arg2, ...))'''
 
     agenda = set()
     
@@ -23,7 +24,7 @@ def Rae(method_lib, state):
             candidates = getCandidates(method_lib, task_event, state)
             
             if not candidates:
-                print "Failure: No methods found that address " + task_event
+                print "Failure: No methods found that address " + task_event[0] + " with " + str(task_event[1])
                 
             else:
                 #From Sunandita: Can try out different ways to choose the method in future instead of just poping the first one
@@ -37,7 +38,7 @@ def Rae(method_lib, state):
         temp_agenda = set()
         
         for stack in agenda:
-            Progress(method_lib, state, stack)
+            Progress(method_lib, command_lib, state, stack)
             
             if stack:
                 temp_agenda.add(stack)
@@ -63,115 +64,47 @@ def getCandidates(method_lib, task_event, state):
     for method_name in method_lib:
         if method_lib[method_name]["task"]["id"] == task_name:
         
-            precond_func = method_lib[method_name]["preconditions"]["preconditions"]
+            #Need to try all permutations of variables to instantiate what was not given by the task.
+            #Will be considered good method instantiation if precond_func evaluates to true
+            method_arguments_list = method_lib[method_name]["paramaters"]
+            task_arguments_list = method_lib[method_name]["task"]["paramaters"]
             
-            if precond_func(state):
-                task_instantiation_dict = {}
-                method_list = method_lib[method_name]["parameters"]
-                count = 0
-                for parameter in method_list:
-                    task_instantiation_dict[parameter] = task_instantiation_tup[0]
-                    count++
-            
-                candidates.append(method_name, task_instantiation_tup)
+            #Create a bunch of lists of what each argument could be 
+            poss_instantiation_queues = {}
+            for argument in method_arguments_list:
+                poss_instantiation_queues[argument] = []
+                
+                if argument not in task_arguments_list:
+                    for object_type in state["objects"]:
+                        for object in object_type:
+                            poss_instantiation_queues[argument].append(object)
+                else: #argument already instantiated, so can get the one in the task instantiation tuple in the same position
+                    ndx = method_arguments_list.index(argument)
+                    poss_instantiation_queues[argument].append(task_instantiation_tup[index])
+                    
+            #for each permutation in poss_instantiation_queues
+            ########################################################
+                
+                #put variables that are not instantiated by the task in this dictionary as -- precond_dict[
+                precond_dict = method_lib[method_name]["preconditions"]
+                
+                precond_func = method_lib[method_name]["preconditions"]["preconditions"]
+                
+                if precond_func(state):
+                    task_instantiation_dict = {}
+                    method_list = method_lib[method_name]["parameters"]
+                    count = 0
+                    for parameter in method_list:
+                        task_instantiation_dict[parameter] = task_instantiation_tup[0]
+                        count+=1
+                
+                    candidates.append(method_name, task_instantiation_tup)
+            ############################################################
                 
     return candidates
             
-            
-    # ''''This method attempts to unify the given task/event with the state and method library and produces a list of 2 item tuples, which are all the possible methods and their associated instantiations that are consistent with the model'''
-   
-    # candidates = []
-    
-    # task_name = task_event[0]
-    # task_instantiation_tup = task_event[1]
-    
-    # relevant_meths = method_lib[task_name][1:]
-    # task_arg_tup = method_lib[task_name][0]
-    
-    # #Try to unify each relevant method with the state
-    # for meth in relevant_meths:
-    
-        # meth_name = meth[0]
-        # meth_arg_tup = meth[1]
-        # meth_preconds_tup = meth[2]
-        
-        # #Make dictionary of method arguments and their associated logpy vars
-        # args_to_vars = dict();
-        # for arg in meth_arg_tup:
-            # x = var(str(arg))
-            # args_to_vars[str(arg)] = x
-            
-        # #Split state into arbitrary 'Relation' chunks based on relation name; store in logpy's facts and dict for future lookup
-        # rel_name_to_relation = dict()
-        # for relation_name in state:
-        
-            # #Not sure about state representation here
-            # if relation_name not in rel_name_to_relation:
-                # rel_name_to_relation[relation_name] = Relation()
-                
-            # for tup in state[relation_name]:
-                # fact(rel_name_to_relation[relation_name], (relation_name,) + tup)
-            
-        # #Remake preconditions tuple with unification vars and relations from logpy
-        # goals_tup = tuple()
-        # for precond in meth_preconds_tup:
-            # relation_name = precond[0]
-            
-            # if relation_name in rel_name_to_relation:
-                # relation = rel_name_to_relation[relation_name]
-            # else:
-                # print "ERROR: " + relation_name + " in " + meth_name + " preconditions is not in the state!"
-                # relation = None
-                
-            # inner_inner_tup = (relation_name, )
-            
-            # for variable in precond[1]:
-            
-                # if str(variable) in args_to_vars:
-                    # inner_inner_tup = inner_inner_tup + (args_to_vars[str(variable)],)
-                # else:
-                    # inner_inner_tup = inner_inner_tup + (variable,)
-            
-            # inner_tup = (relation, inner_inner_tup)
-            # goals_tup = goals_tup + (inner_tup,)
-            
-        # #Create tuples for equals goal tup for partial instantiations -- (eq, (~a, ~b, ~c, ~d), (a, b, c, d))
-        # #We have a usage error if the instantiation isn't given enough variables, unless we've defined the same task with multiple inputs
-        # if len(task_instantiation_tup) != len(task_arg_tup):
-            # print "Possible error: " + task_name + " expected " + len(task_instantiation_tup) + " input arguments, but received " + len(task_arg_tup)
-            # continue
-            
-        # partials_args1 = ()
-        # partials_args2 = ()
-        # for i in range(0, len(task_arg_tup)):
-            # arg1 = task_arg_tup[i]
-            # arg2 = task_instantiation_tup[i]
-            
-            # if str(arg1) in args_to_vars:
-                # partials_args1 = partials_args1 + (args_to_vars[str(arg1)],)
-                # partials_args2 = partials_args2 + (arg2,)
-            # else:
-                # print "ERROR: " + str(arg1) + " appears in " + task_name + " arguments but not " + meth_name + " arguments!"
-                
-        # #Put vars in tuple for logpy run method
-        # unify_tup = tuple()
-        # for key in args_to_vars:
-            # unify_tup = unify_tup + (args_to_vars[key],)
-            
-        # #Run unification
-        # unifies = run(0, unify_tup, (lallgreedy,) + goals_tup, (eq, partials_args1, partials_args2))
-        
-        # #Consider two different possible instantions for the same method different candidates
-        # for each_unify in unifies:
-            # candidates.append((meth_name, each_unify))
-            
-            
-    # return candidates
 
-
-
-
-def Progress(method_lib, state, stack):
+def Progress(method_lib, command_lib, state, stack):
     '''This method will refine the current stack.
        Stack is a bunch of method frames of the form: (task_event, method, Interpreter, tried)
        and method contains it's name and the current instantiation of its arguments: (method name, {'param1':value1, 'param2':value2, ...})'''
@@ -188,36 +121,36 @@ def Progress(method_lib, state, stack):
     if not interp:
         interp = Interpreter(method_lib[method[0]], method[1], state) #This needs to be given the correct inputs when that's sorted
     
-    next_node = interp.next()
-	
-	#All the return cases of the interpreter
-    if next_node: #is assignment?
-        #UPDATE STATE HERE
-        stack[len(stack) - 1] = (task_event, method, interp, tried)
-        return
+    #Try to get the next node from the interpreter, which will be a task or command
+    try:
+        next_node = interp.next()
+        node_type = next_node[0]
+        id = next_node[1]
+        args = next_node[2]
         
-    elif next_node: #is command?
-        #TRIGGER COMMAND HERE
-        stack[len(stack) - 1] = (task_event, method, interp, tried)
-        return
-	
-    elif next_node: #is failure?
-        Retry(stack)
-        return
-	
-    elif not next_node: #is finished? Catch the StopIteration exception?
+        if node_type == "action": #is command
+            command = command_lib[id]
+            succeeded = command(*args)
+            
+            if succeeded:
+                stack[len(stack) - 1] = (task_event, method, interp, tried)
+                return
+            else: #command failed
+                Retry(stack)
+                return
+                
+        elif node_type == "task": #is task
+            candidates = getCandidates(method_lib, (id, args), state)
+            if not candidates:
+                Retry(stack)
+            else:
+                method_primed = candidates.pop(0)
+                tried_primed = set()
+                stack.append(('task_event_primed', method_primed, None, tried_primed))
+            return
+        
+    except: #Should have reached the end of the method if error raised
         stack.pop()
-        return
-	
-    elif next_node: #is task?
-        #GET TASK FROM NODE HERE
-        candidates = getCandidates(method_lib, 'task_event_primed', state)
-        if not candidates:
-            Retry(stack)
-        else:
-            method_primed = candidates.pop(0)
-            tried_primed = set()
-            stack.append(('task_event_primed', method_primed, None, tried_primed))
         return
 	
 	
@@ -266,35 +199,38 @@ def Retry(stack):
 
 
 
-#State stored as -- relationship name : [tuples that have this relationship]
-state = {
-    'dock' : [('d1',), ('d2',)],
-    'robot' : [('r1',), ('r2',)],
-    'cargo' : [('c1',), ('c2',), ('c3',)],
-    'pile' : [('p1',), ('p2',), ('p3',), ('p4',)],
-    'loc' : [('r1', 'd1'), ('r2', 'd2'), ('p1', 'd1'), ('p2', 'd1'), ('p3', 'd2'), ('p4', 'd2')],
-    'in-pile' : [('c1', 'p1'), ('c2', 'p2'), ('c3', 'p3')],
-    'on-robot' : [('r1', 'None'), ('r2', 'None')],
-    'adjacent' : [('d1', 'd2')],
-    }
+# #State stored as -- relationship name : [tuples that have this relationship]
+# state = {
+    # 'dock' : [('d1',), ('d2',)],
+    # 'robot' : [('r1',), ('r2',)],
+    # 'cargo' : [('c1',), ('c2',), ('c3',)],
+    # 'pile' : [('p1',), ('p2',), ('p3',), ('p4',)],
+    # 'loc' : [('r1', 'd1'), ('r2', 'd2'), ('p1', 'd1'), ('p2', 'd1'), ('p3', 'd2'), ('p4', 'd2')],
+    # 'in-pile' : [('c1', 'p1'), ('c2', 'p2'), ('c3', 'p3')],
+    # 'on-robot' : [('r1', 'None'), ('r2', 'None')],
+    # 'adjacent' : [('d1', 'd2')],
+    # }
 
-#Tasks stored as -- task name : [(arguments), (m1 name, (m1 args), (m1 precond as tups)), (m2 name, (m2 args), (m2 precond as tups)) ...]
-method_lib = {
-    'get-cargo' : [('r', 'c'), ('m1-get-cargo', ('r', 'c', 'd', 'p'), (('pile', ('p',)), ('dock', ('d',)), ('loc', ('r', 'd')), ('loc', ('p', 'd')), ('in-pile', ('c', 'p')), ('on-robot', ('r', 'None'))))
-                   ],
-    }
+# #Tasks stored as -- task name : [(arguments), (m1 name, (m1 args), (m1 precond as tups)), (m2 name, (m2 args), (m2 precond as tups)) ...]
+# method_lib = {
+    # 'get-cargo' : [('r', 'c'), ('m1-get-cargo', ('r', 'c', 'd', 'p'), (('pile', ('p',)), ('dock', ('d',)), ('loc', ('r', 'd')), ('loc', ('p', 'd')), ('in-pile', ('c', 'p')), ('on-robot', ('r', 'None'))))
+                   # ],
+    # }
     
-task_event = ('get-cargo', ('r1', 'c1'))
+# task_event = ('get-cargo', ('r1', 'c1'))
     
-print "Test Candidates: " + str(getCandidates(method_lib, task_event, state))
+# print "Test Candidates: " + str(getCandidates(method_lib, task_event, state))
 
 
-#Example of importing and using actions here:
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0,parentdir) 
+# #Example of importing and using actions here:
+# currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+# parentdir = os.path.dirname(currentdir)
+# sys.path.insert(0,parentdir) 
 
-file_path = 'domains.simple_domain'
-a_mod = import_module('.actions', file_path)
+# file_path = 'domains.simple_domain'
+# a_mod = import_module('.actions', file_path)
 
-#bool = a_mod.actionDict['pickupCargo']({}, None, None, None)
+# #bool = a_mod.actionDict['pickupCargo']({}, None, None, None)
+
+import planning_problem
+ppi = planning_problem.PlanningProblem('parsing/trivial_pp/trivial_pp.zip')
