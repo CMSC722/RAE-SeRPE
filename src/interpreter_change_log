@@ -1,11 +1,11 @@
 1) make interpreter yield action/command nodes
   x make it so PlanningProblem can load multiple meth_parse files
-  - (task|action, id, arguments (as tuple -- for actions, sv's as first arg))
-  - question: will sv's change for me to, if an action model modifies sv's?
+  x (task|action, id, arguments (as tuple -- for actions, sv's as first arg))
+  x question: will sv's change for me to, if an action model modifies sv's?
   x get rid of action model params
-  - fix environment representation so that incoming arguments are transformed
+  x fix environment representation so that incoming arguments are transformed
     into Interpreter vals
-  - retest
+  - retest/debug
   - finish tests
 2) meth parser
-  - make sure parses correctly -- preconditions and all
+  x make sure parses correctly -- preconditions and all
