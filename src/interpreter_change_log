@@ -9,3 +9,12 @@
   - finish tests
 2) meth parser
   x make sure parses correctly -- preconditions and all
+3) SeRPE:
+  - SeRPE should make a copy of the state before invoking an
+    action, because the action may change the state but then
+    return False, indicating the action failed (or was not
+    applicable) -- and in that case any changes the action
+    made should be discarded, and the state replaced with
+    what it was before invoking the action
+4) parsing problem representation:
+  - allow path to directory -- test whether directory or zip file
