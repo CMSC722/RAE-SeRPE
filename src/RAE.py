@@ -2,10 +2,10 @@ from logpy.facts import (Relation, fact)
 from unification.variable import var
 from logpy.core import (isvar, eq, EarlyGoalError, lany, everyg, lallgreedy, run)
 from interpreter import *
-from importlib import import_module
-import os,sys,inspect
+# from importlib import import_module
+# import os,sys,inspect
 
-def Rae(method_lib, command_lib, state):
+def Rae(method_lib, command_lib, state, task): #We'll need to remove 'task' when we're getting an input stream
     '''This is the main method for RAE, which will loop infinitely as it expects to receive tasks/events and refine a set
        of methods into a plan to complete these tasks/events with the Progress and Retry functions.
        task_event is a tuple of the form: (task_name, (arg1, arg2, ...))'''
@@ -15,11 +15,14 @@ def Rae(method_lib, command_lib, state):
     #Keep rae running indefinitely or add option for shutting down?
     # From Sunandita: Can do this based on the output of getTaskEvents(). RAE stops when its empty?
 	#Can't it be given inputs at arbitrary times?
+    te_inputs = [task]
     while True: 
-        te_inputs = getTasksEvents()
+        #te_inputs = getTasksEvents()
+        
+        agenda = set()
         
         #Here, we'll get task and event inputs and initialize them in the agenda
-        while inputs:
+        while len(te_inputs) > 0:
             task_event = te_inputs.pop(0)
             candidates = getCandidates(method_lib, task_event, state)
             
@@ -53,7 +56,7 @@ def getTasksEvents():
     
     
 def getCandidates(method_lib, task_event, state):
-    '''returns a list of methods, tuples of the form -- (method name, {'param1':value1, 'param2':value2, ...})'''
+    '''returns a list of methods, which are tuples of the form -- (method name,  {arg1:{'v_type':v_type1, 'val':value1}, arg2:{'v_type':v_type2, 'val':value2}, ...})'''
 
     candidates = []
     
@@ -62,14 +65,16 @@ def getCandidates(method_lib, task_event, state):
     
     #Extract the relevant methods from the method_lib whose preconditions evaluate to True given the state
     for method_name in method_lib:
+        print "Trying to instantiate method: " + method_name + " for task: " + task_name
         if method_lib[method_name]["task"]["id"] == task_name:
         
             #Need to try all permutations of variables to instantiate what was not given by the task.
             #Will be considered good method instantiation if precond_func evaluates to true
-            method_arguments_list = method_lib[method_name]["paramaters"]
-            task_arguments_list = method_lib[method_name]["task"]["paramaters"]
+            method_arguments_list = method_lib[method_name]["parameters"]
+            task_arguments_list = method_lib[method_name]["task"]["parameters"]
             
             #Create a bunch of lists of what each argument could be 
+            #WE WILL NEED TO CHANGE THIS PART ONCE WE HAVE OBJECT TYPING IN METHODS
             poss_instantiation_queues = {}
             for argument in method_arguments_list:
                 poss_instantiation_queues[argument] = []
@@ -80,26 +85,56 @@ def getCandidates(method_lib, task_event, state):
                             poss_instantiation_queues[argument].append(object)
                 else: #argument already instantiated, so can get the one in the task instantiation tuple in the same position
                     ndx = method_arguments_list.index(argument)
-                    poss_instantiation_queues[argument].append(task_instantiation_tup[index])
+                    poss_instantiation_queues[argument].append(task_instantiation_tup[ndx])
                     
-            #for each permutation in poss_instantiation_queues
-            ########################################################
+            #Create all permutations by keeping track of an index list that corresponds to the ordering of the arguments
+            #in method_arguments_list. 
+            ndx_list = []
+            for key in poss_instantiation_queues:
+                ndx_list.append(0)
                 
-                #put variables that are not instantiated by the task in this dictionary as -- precond_dict[
-                precond_dict = method_lib[method_name]["preconditions"]
-                
+            #Then try to run the preconditions for each permutation in poss_instantiation_queues
+            while ndx_list[0] < len(method_arguments_list[0]):
+                ndx_loc = 0
+                meth_environment_dict = method_lib[method_name]["preconditions"]
+                poss_environment = {}
+                for argument in method_arguments_list:
+                    poss_value = poss_instantiation_queues[argument][ndx_list[ndx_loc]]
+                    ndx_loc += 1
+                    
+                    #Add argument:poss_value to meth_environment_dict
+                    #We need to undo this later to not update our method library!
+                    meth_environment_dict[argument] = poss_value
+                    
+                    #And also add it to environment dictionary that will be kept if preconditions evaluates to true
+                    v_type = 'val_none'
+                    if isinstance(poss_value, str):
+                        v_type = 'val_str'
+                    elif isinstance(poss_value, (int, float, long)):
+                        v_type = 'val_num'
+                    elif isinstance(poss_value, bool):
+                        v_type = 'val_bool'
+                    poss_environment[argument] = {'v_type':v_type, 'val':poss_value}
+                  
+                print meth_environment_dict
+                #Evaluate preconditions and store this instantiation in candidates if true
                 precond_func = method_lib[method_name]["preconditions"]["preconditions"]
-                
                 if precond_func(state):
-                    task_instantiation_dict = {}
-                    method_list = method_lib[method_name]["parameters"]
-                    count = 0
-                    for parameter in method_list:
-                        task_instantiation_dict[parameter] = task_instantiation_tup[0]
-                        count+=1
+                    candidates.append(method_name, poss_environment)
                 
-                    candidates.append(method_name, task_instantiation_tup)
-            ############################################################
+                
+                #We need to undo the changes to teh meth_environment_dict so we can use different instantiations later
+                for argument in method_arguments_list:
+                    del meth_environment_dict[argument]
+                
+                #We're going to increment the index at the end of ndx_list by one and propogate this change toward the start
+                #of the list so we go through every possible permutation
+                rvrs_ndx = len(ndx_list) - 1
+                ndx_list[rvrs_ndx] += 1
+                while rvrs_ndx > 0 and ndx_list[rvrs_ndx] >= len(poss_instantiation_queues[method_arguments_list[rvrs_ndx]]):
+                    ndx_list[rvrs_ndx] = 0
+                    rvrs_ndx -= 1
+                    ndx_list[rvrs_ndx] += 1
                 
     return candidates
             
@@ -107,7 +142,7 @@ def getCandidates(method_lib, task_event, state):
 def Progress(method_lib, command_lib, state, stack):
     '''This method will refine the current stack.
        Stack is a bunch of method frames of the form: (task_event, method, Interpreter, tried)
-       and method contains it's name and the current instantiation of its arguments: (method name, {'param1':value1, 'param2':value2, ...})'''
+       and method contains it's name and the current instantiation of its arguments: (method name,  {arg1:{'v_type':v_type1, 'val':value1}, arg2:{'v_type':v_type2, 'val':value2}, ...})'''
 
     top_tup = stack[len(stack) - 1]
     
@@ -155,7 +190,7 @@ def Progress(method_lib, command_lib, state, stack):
 	
 	
     #Should not get here
-    print "ERROR: Unexpected node type: " + str(next_node)
+    print "ERROR: Unexpected node type: " + node_type
     return
 
 
@@ -233,4 +268,5 @@ def Retry(stack):
 # #bool = a_mod.actionDict['pickupCargo']({}, None, None, None)
 
 import planning_problem
-ppi = planning_problem.PlanningProblem('parsing/trivial_pp/trivial_pp.zip')
+ppi = planning_problem.PlanningProblem('./parsing/trivial_pp.zip')
+Rae(ppi.method_table, ppi.commands, ppi.domain, ('t_start', (3,)))

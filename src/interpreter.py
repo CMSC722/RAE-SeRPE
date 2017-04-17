@@ -66,7 +66,7 @@ from pydoc import pager     # we'll be using this to produce less-like,
 # import dom_lexer            # this is the module where we've specified the dom-file lexer rules
 # import dom_parser           # this is the module where we've specified the dom-file parser rules
 import parsing.meth_lexer           # this is the module where we've specified the method-file lexer rules
-import parsing.meth_parser          # this is the module where we've specified the method-file parser rules
+import parsing.meth_parser as meth_parser         # this is the module where we've specified the method-file parser rules
 # import pprint             # python's pretty-printer for arbitrary data
 import json                 # a better way of getting a pretty print of a dict
 import cPickle as pickle    # for serializing objects to file -- in our case,

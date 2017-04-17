@@ -9,10 +9,12 @@ Rigid relations:
 adjacent = {(d1, d2)}
 on-dock = {(p1, d1), (p2, d1), (p3, d2), (p4, d2)}
 
+/*
 State-variable ranges:
 on-robot(robot) = {c1, c2, c3, None}
 loc(robot) = {d1, d2}
 in-pile(cargo) = {p1, p2, p3, p4}
+*/
 
 Initial state:
 loc(r1) = d1
