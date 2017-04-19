@@ -4,6 +4,7 @@ method m_start(n):
   =BEGIN
 def preconditions(_):
   print("Evaluating m_start(n) preconditions.\n")
+  return True
   =END
   body:
     m = n + 3
@@ -15,6 +16,7 @@ method m_print_result(n):
   =BEGIN
 def preconditions(_):
   print("Evaluating m_print_result(n) preconditions.\n")
+  return True
   =END
   body:
     print_result(n)

@@ -10,7 +10,7 @@ def Rae(method_lib, command_lib, state, task): #We'll need to remove 'task' when
        of methods into a plan to complete these tasks/events with the Progress and Retry functions.
        task_event is a tuple of the form: (task_name, (arg1, arg2, ...))'''
 
-    agenda = set()
+    agenda = [] #making agenda a list instead of a set so we can have mutable stacks in the agenda (and don't have to return them from Progress/Retry)
     
     #Keep rae running indefinitely or add option for shutting down?
     # From Sunandita: Can do this based on the output of getTaskEvents(). RAE stops when its empty?
@@ -18,8 +18,6 @@ def Rae(method_lib, command_lib, state, task): #We'll need to remove 'task' when
     te_inputs = [task]
     while True: 
         #te_inputs = getTasksEvents()
-        
-        agenda = set()
         
         #Here, we'll get task and event inputs and initialize them in the agenda
         while len(te_inputs) > 0:
@@ -30,21 +28,23 @@ def Rae(method_lib, command_lib, state, task): #We'll need to remove 'task' when
                 print "Failure: No methods found that address " + task_event[0] + " with " + str(task_event[1])
                 
             else:
+                print "Got candidates: " + str(candidates)
                 #From Sunandita: Can try out different ways to choose the method in future instead of just poping the first one
                 method = candidates.pop(0)
                 tried = set()
-                agenda.add([(task_event, method, None, tried)]) #Third element is 'i' normally, but we'll use an Interpreter generator object instead
+                if [(task_event, method, None, tried)] not in agenda:
+                    agenda.append([(task_event, method, None, tried)]) #Third element is 'i' normally, but we'll use an Interpreter generator object instead
         
         #Now we'll progress each stack in the agenda once and only add it back to the agenda if Progress succeeded
         #From Sunandita: We add a stack back only when stack is not empty and Progress has succeeded. Yes? 
 		#Return None if Progress does not succeed
-        temp_agenda = set()
+        temp_agenda = []
         
         for stack in agenda:
             Progress(method_lib, command_lib, state, stack)
             
             if stack:
-                temp_agenda.add(stack)
+                temp_agenda.append(stack)
                 
         agenda = temp_agenda
         
@@ -65,8 +65,9 @@ def getCandidates(method_lib, task_event, state):
     
     #Extract the relevant methods from the method_lib whose preconditions evaluate to True given the state
     for method_name in method_lib:
-        print "Trying to instantiate method: " + method_name + " for task: " + task_name
         if method_lib[method_name]["task"]["id"] == task_name:
+        
+            print "Trying to instantiate method: " + method_name + " for task: " + task_name
         
             #Need to try all permutations of variables to instantiate what was not given by the task.
             #Will be considered good method instantiation if precond_func evaluates to true
@@ -94,7 +95,7 @@ def getCandidates(method_lib, task_event, state):
                 ndx_list.append(0)
                 
             #Then try to run the preconditions for each permutation in poss_instantiation_queues
-            while ndx_list[0] < len(method_arguments_list[0]):
+            while ndx_list[0] < len(poss_instantiation_queues[method_arguments_list[0]]):
                 ndx_loc = 0
                 meth_environment_dict = method_lib[method_name]["preconditions"]
                 poss_environment = {}
@@ -116,11 +117,15 @@ def getCandidates(method_lib, task_event, state):
                         v_type = 'val_bool'
                     poss_environment[argument] = {'v_type':v_type, 'val':poss_value}
                   
-                print meth_environment_dict
+                printstr = "Trying instantiation: {"
+                for key, value in poss_environment.iteritems():
+                    printstr += key + " : " + str(value['val']) + ", "
+                print "}" + printstr
+                
                 #Evaluate preconditions and store this instantiation in candidates if true
                 precond_func = method_lib[method_name]["preconditions"]["preconditions"]
                 if precond_func(state):
-                    candidates.append(method_name, poss_environment)
+                    candidates.append((method_name, poss_environment))
                 
                 
                 #We need to undo the changes to teh meth_environment_dict so we can use different instantiations later
@@ -144,6 +149,8 @@ def Progress(method_lib, command_lib, state, stack):
        Stack is a bunch of method frames of the form: (task_event, method, Interpreter, tried)
        and method contains it's name and the current instantiation of its arguments: (method name,  {arg1:{'v_type':v_type1, 'val':value1}, arg2:{'v_type':v_type2, 'val':value2}, ...})'''
 
+    print "Progressing stack: " + str(stack)
+       
     top_tup = stack[len(stack) - 1]
     
     task_event = top_tup[0]
@@ -154,14 +161,23 @@ def Progress(method_lib, command_lib, state, stack):
     #We're going to run the entire method for now instead of using the line pointer 'i'
 	#We'll keep track of the Interpreter object that will lazily yield the branch nodes
     if not interp:
+        print "Instantiating Interpreter instance"
         interp = Interpreter(method_lib[method[0]], method[1], state) #This needs to be given the correct inputs when that's sorted
     
     #Try to get the next node from the interpreter, which will be a task or command
+    for node in interp:
+        print node
+    
+    next_node = next(interp)
     try:
+        print "HERE 1"
         next_node = interp.next()
+        print "HERE 2"
         node_type = next_node[0]
         id = next_node[1]
         args = next_node[2]
+        
+        print "Got node from Interpreter: " + str(next_node)
         
         if node_type == "action": #is command
             command = command_lib[id]
@@ -185,6 +201,7 @@ def Progress(method_lib, command_lib, state, stack):
             return
         
     except: #Should have reached the end of the method if error raised
+        print "HERE 3"
         stack.pop()
         return
 	
@@ -198,6 +215,9 @@ def Progress(method_lib, command_lib, state, stack):
 
 def Retry(stack):
     '''This method will retry other methods that applied to the task. It acts the backtracker'''
+    
+    print "Retrying stack: " + str(stack)
+    
     top_tup = stack.pop()
     
     task_event = top_tup[0]
