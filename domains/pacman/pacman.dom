@@ -1,8 +1,9 @@
 Variables:
-game = Game()
+game = Games
 
 Initial_State:
 score = 0
+game = Game()
 
 Goal:
-maximize score
+score > 100 && !is_done()
