@@ -65,6 +65,7 @@ def getCandidates(method_lib, task_event, state):
     
     #Extract the relevant methods from the method_lib whose preconditions evaluate to True given the state
     for method_name in method_lib:
+        print "Trying method: " + method_name
         if method_lib[method_name]["task"]["id"] == task_name:
         
             print "Trying to instantiate method: " + method_name + " for task: " + task_name
@@ -81,11 +82,11 @@ def getCandidates(method_lib, task_event, state):
                 poss_instantiation_queues[argument] = []
                 
                 if argument not in task_arguments_list:
-                    for object_type in state["objects"]:
-                        for object in object_type:
+                    for object_type, object_set in state["objects"].iteritems():
+                        for object in object_set:
                             poss_instantiation_queues[argument].append(object)
                 else: #argument already instantiated, so can get the one in the task instantiation tuple in the same position
-                    ndx = method_arguments_list.index(argument)
+                    ndx = task_arguments_list.index(argument)
                     poss_instantiation_queues[argument].append(task_instantiation_tup[ndx])
                     
             #Create all permutations by keeping track of an index list that corresponds to the ordering of the arguments
@@ -116,17 +117,20 @@ def getCandidates(method_lib, task_event, state):
                     elif isinstance(poss_value, bool):
                         v_type = 'val_bool'
                     poss_environment[argument] = {'v_type':v_type, 'val':poss_value}
-                  
-                printstr = "Trying instantiation: {"
-                for key, value in poss_environment.iteritems():
-                    printstr += key + " : " + str(value['val']) + ", "
-                print "}" + printstr
                 
                 #Evaluate preconditions and store this instantiation in candidates if true
-                precond_func = method_lib[method_name]["preconditions"]["preconditions"]
-                if precond_func(state):
-                    candidates.append((method_name, poss_environment))
-                
+                try:
+                    precond_func = method_lib[method_name]["preconditions"]["preconditions"]
+                    if precond_func(state):
+                        candidates.append((method_name, poss_environment))
+                        
+                        printstr = "Success with trying instantiation: {"
+                        for key, value in poss_environment.iteritems():
+                            printstr += key + " : " + str(value['val']) + ", "
+                        print printstr + "}"
+                    
+                except: #precondition function ran into undefined dictionary entries or something
+                    pass
                 
                 #We need to undo the changes to teh meth_environment_dict so we can use different instantiations later
                 for argument in method_arguments_list:
@@ -288,5 +292,5 @@ def Retry(stack):
 # #bool = a_mod.actionDict['pickupCargo']({}, None, None, None)
 
 import planning_problem
-ppi = planning_problem.PlanningProblem('./parsing/trivial_pp.zip')
-Rae(ppi.method_table, ppi.commands, ppi.domain, ('t_start', (3,)))
+ppi = planning_problem.PlanningProblem('./../domains/simple_domain.zip')
+Rae(ppi.method_table, ppi.commands, ppi.domain, ('get-cargo', ('c1',)))
