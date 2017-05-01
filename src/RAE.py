@@ -5,7 +5,7 @@ from interpreter import *
 # from importlib import import_module
 # import os,sys,inspect
 
-def Rae(method_lib, command_lib, state, task): #We'll need to remove 'task' when we're getting an input stream
+def Rae(method_lib, command_lib, state, task, debug_flag=False): #We'll need to remove 'task' when we're getting an input stream
     '''This is the main method for RAE, which will loop infinitely as it expects to receive tasks/events and refine a set
        of methods into a plan to complete these tasks/events with the Progress and Retry functions.
        task_event is a tuple of the form: (task_name, (arg1, arg2, ...))'''
@@ -22,7 +22,7 @@ def Rae(method_lib, command_lib, state, task): #We'll need to remove 'task' when
         #Here, we'll get task and event inputs and initialize them in the agenda
         while len(te_inputs) > 0:
             task_event = te_inputs.pop(0)
-            candidates = getCandidates(method_lib, task_event, state)
+            candidates = getCandidates(method_lib, task_event, state, debug_flag)
             
             if not candidates:
                 print "Failure: No methods found that address " + task_event[0] + " with " + str(task_event[1])
@@ -40,6 +40,15 @@ def Rae(method_lib, command_lib, state, task): #We'll need to remove 'task' when
 		#Return None if Progress does not succeed
         temp_agenda = []
         
+        #Prints for debugging WHICH WILL NOT INCLUDE MORE THAN THE FIRST ITEM IN THE STACK FOR NOW
+        print "\nCurrent stacks in the agenda:"
+        for stack in agenda:
+            instantiation = []
+            for key, value in stack[0][1][1].iteritems():
+                instantiation.append(str(key) + " = " + str(value['val']))
+            print "[" + str(stack[0][0]) + ", (" + str(stack[0][1][0]) + ", {" + str(instantiation) + "}), Interpreter, " + str(stack[0][3]) + "]"
+        print "\nThe Progress method is starting now and will fail:\n"
+        
         for stack in agenda:
             Progress(method_lib, command_lib, state, stack)
             
@@ -55,9 +64,10 @@ def getTasksEvents():
     
     
     
-def getCandidates(method_lib, task_event, state):
+def getCandidates(method_lib, task_event, state, debug_flag):
     '''returns a list of methods, which are tuples of the form -- (method name,  {arg1:{'v_type':v_type1, 'val':value1}, arg2:{'v_type':v_type2, 'val':value2}, ...})'''
-
+    print "Starting getCandidates:"
+    
     candidates = []
     
     task_name = task_event[0]
@@ -117,6 +127,13 @@ def getCandidates(method_lib, task_event, state):
                     elif isinstance(poss_value, bool):
                         v_type = 'val_bool'
                     poss_environment[argument] = {'v_type':v_type, 'val':poss_value}
+                    
+                #Print every tried instantiation if set to debug
+                if debug_flag:
+                    printstr = "Trying instantiation: {"
+                    for key, value in poss_environment.iteritems():
+                        printstr += key + " : " + str(value['val']) + ", "
+                    print printstr + "}"
                 
                 #Evaluate preconditions and store this instantiation in candidates if true
                 try:
@@ -254,43 +271,7 @@ def Retry(stack):
     return
 
 
-
-
-
-
-# #State stored as -- relationship name : [tuples that have this relationship]
-# state = {
-    # 'dock' : [('d1',), ('d2',)],
-    # 'robot' : [('r1',), ('r2',)],
-    # 'cargo' : [('c1',), ('c2',), ('c3',)],
-    # 'pile' : [('p1',), ('p2',), ('p3',), ('p4',)],
-    # 'loc' : [('r1', 'd1'), ('r2', 'd2'), ('p1', 'd1'), ('p2', 'd1'), ('p3', 'd2'), ('p4', 'd2')],
-    # 'in-pile' : [('c1', 'p1'), ('c2', 'p2'), ('c3', 'p3')],
-    # 'on-robot' : [('r1', 'None'), ('r2', 'None')],
-    # 'adjacent' : [('d1', 'd2')],
-    # }
-
-# #Tasks stored as -- task name : [(arguments), (m1 name, (m1 args), (m1 precond as tups)), (m2 name, (m2 args), (m2 precond as tups)) ...]
-# method_lib = {
-    # 'get-cargo' : [('r', 'c'), ('m1-get-cargo', ('r', 'c', 'd', 'p'), (('pile', ('p',)), ('dock', ('d',)), ('loc', ('r', 'd')), ('loc', ('p', 'd')), ('in-pile', ('c', 'p')), ('on-robot', ('r', 'None'))))
-                   # ],
-    # }
-    
-# task_event = ('get-cargo', ('r1', 'c1'))
-    
-# print "Test Candidates: " + str(getCandidates(method_lib, task_event, state))
-
-
-# #Example of importing and using actions here:
-# currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-# parentdir = os.path.dirname(currentdir)
-# sys.path.insert(0,parentdir) 
-
-# file_path = 'domains.simple_domain'
-# a_mod = import_module('.actions', file_path)
-
-# #bool = a_mod.actionDict['pickupCargo']({}, None, None, None)
-
 import planning_problem
 ppi = planning_problem.PlanningProblem('./../domains/simple_domain.zip')
 Rae(ppi.method_table, ppi.commands, ppi.domain, ('get-cargo', ('c1',)))
+#Set debug_flag to True when calling RAE if you want to see all the tried instantiations
