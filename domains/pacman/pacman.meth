@@ -1,26 +1,51 @@
-m-play-until-done():
+method m-play-until-done():
   task: play-game()
+  pre:
+  =BEGIN
+def preconditions(state):
+    return True
+  =END
   body:
     while !is_done() do
       do-action()
     end
 
-m-go-up():
+method m-go-up():
     task: do-action()
+    pre:
+    =BEGIN
+def preconditions(state):
+  return 'North' in state.game.state.getLegalActions()
+    =END
     body:
         go-up()
 
-m-go-down():
+method m-go-down():
     task: do-action()
+    pre:
+    =BEGIN
+def preconditions(state):
+  return 'South' in state.game.state.getLegalActions()
+    =END
     body:
         go-down()
 
-m-go-left():
+method m-go-left():
     task: do-action()
+    pre:
+    =BEGIN
+def preconditions(state):
+  return 'West' in state.game.state.getLegalActions()
+    =END
     body:
         go-left()
 
 m-go-right():
     task: do-action()
+    pre:
+    =BEGIN
+def preconditions(state):
+  return 'East' in state.game.state.getLegalActions()
+    =END
     body:
         go-right()

@@ -5,11 +5,7 @@ import game
 import layout
 
 
-class State:
-    pass
-
-
-def init():
+def init(state):
     rules = pacman.ClassicGameRules()
     rules.quiet = False
     gameDisplay = graphicsDisplay.PacmanGraphics()
@@ -22,9 +18,9 @@ def init():
         layout.getLayout('mediumClassic'), 'ReflexAgent', ghosts,
         gameDisplay, beQuiet, catchExceptions)
     gameDisplay.initialize(game.state.data)
-    state = State()
     state.game = game
-    return state
+    state.score = 0
+    return True
 
 
 def render(state):
@@ -34,6 +30,7 @@ def render(state):
     newState = state.game.state.data
     newState._agentMoved = 1
     state.game.display.update(newState)
+    return True
 
 
 def is_accessible(state, x, y):
@@ -50,22 +47,26 @@ def is_accessible(state, x, y):
 
 def go_up(state):
     state.game.state = state.game.state.generateSuccessor(0, game.Directions().NORTH)
-    return state
+    state.score = state.game.state.getScore()
+    return True
 
 
 def go_down(state):
     state.game.state = state.game.state.generateSuccessor(0, game.Directions().SOUTH)
-    return state
+    state.score = state.game.state.getScore()
+    return True
 
 
 def go_left(state):
     state.game.state = state.game.state.generateSuccessor(0, game.Directions().WEST)
-    return state
+    state.score = state.game.state.getScore()
+    return True
 
 
 def go_right(state):
     state.game.state = state.game.state.generateSuccessor(0, game.Directions().EAST)
-    return state
+    state.score = state.game.state.getScore()
+    return True
 
 
 def is_done(state):

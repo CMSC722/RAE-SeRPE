@@ -1,19 +1,23 @@
 # simulate a RAE
-from commands import *
+import imp
+pacman = imp.load_source('foobar', 'pacman.cmd')
 
+class State:
+    pass
 
 def main():
-    state = init()
-    render(state)
+    state = State()
+    pacman.init(state)
+    pacman.render(state)
     pause = raw_input()
-    state = go_right(state)
-    render(state)
+    pacman.go_right(state)
+    pacman.render(state)
     pause = raw_input()
-    state = go_right(state)
-    render(state)
+    pacman.go_right(state)
+    pacman.render(state)
     pause = raw_input()
-    state = go_right(state)
-    render(state)
+    pacman.go_right(state)
+    pacman.render(state)
     pause = raw_input()
 
 
