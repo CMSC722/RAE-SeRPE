@@ -166,7 +166,6 @@ self.method_table:
 
 def preconditions(_):
   print("Evaluating m_start(n) preconditions.\n")
-  =E
          }
 
          id: m_start

@@ -45,9 +45,14 @@ Current debugging hit list (change '-' to 'x' as completed):
 - add print function (THIS WILL BE HUGELY IMPORTANT)
 """
 
-import unittest
+import sys
+sys.path.insert(0, '../')
+sys.path.insert(0, '../parsing')
+
 import interpreter
 import meth_parser
+
+import unittest
 import json
 import copy
 
@@ -116,29 +121,29 @@ class EvalPrimitives(unittest.TestCase):
     )
 
     def test_eval_int(self):
-        self.assertEqual(empty_interpreter_instance.eval(self.int_instr, {}, {}, {}),
-                                                         (dict(
+        empty_interpreter_instance.eval(self.int_instr, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (dict(
                                                             v_type = 'val_num',
                                                             val = 3
                                                           ), {}, {}))
 
     def test_eval_float(self):
-        self.assertEqual(empty_interpreter_instance.eval(self.float_instr, {}, {}, {}),
-                                                         (dict(
+        empty_interpreter_instance.eval(self.float_instr, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (dict(
                                                             v_type = 'val_num',
                                                             val = 3.1415926
                                                           ), {}, {}))
 
     def test_eval_str(self):
-        self.assertEqual(empty_interpreter_instance.eval(self.str_instr, {}, {}, {}),
-                                                         (dict(
+        empty_interpreter_instance.eval(self.str_instr, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (dict(
                                                             v_type = 'val_str',
                                                             val = "Hello, world!"
                                                           ), {}, {}))
 
     def test_eval_id(self):
-        self.assertEqual(empty_interpreter_instance.eval(self.id_instr, self.id_instr_env, {}, {}),
-                                                         (dict(
+        empty_interpreter_instance.eval(self.id_instr, self.id_instr_env, {})
+        self.assertEqual(empty_interpreter_instance.ret, (dict(
                                                             v_type = 'val_str',
                                                             val = "I'm a variable!"
                                                           ), self.id_instr_env, {}))
@@ -205,36 +210,36 @@ class EvalArithmeticExpressions(unittest.TestCase):
     )
 
     def test_eval_add(self):
-        self.assertEqual(empty_interpreter_instance.eval(self.add_instr, {}, {}, {}),
-                                                         (dict(
+        empty_interpreter_instance.eval(self.add_instr, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (dict(
                                                             v_type = 'val_num',
                                                             val = 45
                                                           ), {}, {}))
 
     def test_eval_minus(self):
-        self.assertEqual(empty_interpreter_instance.eval(self.sub_instr, {}, {}, {}),
-                                                         (dict(
+        empty_interpreter_instance.eval(self.sub_instr, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (dict(
                                                             v_type = 'val_num',
                                                             val = -5
                                                           ), {}, {}))
 
     def test_eval_times(self):
-        self.assertEqual(empty_interpreter_instance.eval(self.mult_instr, {}, {}, {}),
-                                                         (dict(
+        empty_interpreter_instance.eval(self.mult_instr, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (dict(
                                                             v_type = 'val_num',
                                                             val = 500
                                                           ), {}, {}))
 
     def test_eval_div_int_coerce(self):
-        self.assertEqual(empty_interpreter_instance.eval(self.div_instr_coerce, {}, {}, {}),
-                                                         (dict(
+        empty_interpreter_instance.eval(self.div_instr_coerce, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (dict(
                                                             v_type = 'val_num',
                                                             val = 2
                                                           ), {}, {}))
 
     def test_eval_div_float(self):
-        self.assertEqual(empty_interpreter_instance.eval(self.div_instr_float, {}, {}, {}),
-                                                         (dict(
+        empty_interpreter_instance.eval(self.div_instr_float, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (dict(
                                                             v_type = 'val_num',
                                                             val = 2.5
                                                           ), {}, {}))
@@ -486,133 +491,135 @@ class EvalBooleanExpressions(unittest.TestCase):
 
     # here are the tests themselves
     def test_boolean_primitives(self):
-        self.assertEqual(empty_interpreter_instance.eval(self.true_instr, {}, {}, {}),
-                                                         (self.val_true, {}, {}))
+        empty_interpreter_instance.eval(self.true_instr, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_true, {}, {}))
 
-        self.assertEqual(empty_interpreter_instance.eval(self.false_instr, {}, {}, {}),
-                                                         (self.val_false, {}, {}))
+        empty_interpreter_instance.eval(self.false_instr, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_false, {}, {}))
 
     def test_equals(self):
-        self.assertEqual(empty_interpreter_instance.eval(self.equals_instr_bool, {}, {}, {}),
-                                                         (self.val_true, {}, {}))
+        empty_interpreter_instance.eval(self.equals_instr_bool, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_true, {}, {}))
 
-        self.assertEqual(empty_interpreter_instance.eval(self.not_equals_instr_bool, {}, {}, {}),
-                                                         (self.val_false, {}, {}))
+        empty_interpreter_instance.eval(self.not_equals_instr_bool, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_false, {}, {}))
 
-        self.assertEqual(empty_interpreter_instance.eval(self.equals_instr_int, {}, {}, {}),
-                                                         (self.val_true, {}, {}))
+        empty_interpreter_instance.eval(self.equals_instr_int, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_true, {}, {}))
 
-        self.assertEqual(empty_interpreter_instance.eval(self.not_equals_instr_int, {}, {}, {}),
-                                                         (self.val_false, {}, {}))
+        empty_interpreter_instance.eval(self.not_equals_instr_int, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_false, {}, {}))
 
-        self.assertEqual(empty_interpreter_instance.eval(self.equals_instr_float, {}, {}, {}),
-                                                         (self.val_true, {}, {}))
+        empty_interpreter_instance.eval(self.equals_instr_float, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_true, {}, {}))
 
-        self.assertEqual(empty_interpreter_instance.eval(self.not_equals_instr_float, {}, {}, {}),
-                                                         (self.val_false, {}, {}))
+        empty_interpreter_instance.eval(self.not_equals_instr_float, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_false, {}, {}))
 
-        self.assertEqual(empty_interpreter_instance.eval(self.equals_instr_str, {}, {}, {}),
-                                                         (self.val_true, {}, {}))
+        empty_interpreter_instance.eval(self.equals_instr_str, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_true, {}, {}))
 
-        self.assertEqual(empty_interpreter_instance.eval(self.not_equals_instr_str, {}, {}, {}),
-                                                         (self.val_false, {}, {}))
+        empty_interpreter_instance.eval(self.not_equals_instr_str, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_false, {}, {}))
 
     def test_gt(self):
-        self.assertEqual(empty_interpreter_instance.eval(self.gt_instr, {}, {}, {}),
-                                                         (self.val_true, {}, {}))
+        empty_interpreter_instance.eval(self.gt_instr, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_true, {}, {}))
 
-        self.assertEqual(empty_interpreter_instance.eval(self.not_gt_instr, {}, {}, {}),
-                                                         (self.val_false, {}, {}))
+        empty_interpreter_instance.eval(self.not_gt_instr, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_false, {}, {}))
 
     def test_lt(self):
-        self.assertEqual(empty_interpreter_instance.eval(self.lt_instr, {}, {}, {}),
-                                                         (self.val_true, {}, {}))
+        empty_interpreter_instance.eval(self.lt_instr, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_true, {}, {}))
 
-        self.assertEqual(empty_interpreter_instance.eval(self.not_lt_instr, {}, {}, {}),
-                                                         (self.val_false, {}, {}))
+        empty_interpreter_instance.eval(self.not_lt_instr, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_false, {}, {}))
 
     def test_gte(self):
-        self.assertEqual(empty_interpreter_instance.eval(self.gte_instr, {}, {}, {}),
-                                                         (self.val_true, {}, {}))
+        empty_interpreter_instance.eval(self.gte_instr, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_true, {}, {}))
 
-        self.assertEqual(empty_interpreter_instance.eval(self.not_gte_instr, {}, {}, {}),
-                                                         (self.val_false, {}, {}))
+        empty_interpreter_instance.eval(self.not_gte_instr, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_false, {}, {}))
 
     def test_lte(self):
-        self.assertEqual(empty_interpreter_instance.eval(self.lte_instr, {}, {}, {}),
-                                                         (self.val_true, {}, {}))
+        empty_interpreter_instance.eval(self.lte_instr, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_true, {}, {}))
 
-        self.assertEqual(empty_interpreter_instance.eval(self.not_lte_instr, {}, {}, {}),
-                                                         (self.val_false, {}, {}))
+        empty_interpreter_instance.eval(self.not_lte_instr, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_false, {}, {}))
 
     def test_and(self):
-        self.assertEqual(empty_interpreter_instance.eval(self.and_instr_simple_true, {}, {}, {}),
-                                                         (self.val_true, {}, {}))
+        empty_interpreter_instance.eval(self.and_instr_simple_true, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_true, {}, {}))
 
-        self.assertEqual(empty_interpreter_instance.eval(self.and_instr_simple_false_1, {}, {}, {}),
-                                                         (self.val_false, {}, {}))
+        empty_interpreter_instance.eval(self.and_instr_simple_false_1, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_false, {}, {}))
 
-        self.assertEqual(empty_interpreter_instance.eval(self.and_instr_simple_false_2, {}, {}, {}),
-                                                         (self.val_false, {}, {}))
+        empty_interpreter_instance.eval(self.and_instr_simple_false_2, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_false, {}, {}))
 
-        self.assertEqual(empty_interpreter_instance.eval(self.and_instr_complex_true, {}, {}, {}),
-                                                         (self.val_true, {}, {}))
+        empty_interpreter_instance.eval(self.and_instr_complex_true, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_true, {}, {}))
 
-        self.assertEqual(empty_interpreter_instance.eval(self.and_instr_complex_false, {}, {}, {}),
-                                                         (self.val_false, {}, {}))
+        empty_interpreter_instance.eval(self.and_instr_complex_false, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_false, {}, {}))
 
     def test_or(self):
-        self.assertEqual(empty_interpreter_instance.eval(self.or_instr_simple_true_1, {}, {}, {}),
-                                                         (self.val_true, {}, {}))
+        empty_interpreter_instance.eval(self.or_instr_simple_true_1, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_true, {}, {}))
 
-        self.assertEqual(empty_interpreter_instance.eval(self.or_instr_simple_true_2, {}, {}, {}),
-                                                         (self.val_true, {}, {}))
+        empty_interpreter_instance.eval(self.or_instr_simple_true_2, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_true, {}, {}))
 
-        self.assertEqual(empty_interpreter_instance.eval(self.or_instr_simple_false, {}, {}, {}),
-                                                         (self.val_false, {}, {}))
+        empty_interpreter_instance.eval(self.or_instr_simple_false, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_false, {}, {}))
 
-        self.assertEqual(empty_interpreter_instance.eval(self.or_instr_complex_true, {}, {}, {}),
-                                                         (self.val_true, {}, {}))
+        empty_interpreter_instance.eval(self.or_instr_complex_true, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_true, {}, {}))
 
-        self.assertEqual(empty_interpreter_instance.eval(self.or_instr_complex_false, {}, {}, {}),
-                                                         (self.val_false, {}, {}))
+        empty_interpreter_instance.eval(self.or_instr_complex_false, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_false, {}, {}))
 
     def test_not(self):
-        self.assertEqual(empty_interpreter_instance.eval(self.not_instr_simple_false, {}, {}, {}),
-                                                         (self.val_false, {}, {}))
+        empty_interpreter_instance.eval(self.not_instr_simple_false, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_false, {}, {}))
 
-        self.assertEqual(empty_interpreter_instance.eval(self.not_instr_simple_true, {}, {}, {}),
-                                                         (self.val_true, {}, {}))
+        empty_interpreter_instance.eval(self.not_instr_simple_true, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_true, {}, {}))
 
-        self.assertEqual(empty_interpreter_instance.eval(self.not_instr_complex_false, {}, {}, {}),
-                                                         (self.val_false, {}, {}))
+        empty_interpreter_instance.eval(self.not_instr_complex_false, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_false, {}, {}))
 
-        self.assertEqual(empty_interpreter_instance.eval(self.not_instr_complex_true, {}, {}, {}),
-                                                         (self.val_true, {}, {}))
+        empty_interpreter_instance.eval(self.not_instr_complex_true, {}, {})
+        self.assertEqual(empty_interpreter_instance.ret, (self.val_true, {}, {}))
 
-class EvalSimpleMethod(unittest.TestCase):
-    def test_eval_expr_meth(self):
-        (method_table, _, _) = meth_parser.parse("tests.meth")
-        simple_method = method_table['test_meth1']
-        environment = dict(
-            x = 10,
-            y = 4,
-            pi = 3.1415952
-        )
-        simple_method_interpreter = \
-                interpreter.Interpreter(simple_method, environment, {}, {})
-
-        # we'll round the interpreter's answer to three decimal places
-        # so that we're actually testing the interpreter's functionality, and
-        # not Python's floating point precision
-        unrounded_val = simple_method_interpreter.res[0]['val']
-        rounded_val = float("{0:.3f}".format(unrounded_val))
-        simple_method_interpreter.res[0]['val'] = rounded_val
-
-        self.assertEqual(simple_method_interpreter.res, (dict(
-                                                            v_type = 'val_num',
-                                                            val = 15.283
-                                                         ), environment, {}))
+# class EvalSimpleMethod(unittest.TestCase):
+#     def test_eval_expr_meth(self):
+#         (method_table, _, _) = meth_parser.parse("tests.meth")
+#         simple_method = method_table['test_meth1']
+#         environment = dict(
+#             x = 10,
+#             y = 4,
+#             pi = 3.1415952
+#         )
+#         simple_method_interpreter = \
+#                 interpreter.Interpreter(simple_method, environment, {})
+#
+#         # we'll round the interpreter's answer to three decimal places
+#         # so that we're actually testing the interpreter's functionality, and
+#         # not Python's floating point precision
+#         for node in simple_method_interpreter:
+#             print node
+#         unrounded_val = simple_method_interpreter.ret[0]['val']
+#         rounded_val = float("{0:.3f}".format(unrounded_val))
+#         simple_method_interpreter.ret[0]['val'] = rounded_val
+#
+#         self.assertEqual(simple_method_interpreter.ret, (dict(
+#                                                             v_type = 'val_num',
+#                                                             val = 15.283
+#                                                          ), environment, {}))
 
 """
 INTERPRETER SEMANTICS: STATEMENTS
@@ -823,9 +830,13 @@ class EvalControlStatements(unittest.TestCase):
         new_env['i'] = old_env['i'] - 1
 
         if_instr_1 = self.make_if_instr([self.simple_cond_true_1], [self.block_1])
-        (res, test_env, _) = empty_interpreter_instance.eval(if_instr_1, _env_1, {}, {})
+        empty_interpreter_instance.eval(if_instr_1, _env_1, {})
+        (res, test_env, _) = empty_interpreter_instance.ret
 
-        self.assertEqual(res['val'], new_env['i']) # test the stmt returns the
+        # print("\n\nres = " + res.__repr__())
+        # print("test_env = " + test_env.__repr__() + "\n\n")
+
+        self.assertEqual(res['val'], None) # test the stmt returns the
                                                    # correct value as result
         self.assertEqual(test_env, new_env) # test that the stmt correctly
                                             # modified the environment
@@ -835,7 +846,8 @@ class EvalControlStatements(unittest.TestCase):
 
         '''now a simple (false) if with no alternate branches'''
         if_instr_2 = self.make_if_instr([self.simple_cond_false_1], [self.block_1])
-        (res, test_env, _) = empty_interpreter_instance.eval(if_instr_2, _env_1, {}, {})
+        empty_interpreter_instance.eval(if_instr_2, _env_1, {})
+        (res, test_env, _) = empty_interpreter_instance.ret
 
         self.assertEqual(res['val'], None) # test the stmt returns the
                                                    # correct value as result

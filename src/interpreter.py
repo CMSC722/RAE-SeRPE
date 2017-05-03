@@ -71,6 +71,7 @@ import parsing.meth_parser as meth_parser         # this is the module where we'
 import json                 # a better way of getting a pretty print of a dict
 import cPickle as pickle    # for serializing objects to file -- in our case,
                             # we'll want to be persisting our method tables
+from collections import deque
 
 
 """
@@ -182,11 +183,25 @@ class Interpreter:
         self.mode = mode # can be SeRPE or RAE
         self.new_decision_node = False
         self.decision_node = None
-        self.ret = None
+        self.ret = (val_none, environment, state_vars)
         self.state = 'READY' # can be READY, EXECUTING, FINISHED, or ERROR
+        self.stack = deque([])
 
     def __iter__(self):
-        return self.execute_method(self.method, self.environment, self.state_vars)
+        return self
+
+    def __next__(self):
+        if self.new_decision_node:
+            self.new_decision_node = False
+            return self.decision_node
+        elif self.stack: # pick up where we left off
+            next_instr = self.stack.popleft()
+            eval(next_instr)
+        elif self.state == 'READY':
+            execute_method(self.method)
+        else:
+            self.state = 'FINISHED'
+            raise StopIteration
 
     def __str__(self):
         return json.dumps(self.decision_nodes, sort_keys=False, indent=3)
@@ -203,6 +218,7 @@ class Interpreter:
     """
 
     def execute_method(self, method, environment, state_vars):
+        self.state = 'EXECUTING'
         if method:
             first_instr = method['exprs']
             return self.eval(first_instr, environment=environment,
@@ -263,6 +279,7 @@ class Interpreter:
                                  format(curr_instr['e_type']))
 
     def eval(self, curr_instr, environment, state_vars):
+        # print("In eval with curr_instr = " + repr(curr_instr))
         op_sem = {
             'E_NOOP':         self.e_noop,
             'E_SEQ':          self.e_seq,
@@ -294,13 +311,14 @@ class Interpreter:
 
         # before proceeding with execusion, check if there are any new
         # decision nodes to yield
-        if self.new_decision_node:
-            self.new_decision_node = False
-            yield self.decision_node
+        # if self.new_decision_node:
+        #    self.new_decision_node = False
+        #    yield self.decision_node
 
+        # print("recursing on ast")
         # continue recursing on the AST
-        op_sem(curr_instr, environment=environment,
-                           state_vars=state_vars)
+        op_sem(curr_instr, environment=environment, state_vars=state_vars)
+        # print("done recursing on ast")
 
 
     """
@@ -317,11 +335,12 @@ class Interpreter:
 
         # noop
     def e_noop(self, instr, environment, state_vars):      # [no arguments]
-        self.state = 'FINISHED'
-        if self.ret:
-            pass
-        else:
-            self.ret = (None, environment, state_vars)
+        # self.state = 'FINISHED'
+        # if self.ret:
+        #     pass
+        # else:
+        #     self.ret = (None, environment, state_vars)
+        pass
 
 
     """
@@ -335,7 +354,13 @@ class Interpreter:
                               state_vars=state_vars)
         (res, environment, state_vars) = self.ret
 
-        if self.mode == 'RAE' and not self.new_decision_node:
+        # we might have generated a decision node in executing that instr;
+        # if so, save the execution state and pass so that the original invok
+        # ing method (__next__) can yield the decision node
+        if self.new_decision_node:
+            self.stack.append(next_instr, environment)
+            pass
+        elif self.mode == 'RAE' and not self.new_decision_node:
             self.new_decision_node = True
             self.decision_node = dict(
                                     node_type =   'progress_node',
@@ -353,9 +378,18 @@ class Interpreter:
                                            state_vars=state_vars)
         ret = val_none
         while cond_res['val']:
+            # evaluate the code block once
             self.eval(block, environment=environment,
                              state_vars=state_vars)
             (ret, environment, state_vars) = self.ret
+
+            # there could be a new decision node after evaluating the block
+            if self.new_decision_node:
+                self.stack.append(instr, environment) # save the state
+                pass # return so that __next__ (the original invoking method)
+                     # can yield the generated decision node
+
+            # now evaluate the guard and continue iterating as appropriate
             self.eval(cond, environment=environment,
                             state_vars=state_vars)
             (cond_res, _, _) = self.ret
@@ -365,21 +399,17 @@ class Interpreter:
     def e_if(self, instr, environment, state_vars):
         cond_list = instr['conds']
         block_list = instr['blocks']
-        i = 0
+
         for cond, block in zip(cond_list, block_list):
-            i = i + 1
-            # print("\ncond {0} is: ".format(i) + json.dumps(cond, sort_keys=False, indent=3) + "\n")
             self.eval(cond, environment=environment,
                             state_vars=state_vars)
             (res, _, _) = self.ret
-            # print("\nevaluated cond {0} with res: ".format(i) + json.dumps(res, sort_keys=False, indent=3) + "\n")
+
             if res['val']:
-                # print("\nreturning from if: " + json.dumps(res, sort_keys=False, indent=3) + "\n")
                 self.eval(block, environment=environment,
                                  state_vars=state_vars)
                 pass
 
-        # print("\nreturning from if: " + json.dumps(val_none, sort_keys=False, indent=3) + "\n")
         self.ret = (val_none, environment, state_vars)
 
         # binary (here only boolean) operators
@@ -561,10 +591,12 @@ class Interpreter:
                     ), environment, state_vars)
 
     def e_int(self, instr, environment, state_vars):
+        # print("IN e_int!")
         self.ret = (dict(
                         v_type = 'val_num',
                         val = instr['val']
                     ), environment, state_vars)
+        # print("SET self.ret = " + repr(self.ret))
 
     def e_float(self, instr, environment, state_vars):
         self.ret = (dict(
@@ -576,11 +608,9 @@ class Interpreter:
         l_expr = instr['arg1']
         r_expr = instr['arg2']
 
-        self.eval(l_expr, environment=environment,
-                          state_vars=state_vars)
+        self.eval(l_expr, environment=environment, state_vars=state_vars)
         (l_res, _, _) = self.ret
-        self.eval(r_expr, environment=environment,
-                          state_vars=state_vars)
+        self.eval(r_expr, environment=environment, state_vars=state_vars)
         (r_res, _, _) = self.ret
 
         if l_res['v_type'] == 'val_num' and r_res['v_type'] == 'val_num':

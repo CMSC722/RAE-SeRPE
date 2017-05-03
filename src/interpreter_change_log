@@ -18,3 +18,7 @@
     what it was before invoking the action
 4) parsing problem representation:
   - allow path to directory -- test whether directory or zip file
+5) planning domain file representation:
+  - allow domains and problems to be defined separately (apart)
+  - hence pp.zip = just the domain
+  - s0 + goal specified in separate file -- or maybe through the UI?
