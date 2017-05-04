@@ -230,7 +230,9 @@ def p_task(p):
         parameters = p[5]
     )
     # now add entries in the task-table and the task-method-map as appropriate:
+    # print("\n\nadding task " + p[0]['id'] + " to task-table\n")
     task_table[p[0]['id']] = p[0]
+    # print("now task-table = " + task_table.__repr__() + "\n\n")
     # if not p[0]['id'] in task_method_map:
     #    task_method_map[p[3]] = list()
 
@@ -524,7 +526,10 @@ def p_state_var_args(p):
 
 def p_state_var_arg(p):
     '''state_var_arg : state_var_rd
-                     | ID'''
+                     | loc_var_rd
+                     | string
+                     | INT
+                     | FLOAT'''
     p[0] = p[1]
 
 def p_loc_var_rd(p):
@@ -707,6 +712,7 @@ def parse(filename):
     meth_parser_instance.parse(input, lexer=meth_lexer_instance, \
                                       tracking=True, debug=DEBUG)
 
+    # print("\n\nreturning task_table = " + task_table.__repr__())
     return (method_table, task_table, {}) #task_method_map)
 
 """

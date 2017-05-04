@@ -187,18 +187,20 @@ class Interpreter:
         self.state = 'READY' # can be READY, EXECUTING, FINISHED, or ERROR
         self.stack = deque([])
 
+        print("\n\nenvironment = " + environment.__repr__() + "\n\n")
+
     def __iter__(self):
         return self
 
-    def __next__(self):
+    def next(self):
         if self.new_decision_node:
             self.new_decision_node = False
             return self.decision_node
         elif self.stack: # pick up where we left off
             next_instr = self.stack.popleft()
-            eval(next_instr)
+            self.eval(next_instr)
         elif self.state == 'READY':
-            execute_method(self.method)
+            self.execute_method(self.method, self.environment, self.state_vars)
         else:
             self.state = 'FINISHED'
             raise StopIteration
@@ -703,17 +705,18 @@ class Interpreter:
     # the dom-lexer (which doesn't yet exist) to disambiguate this within the
     # parser and issue separate byte-code instructions; but for now, this will
     # at least work.
-    def _eval_helper(arg, environment, state_vars):
-        self._eval_helper(arg, environment, state_vars)
+    def _eval_helper(self, arg, environment, state_vars):
+        self.eval(arg, environment, state_vars)
         (res, _, _) = self.ret
         return res
 
     def e_state_var_rd(self, instr, environment, state_vars):  # arg1 (id string), arg2 (list of parameter ids)
         id = instr['arg1']
         arguments = instr['arg2']
-        evaluated_arguments = tuple([self._eval_helper(arg, environment,
-                                         state_vars)['val'] \
+        evaluated_arguments = tuple([self._eval_helper(arg, environment, state_vars)['val'] \
                                      for arg in arguments])
+
+        print("\n\ntask_table = " + self.task_table.__repr__() + "\n\n")
 
         if id in self.task_table:
             if not arguments.size == task['params'].size:
@@ -732,6 +735,9 @@ class Interpreter:
             self.new_decision_node = True
             self.ret = (val_none, environment, state_vars)
         else: # it's a state variable (we hope)
+            print("\n\n\twe were passed state_vars = \n" + state_vars.__repr__() + "\n\n")
+            print("id = " + id + "\n\n")
+            print("evaluated_arguments = " + evaluated_arguments.__repr__() + "\n\n")
             val = state_vars[id][evaluated_arguments]
 
             v_type = 'val_none'

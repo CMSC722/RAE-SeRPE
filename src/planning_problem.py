@@ -39,9 +39,11 @@ class PlanningProblem:
                     print("Processing .meth file: " + member + "\n")
                     (_method_table, _task_table, _task_method_map) = \
                         meth_parser.parse(member)
+                    # print("\n\nin PlanningProblem, got task-table = " + _task_table.__repr__() + "\n\n")
                     self.method_table.update(_method_table)
                     self.task_table.update(_task_table)
                     self.task_method_map.update(_task_method_map)
+                    # print("\n\nin PlanningProblem, got task-table = " + self.task_table.__repr__() + "\n\n")
                     print("Completed processing .meth file: " + member)
                     print("\n*******************************\n")
                 elif member.endswith('.dom'):
