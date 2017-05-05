@@ -197,8 +197,8 @@ class Interpreter:
             self.new_decision_node = False
             return self.decision_node
         elif self.stack: # pick up where we left off
-            next_instr = self.stack.popleft()
-            self.eval(next_instr)
+            next_instr, environment = self.stack.popleft()
+            self.eval(next_instr, environment, self.state_vars)
         elif self.state == 'READY':
             self.execute_method(self.method, self.environment, self.state_vars)
         else:
@@ -360,7 +360,7 @@ class Interpreter:
         # if so, save the execution state and pass so that the original invok
         # ing method (__next__) can yield the decision node
         if self.new_decision_node:
-            self.stack.append(next_instr, environment)
+            self.stack.append((next_instr, environment))
             pass
         elif self.mode == 'RAE' and not self.new_decision_node:
             self.new_decision_node = True
@@ -387,7 +387,7 @@ class Interpreter:
 
             # there could be a new decision node after evaluating the block
             if self.new_decision_node:
-                self.stack.append(instr, environment) # save the state
+                self.stack.append((instr, environment)) # save the state
                 pass # return so that __next__ (the original invoking method)
                      # can yield the generated decision node
 
