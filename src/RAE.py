@@ -5,7 +5,7 @@ from interpreter import *
 # from importlib import import_module
 # import os,sys,inspect
 
-def Rae(method_lib, command_lib, state, task, debug_flag=False): #We'll need to remove 'task' when we're getting an input stream
+def Rae(method_lib, command_lib, state, task_table, task, debug_flag=False): #We'll need to remove 'task' when we're getting an input stream
     '''This is the main method for RAE, which will loop infinitely as it expects to receive tasks/events and refine a set
        of methods into a plan to complete these tasks/events with the Progress and Retry functions.
        task_event is a tuple of the form: (task_name, (arg1, arg2, ...))'''
@@ -16,7 +16,7 @@ def Rae(method_lib, command_lib, state, task, debug_flag=False): #We'll need to 
     # From Sunandita: Can do this based on the output of getTaskEvents(). RAE stops when its empty?
 	#Can't it be given inputs at arbitrary times?
     te_inputs = [task]
-    while True:
+    while len(agenda) > 0 or len(te_inputs) > 0:
         #te_inputs = getTasksEvents()
 
         #Here, we'll get task and event inputs and initialize them in the agenda
@@ -40,23 +40,28 @@ def Rae(method_lib, command_lib, state, task, debug_flag=False): #We'll need to 
 		#Return None if Progress does not succeed
         temp_agenda = []
 
-        #Prints for debugging WHICH WILL NOT INCLUDE MORE THAN THE FIRST ITEM IN THE STACK FOR NOW
-        print "\nCurrent stacks in the agenda:"
+        #Print stacks for debugging
+        print "\nCurrent stacks in the agenda:\n"
+        stack_num = 0
         for stack in agenda:
             instantiation = []
-            for key, value in stack[0][1][1].iteritems():
-                instantiation.append(str(key) + " = " + str(value['val']))
-            print "[" + str(stack[0][0]) + ", (" + str(stack[0][1][0]) + ", {" + str(instantiation) + "}), Interpreter, " + str(stack[0][3]) + "]"
-        print "\nThe Progress method is starting now and will fail:\n"
-
+            print "Stack " + str(stack_num) + ":\n["
+            for i in range(len(stack)):
+                for key, value in stack[i][1][1].iteritems():
+                    instantiation.append(str(key) + " = " + str(value['val']))
+                print "(" + str(stack[i][0]) + ", (" + str(stack[i][1][0]) + ", {" + str(instantiation) + "}), Interpreter, " + str(stack[i][3]) + ")"
+            print "]\n"
+            
+        #Progress stacks and only add back to agenda ones that haven't finished
         for stack in agenda:
-            Progress(method_lib, command_lib, state, stack)
+            Progress(method_lib, command_lib, task_table, state, stack)
 
             if stack:
                 temp_agenda.append(stack)
 
         agenda = temp_agenda
 
+    print "\nRAE finished"
 
 def getTasksEvents():
     return [] #Need to get input stream here
@@ -66,7 +71,7 @@ def getTasksEvents():
 
 def getCandidates(method_lib, task_event, state, debug_flag):
     '''returns a list of methods, which are tuples of the form -- (method name,  {arg1:{'v_type':v_type1, 'val':value1}, arg2:{'v_type':v_type2, 'val':value2}, ...})'''
-    print "Starting getCandidates:"
+    print "Starting getCandidates for " + task_event[0] + ":"
 
     candidates = []
 
@@ -165,12 +170,12 @@ def getCandidates(method_lib, task_event, state, debug_flag):
     return candidates
 
 
-def Progress(method_lib, command_lib, state, stack):
+def Progress(method_lib, command_lib, task_table, state, stack):
     '''This method will refine the current stack.
        Stack is a bunch of method frames of the form: (task_event, method, Interpreter, tried)
        and method contains it's name and the current instantiation of its arguments: (method name,  {arg1:{'v_type':v_type1, 'val':value1}, arg2:{'v_type':v_type2, 'val':value2}, ...})'''
 
-    print "Progressing stack: " + str(stack)
+    print "Progressing stack:"
 
     top_tup = stack[len(stack) - 1]
 
@@ -179,20 +184,18 @@ def Progress(method_lib, command_lib, state, stack):
     interp = top_tup[2]
     tried = top_tup[3]
 
-    #We're going to run the entire method for now instead of using the line pointer 'i'
-	#We'll keep track of the Interpreter object that will lazily yield the branch nodes
+    #Instead of using the line pointer 'i,' we'll keep track of the Interpreter object that 
+    #will lazily yield the branch nodes
     #TODO: from Sam -- you need to pass in ppi.task_table in the appropriate argument slot --
     #TODO: otherwise, the Interpreter won't be able to distinguish task invocations from
     #TODO: state variable reads and similar looking syntactic constructs
     if not interp:
         print "Instantiating Interpreter instance"
-        interp = Interpreter(method_lib[method[0]], method[1], state) #This needs to be given the correct inputs when that's sorted
+        interp = Interpreter(method_lib[method[0]], method[1], state, task_table, {}, 'RAE')
+        
+    next_node = interp.next()
 
     #Try to get the next node from the interpreter, which will be a task or command
-    for node in interp:
-        print node
-
-    next_node = next(interp)
     try:
         print "HERE 1"
         next_node = interp.next()
@@ -276,5 +279,5 @@ def Retry(stack):
 
 import planning_problem
 ppi = planning_problem.PlanningProblem('./../domains/simple_domain.zip')
-Rae(ppi.method_table, ppi.commands, ppi.domain, ('get-cargo', ('c1',)))
+Rae(ppi.method_table, ppi.commands, ppi.domain, ppi.task_table, ('get-cargo', ('c1',)))
 #Set debug_flag to True when calling RAE if you want to see all the tried instantiations
