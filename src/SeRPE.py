@@ -19,6 +19,7 @@ def SeRPE(refine_methods, action_templates, state, task):
     if result != None:
       return result
     state = state_copy
+    print "backtracking!\n"
   return None
 
 def progressToFinish(refine_methods, action_templates, state, task, m):

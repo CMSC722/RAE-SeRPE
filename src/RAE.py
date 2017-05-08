@@ -220,15 +220,15 @@ def Progress(method_lib, command_lib, task_table, state, stack, debug_flag):
                 stack[len(stack) - 1] = (task_event, method, interp, tried)
                 return
             else: #command failed
-                print "Command succeded"
-                Retry(stack, debug_flag)
+                print "Command failed"
+                Retry(stack, debug_flag, method_lib, state)
                 return
 
         elif node_type == "TASK": #is task
             print "Got task: " + str(id)
             candidates = getCandidates(method_lib, (id, args), state)
             if not candidates:
-                Retry(stack, debug_flag)
+                Retry(stack, debug_flag, method_lib, state)
             else:
                 method_primed = candidates.pop(0)
                 tried_primed = set()
@@ -248,7 +248,7 @@ def Progress(method_lib, command_lib, task_table, state, stack, debug_flag):
 
 
 
-def Retry(stack, debug_flag):
+def Retry(stack, debug_flag, method_lib, state):
     '''This method will retry other methods that applied to the task. It acts the backtracker'''
 
     print "Retrying stack: " + str(stack)
@@ -278,7 +278,7 @@ def Retry(stack, debug_flag):
     #Retry underlying task if this one completely failed. If no stack left, let it disappear from agenda
     else:
         if stack:
-            Retry(stack, debug_flag)
+            Retry(stack, debug_flag, method_lib, state)
         else:
             print "Failed to accomplish " + task_event
 
