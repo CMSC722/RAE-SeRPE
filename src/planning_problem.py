@@ -19,6 +19,7 @@ methods, action models, execution platform commands, and problem specification.
 
 import os
 import sys
+import shutil
 import zipfile
 import parsing.dom_parser as dom_parser
 import parsing.meth_parser  as meth_parser
@@ -27,13 +28,20 @@ import parsing.command_parser as command_parser
 
 class PlanningProblem:
     def __init__(self, path_to_zip):
+        self.base_dir = os.path.abspath(os.path.join(path_to_zip, os.pardir)) + "/"
+        self.temp_dir = self.base_dir + "../temp_domain"
         (self.method_table, self.task_table, self.task_method_map) = ({},{},{})
         self.domain = {}
         self.action_models = {}
         self.commands = {}
         with zipfile.ZipFile(path_to_zip, 'r') as archive:
+            # extract domain to temp_domain and add to sys path at pos 0
+            archive.extractall(self.temp_dir)
+            sys.path.insert(0, self.temp_dir)
+
+            # parse all planning files
             for member in archive.namelist():
-                member = os.path.abspath(os.path.join(path_to_zip, os.pardir)) + "/" + member
+                member = self.base_dir + member
                 if member.endswith('.meth'):
                     print("\n*******************************\n")
                     print("Processing .meth file: " + member + "\n")
@@ -64,6 +72,10 @@ class PlanningProblem:
                     self.commands = command_parser.parse(member)
                     print("\nCompleted processing .cmd file: " + member)
                     print("\n*******************************\n")
+
+    def cleanup(self):
+        sys.path.remove(self.temp_dir)
+        shutil.rmtree(self.temp_dir)
 
     """
     Override the built-ins __str__ and __repr__

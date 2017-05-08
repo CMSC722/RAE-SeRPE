@@ -187,7 +187,7 @@ class Interpreter:
         self.state = 'READY' # can be READY, EXECUTING, FINISHED, or ERROR
         self.stack = deque([])
 
-        print("\n\nenvironment = " + environment.__repr__() + "\n\n")
+        # print("\n\nenvironment = " + environment.__repr__() + "\n\n")
 
     def __iter__(self):
         return self
@@ -205,8 +205,8 @@ class Interpreter:
             self.state = 'FINISHED'
             raise StopIteration
 
-    def __str__(self):
-        return json.dumps(self.decision_nodes, sort_keys=False, indent=3)
+    # def __str__(self):
+    #     return json.dumps(self.decision_nodes, sort_keys=False, indent=3)
 
 
     #NOTE: THIS DOCUMENTATION NEEDS TO BE REWRITTEN IN LIGHT OF RECENT CHANGES
@@ -716,7 +716,7 @@ class Interpreter:
         evaluated_arguments = tuple([self._eval_helper(arg, environment, state_vars)['val'] \
                                      for arg in arguments])
 
-        print("\n\ntask_table = " + self.task_table.__repr__() + "\n\n")
+        # print("\n\ntask_table = " + self.task_table.__repr__() + "\n\n")
 
         if id in self.task_table:
             if not arguments.size == task['params'].size:
@@ -735,9 +735,9 @@ class Interpreter:
             self.new_decision_node = True
             self.ret = (val_none, environment, state_vars)
         else: # it's a state variable (we hope)
-            print("\n\n\twe were passed state_vars = \n" + state_vars.__repr__() + "\n\n")
-            print("id = " + id + "\n\n")
-            print("evaluated_arguments = " + evaluated_arguments.__repr__() + "\n\n")
+            # print("\n\n\twe were passed state_vars = \n" + state_vars.__repr__() + "\n\n")
+            # print("id = " + id + "\n\n")
+            # print("evaluated_arguments = " + evaluated_arguments.__repr__() + "\n\n")
             val = state_vars[id][evaluated_arguments]
 
             v_type = 'val_none'
