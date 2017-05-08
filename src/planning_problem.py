@@ -29,7 +29,7 @@ import parsing.command_parser as command_parser
 class PlanningProblem:
     def __init__(self, path_to_zip):
         self.base_dir = os.path.abspath(os.path.join(path_to_zip, os.pardir)) + "/"
-        self.temp_dir = self.base_dir + "../temp_domain"
+        self.temp_dir = os.path.abspath(os.pardir) + "/domains/temp"
         (self.method_table, self.task_table, self.task_method_map) = ({},{},{})
         self.domain = {}
         self.action_models = {}

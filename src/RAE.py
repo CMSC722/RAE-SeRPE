@@ -285,8 +285,8 @@ def Retry(stack, debug_flag):
     return
 
 
-#Set debug_flag to True when calling RAE if you want to see all the tried instantiations
-#EXAMPLE USE:
+# Set debug_flag to True when calling RAE if you want to see all the tried instantiations
+# EXAMPLE USE:
 # import planning_problem
 # ppi = planning_problem.PlanningProblem('./../domains/simple_domain.zip')
 # Rae(ppi.method_table, ppi.commands, ppi.domain, ppi.task_table, ('get-cargo', ('c1',)))
