@@ -52,7 +52,7 @@ def Rae(method_lib, command_lib, state, task_table, task, debug_flag=False): #We
                     instantiation.append(str(key) + " = " + str(value['val']))
                 print "(" + str(stack[i][0]) + ", (" + str(stack[i][1][0]) + ", {" + str(instantiation) + "}), Interpreter, " + str(stack[i][3]) + ")"
             print "]\n"
-            
+
         #Progress stacks and only add back to agenda ones that haven't finished
         print "\nRunning Progress loop..."
         for stack in agenda:
@@ -186,7 +186,7 @@ def Progress(method_lib, command_lib, task_table, state, stack, debug_flag):
     interp = top_tup[2]
     tried = top_tup[3]
 
-    #Instead of using the line pointer 'i,' we'll keep track of the Interpreter object that 
+    #Instead of using the line pointer 'i,' we'll keep track of the Interpreter object that
     #will lazily yield the branch nodes
     #TODO: from Sam -- you need to pass in ppi.task_table in the appropriate argument slot --
     #TODO: otherwise, the Interpreter won't be able to distinguish task invocations from
@@ -194,8 +194,8 @@ def Progress(method_lib, command_lib, task_table, state, stack, debug_flag):
     if not interp:
         print "Instantiating Interpreter instance"
         interp = Interpreter(method_lib[method[0]], method[1], state, task_table, command_lib, 'RAE')
-        
-    next_node = interp.next()
+
+    # next_node = interp.next()
 
     #Try to get the next node from the interpreter, which will be a task or command
     try:
@@ -204,7 +204,7 @@ def Progress(method_lib, command_lib, task_table, state, stack, debug_flag):
         id = next_node[1]
         interp_args = next_node[2]
         args = tuple()
-            
+
         #Need to process args from interpreter tuple type into useable tuple of action or task args
         for each in interp_args:
             args = args + (each['val'],)
