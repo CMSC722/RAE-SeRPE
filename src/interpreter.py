@@ -199,8 +199,10 @@ class Interpreter:
         elif self.stack: # pick up where we left off
             next_instr, environment = self.stack.popleft()
             self.eval(next_instr, environment, self.state_vars)
+            return self.next()
         elif self.state == 'READY':
             self.execute_method(self.method, self.environment, self.state_vars)
+            return self.next()
         else:
             self.state = 'FINISHED'
             raise StopIteration
