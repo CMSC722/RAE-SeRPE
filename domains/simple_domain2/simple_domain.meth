@@ -1,0 +1,19 @@
+method fail-backtrack(r):
+  task: backtrack(r)
+  pre:
+  =BEGIN
+def preconditions(state):
+  return True
+  =END
+  body:
+    succ(r)
+
+method succ-backtrack(r):
+  task: backtrack(r)
+  pre:
+  =BEGIN
+def preconditions(state):
+  return True
+  =END
+  body:
+    fail(r)
