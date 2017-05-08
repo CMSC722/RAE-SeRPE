@@ -32,14 +32,19 @@ def progressToFinish(refine_methods, action_templates, state, task, m):
     for arg in node_args:
       args = args + (arg['val'],)
     if node_type == "ACTION":
-      print "Processing command" + str(node_id)
+      print "Processing command " + str(node_id)
       action = action_templates[node_id]
       args = (state,) + args
+      print("\n\nabout to execute \"" + node_id + "\"\n")
+      print("state = " + state.__repr__() + "\n\n")
       succeeded = action(*args)
       if succeeded:
-        print "Command succeeded"
+        print "Command \"" + node_id + "\" succeeded\n"
+        print("state = " + state.__repr__() + "\n\n")
         plan.append(action)
       else:
+        print "Command \"" + node_id + "\" failed\n"
+        print("state = " + state.__repr__() + "\n\n")
         return None
     elif node_type == "TASK":
       print "Processing task" + str(node_id)
@@ -50,7 +55,7 @@ def progressToFinish(refine_methods, action_templates, state, task, m):
         return None
   return plan
 
-pp = planning_problem.PlanningProblem("../domains/simple_domain.zip")
+pp = planning_problem.PlanningProblem("../domains/simple_domain2.zip")
 print pp
-result = SeRPE(pp.method_table, pp.action_models, pp.domain, ('get-cargo', ('c1',)))
+result = SeRPE(pp.method_table, pp.action_models, pp.domain, ('backtrack', ('r1',)))
 print result

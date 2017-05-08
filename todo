@@ -1,0 +1,22 @@
+Near-term:
+* example of RAE observing failure and recovering?
+* midterm domain example -- various permutations
+* create README on git to detail how to
+  - install
+  - operate
+  - write planning problems
+  - use method-def language
+* add UMD boiler-plate license to project
+* integrate GUI
+  - make sure GUI works
+* editing LaTeX --
+  - sharelatex.com?
+  - git?
+  - overleaf?
+  - svn server?
+
+Far-term:
+* add greedy best-first to SeRPE/RAE
+  - what heuristics? how are they domain-independent?
+* fix getCandidates by adding object typing
+  - add parameter types to method-def language

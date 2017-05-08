@@ -1,5 +1,5 @@
 def fail(state, r):
-	state = {}
+	state.clear()
 	return False
 
 def succ(state, r):
