@@ -2,12 +2,14 @@ Objects:
 location = {A, B, C, D, E, F, G, H, I, J, K, L}
 robot = {r1}
 
+Rigid relations:
+
 /*
 State-variable ranges:
 loc(robot) = {A, B, C, D, E, F, G, H, I, J, K, L}
 */
 
-Initial_State:
+Initial state:
 loc(r1) = A
 
 Goal:

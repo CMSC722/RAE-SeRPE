@@ -10,8 +10,8 @@ def preconditions(state):
       exit-room(r,loc1)
           move(r,loc1,loc2)
           enter-room(r,loc2)
-      else
-          move-towards(r,loc1,loc2)
+    else
+      move-towards(r,loc1,loc2)
     end
 
 method m1-enter-room(r,loc1,d,loc2):
@@ -24,7 +24,7 @@ def preconditions(state):
   body:
     if search(r,d) then
           enter(r,d)
-        end
+    end
 
 method m1-exit-room(r,loc1,d,loc2):
   task: exit-room(r,d,loc2)
@@ -37,6 +37,7 @@ def preconditions(state):
     if search(r,d) then
       exit(r,d)
     end
+
 method m1-move-towards(r,loc1,loc2):
   task: move-towards(r,loc2)
     pre:
@@ -54,6 +55,6 @@ def preconditions(state):
                    move(r,loc1,pop(t))
               else
                    move-towards(r,loc1,pop(t))
-                end
+               end
         end
-        end
+      end

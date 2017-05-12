@@ -55,7 +55,7 @@ import json                     # a better way of getting a pretty print of a di
 from pydoc import pager         # we'll be using this to produce less-like,
                                 # paged output -- primarily for debugging purposes
 
-DEBUG = True
+DEBUG = False
 
 """
 METHODS, TASKS, PRECONDITIONS, and INSTRUCTIONS: REPRESENTATION
