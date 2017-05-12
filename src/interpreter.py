@@ -286,6 +286,7 @@ class Interpreter:
         # print("In eval with curr_instr = " + repr(curr_instr))
         op_sem = {
             'E_NOOP':         self.e_noop,
+            'E_FAIL':         self.e_fail,
             'E_SEQ':          self.e_seq,
             'E_WHILE':        self.e_while,
             'E_IF':           self.e_if,
@@ -346,6 +347,10 @@ class Interpreter:
         #     self.ret = (None, environment, state_vars)
         pass
 
+    def e_fail(self, instr, environment, state_vars):
+        self.new_decision_node = True
+        self.decision_node = ('FAIL', 'FAIL', 'FAIL')
+
 
     """
     IMPORTANT NOTE
@@ -364,13 +369,13 @@ class Interpreter:
         if self.new_decision_node:
             self.stack.append((next_instr, environment))
             pass
-        elif self.mode == 'RAE' and not self.new_decision_node:
-            self.new_decision_node = True
-            self.decision_node = dict(
-                                    node_type =   'progress_node',
-                                    environment = environment,
-                                    state_vars = state_vars
-                                 )
+        # elif self.mode == 'RAE' and not self.new_decision_node:
+        #     self.new_decision_node = True
+        #     self.decision_node = dict(
+        #                             node_type =   'progress_node',
+        #                             environment = environment,
+        #                             state_vars = state_vars
+        #                          )
 
         self.eval(next_instr, environment=environment,
                               state_vars=state_vars)

@@ -51,6 +51,8 @@ by ply.lex for validation purposes, by ply.yacc to identify valid terminals.
 """
 
 reserved = {
+    # reserved failure keyword
+    'fail':     'FAIL',
     # method delimiter
     'method':   'METHOD',
     # statement delimiters

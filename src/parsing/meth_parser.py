@@ -55,7 +55,7 @@ import json                     # a better way of getting a pretty print of a di
 from pydoc import pager         # we'll be using this to produce less-like,
                                 # paged output -- primarily for debugging purposes
 
-DEBUG = False
+DEBUG = True
 
 """
 METHODS, TASKS, PRECONDITIONS, and INSTRUCTIONS: REPRESENTATION
@@ -212,9 +212,9 @@ def p_params(p):
               | ID
               |             '''
     if len(p) == 4:
-        p[0] = list(p[1]) + p[3]
+        p[0] = [p[1]] + p[3]
     elif len(p) == 2:
-        p[0] = list(p[1])
+        p[0] = [p[1]]
     else:
         p[0] = []
 
@@ -304,7 +304,8 @@ def p_exprs(p):
 
 # We divide the production for exprs up just for sanity's sake ...
 def p_expr(p):
-    '''expr : LPAREN expr RPAREN
+    # used to have as first production: LPAREN expr RPAREN
+    '''expr : fail
             | control_structure
             | bexpr
             | aexpr
@@ -403,9 +404,17 @@ def p_task_invocation(p):
 PRODUCTIONS FOR EXPRESSIONS
 '''
 
+# failure
+def p_fail(p):
+    'fail : FAIL'
+    p[0] = dict(
+        e_type = 'E_FAIL'
+    )
+
 # arithmetic expressions:
 def p_aexpr(p):
-    '''aexpr : aexpr PLUS aexpr
+    '''aexpr : LPAREN aexpr RPAREN
+             | aexpr PLUS aexpr
              | aexpr MINUS aexpr
              | aexpr TIMES aexpr
              | aexpr DIVIDED_BY aexpr
@@ -442,7 +451,8 @@ def p_aexpr(p):
 
 # boolean expressions:
 def p_bexpr(p):
-    '''bexpr : bexpr AND bexpr
+    '''bexpr : LPAREN bexpr RPAREN
+             | bexpr AND bexpr
              | bexpr OR bexpr
              | expr EQUALS expr
              | expr LT expr
@@ -455,19 +465,22 @@ def p_bexpr(p):
              | state_var_rd     '''
              # | expr             '''
     if len(p) == 4:
-        p[0] = dict(
-            e_type = {
-                '&&':   'E_AND',
-                '||':   'E_OR',
-                '==':   'E_EQUALS',
-                '<':    'E_LT',
-                '>':    'E_GT',
-                '<=':   'E_LTE',
-                '>=':   'E_GTE'
-            }.get(p[2]),
-            arg1 = p[1],
-            arg2 = p[3]
-        )
+        try:
+            p[0] = dict(
+                e_type = {
+                    '&&':   'E_AND',
+                    '||':   'E_OR',
+                    '==':   'E_EQUALS',
+                    '<':    'E_LT',
+                    '>':    'E_GT',
+                    '<=':   'E_LTE',
+                    '>=':   'E_GTE'
+                }.get(p[2]),
+                arg1 = p[1],
+                arg2 = p[3]
+            )
+        except TypeError: # this is the LPAREN bexpr RPAREN case, if you can believe it
+            p[0] = p[2]
     elif len(p) == 3:
         p[0] = dict(
             e_type = 'E_NOT',
