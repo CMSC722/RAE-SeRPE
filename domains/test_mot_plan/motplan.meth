@@ -1,38 +1,60 @@
-m-move-to-room(r,loc1,loc2)
-    task: move-to-room(r,loc2)
-	    pre: loc(r)=loc1
-    body:
-        if(search(r,loc2)=true)
-            exit-room(r,loc1)
-		    move(r,loc1,loc2)
-		    enter-room(r,loc2)
-	    else
-		    move-towards(r,loc1,loc2)
+method m1-move-to-room(r,loc1,loc2):
+  task: move-to-room(r,loc2)
+    pre:
+  =BEGIN
+def preconditions(state):
+  return state['state_vars']['loc'][(r,)] == loc1
+  =END
+  body:
+    if search(r,loc2) then
+      exit-room(r,loc1)
+          move(r,loc1,loc2)
+          enter-room(r,loc2)
+      else
+          move-towards(r,loc1,loc2)
+    end
 
-m-enter-room(r,loc1,d,loc2)
-    task: enter-room(r,d,loc2)
-	    pre:
-    body:
-        if(search(r,d)):
-		    enter(r,d)
+method m1-enter-room(r,loc1,d,loc2):
+  task: enter-room(r,d,loc2)
+    pre:
+    =BEGIN
+def preconditions(state):
+  return True
+  =END
+  body:
+    if search(r,d) then
+          enter(r,d)
+    end
 
-m-exit-room(r,loc1,d,loc2)
-    task: exit-room(r,d,loc2)
-	    pre:
-    body:
-        if(search(r,d)):
-            exit(r,d)
+method m1-exit-room(r,loc1,d,loc2):
+  task: exit-room(r,d,loc2)
+    pre:
+    =BEGIN
+def preconditions(state):
+  return True
+  =END
+  body:
+    if search(r,d) then
+      exit(r,d)
+    end
 
-move-towards(r,loc1,loc2)
-    task: move-towards(r,loc2)
-	    pre: currLoc(r)=loc1
+method m1-move-towards(r,loc1,loc2):
+  task: move-towards(r,loc2)
+    pre:
+    =BEGIN
+def preconditions(state):
+  return state['state_vars']['loc'][(r,)] == loc1
+  =END
     body:
-        t=naïve-path(r,loc1,loc2)
-        if(t=empty)
-	        return fail
-        else:
-	        while(t!=empty)
-		        if(search(r, poll(t)):
-			        move(r,loc1,pop(t))
-		    else:
-			    move-towards(r,loc1,pop(t))
+      t=naive-path(r,loc1,loc2)
+      if t=='empty' then
+        fail
+      else
+        while !(t == 'empty') do
+              if search(r, poll(t)) then
+                   move(r,loc1,pop(t))
+              else
+                   move-towards(r,loc1,pop(t))
+              end
+        end
+      end
