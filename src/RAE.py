@@ -1,6 +1,3 @@
-from logpy.facts import (Relation, fact)
-from unification.variable import var
-from logpy.core import (isvar, eq, EarlyGoalError, lany, everyg, lallgreedy, run)
 from interpreter import *
 # from importlib import import_module
 # import os,sys,inspect
@@ -91,6 +88,10 @@ def getCandidates(method_lib, task_event, state, debug_flag):
             #Will be considered good method instantiation if precond_func evaluates to true
             method_arguments_list = method_lib[method_name]["parameters"]
             task_arguments_list = method_lib[method_name]["task"]["parameters"]
+            if len(task_arguments_list) != len(task_instantiation_tup):
+                print "ERROR: Task: " + task_name + " only given " + str(len(task_instantiation_tup)) + \
+                " arguments, but expects " + str(len(task_arguments_list)) + " arguments in Method: " + method_name
+                return []
 
             #Create a bunch of lists of what each argument could be
             #WE WILL NEED TO CHANGE THIS PART ONCE WE HAVE OBJECT TYPING IN METHODS
@@ -103,6 +104,10 @@ def getCandidates(method_lib, task_event, state, debug_flag):
                         for object in object_set:
                             poss_instantiation_queues[argument].append(object)
                 else: #argument already instantiated, so can get the one in the task instantiation tuple in the same position
+                    if debug_flag:
+                        print "Task Arguments: " + str(task_arguments_list)
+                        print "Task Instantiation: " + str(task_instantiation_tup)
+                        
                     ndx = task_arguments_list.index(argument)
                     poss_instantiation_queues[argument].append(task_instantiation_tup[ndx])
 
@@ -233,6 +238,11 @@ def Progress(method_lib, command_lib, task_table, state, stack, debug_flag):
                 method_primed = candidates.pop(0)
                 tried_primed = set()
                 stack.append(('task_event_primed', method_primed, None, tried_primed))
+            return
+
+        elif node_type == "FAIL": #Method returned failure
+            print "Method failed"
+            Retry(stack, debug_flag, method_lib, state)
             return
 
     except StopIteration: #Should have reached the end of the method if error raised
