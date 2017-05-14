@@ -1,17 +1,17 @@
 method m1-move-to-room(r,loc1,loc2):
-  task: move-to-room(r,loc2)
+  task: move-to-room(r,loc1,loc2)
     pre:
   =BEGIN
 def preconditions(state):
-  return state['state_vars']['loc'][(r,)] == loc1
+  print state['state_vars']['loc'][(r,)]
   =END
   body:
     if search(r,loc2) then
-      exit-room(r,loc1)
+          exit-room(r,loc1)
           move(r,loc1,loc2)
           enter-room(r,loc2)
-      else
-          move-towards(r,loc1,loc2)
+    else
+      move-towards(r,loc1,loc2)
     end
 
 method m1-enter-room(r,loc1,d,loc2):
@@ -22,9 +22,7 @@ def preconditions(state):
   return True
   =END
   body:
-    if search(r,d) then
-          enter(r,d)
-        end
+    enter(r,d)
 
 method m1-exit-room(r,loc1,d,loc2):
   task: exit-room(r,d,loc2)
@@ -34,11 +32,10 @@ def preconditions(state):
   return True
   =END
   body:
-    if search(r,d) then
-      exit(r,d)
-    end
+    exit(r,d)
+
 method m1-move-towards(r,loc1,loc2):
-  task: move-towards(r,loc2)
+  task: move-towards(r,loc1,loc2)
     pre:
     =BEGIN
 def preconditions(state):
@@ -47,13 +44,13 @@ def preconditions(state):
     body:
       t=naive-path(r,loc1,loc2)
       if t=='empty' then
-        fail
+        return fail
       else
         while !(t == 'empty') do
               if search(r, poll(t)) then
-                   move(r,loc1,pop(t))
+                   move-to-room(r,loc1,pop(t))
               else
                    move-towards(r,loc1,pop(t))
-                end
+               end
         end
-        end
+      end

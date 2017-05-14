@@ -7,7 +7,7 @@ def preconditions(state):
   =END
   body:
     pickupCargo(r, c, p)
-    
+
 method m1-put-cargo(r, c, d, p):
   task: put-cargo(c, p)
   pre:

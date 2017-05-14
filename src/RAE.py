@@ -2,7 +2,7 @@ from interpreter import *
 # from importlib import import_module
 # import os,sys,inspect
 
-def Rae(method_lib, command_lib, state, task_table, task, debug_flag=False): #We'll need to remove 'task' when we're getting an input stream
+def Rae(method_lib, command_lib, state, task_table, task, debug_flag=True): #We'll need to remove 'task' when we're getting an input stream
     '''This is the main method for RAE, which will loop infinitely as it expects to receive tasks/events and refine a set
        of methods into a plan to complete these tasks/events with the Progress and Retry functions.
        task_event is a tuple of the form: (task_name, (arg1, arg2, ...))'''

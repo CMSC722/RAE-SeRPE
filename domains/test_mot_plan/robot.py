@@ -2,10 +2,10 @@ import map
 
 class robot:
     location=''
-    arena=map.map()
+    temp=map.map()
     def __init__(self,loc,currMap):
         self.location=loc
-        self.arena=currMap
+        self.temp=currMap
 
     def move(self,loc):
         print 'Moved from location: ' + self.location + ' to location : ' + loc

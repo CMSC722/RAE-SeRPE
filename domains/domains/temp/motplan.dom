@@ -1,5 +1,6 @@
 Objects:
 location = {A, B, C, D, E, F, G, H, I, J, K, L}
+doors = {Door A, Door B, Door C, Door D, Door E, Door F}
 robot = {r1}
 
 Rigid relations:
@@ -13,4 +14,4 @@ Initial state:
 loc(r1) = A
 
 Goal:
-loc(r1) = L
+loc(r1) = H

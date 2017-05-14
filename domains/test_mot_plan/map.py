@@ -26,15 +26,15 @@ class map:
             'Door F': ['F','L']
         }
 
-    def defDoors(self):
-        self.doors={
-            'A':'Door A',
-            'B': 'Door B',
-            'C': 'Door C',
-            'D': 'Door D',
-            'E': 'Door E',
-            'F': 'Door F',
-        }
+    # def defDoors(self):
+    #     self.doors={
+    #         'A': 'Door A',
+    #         'B': 'Door B',
+    #         'C': 'Door C',
+    #         'D': 'Door D',
+    #         'E': 'Door E',
+    #         'F': 'Door F',
+    #     }
 
     def defObservMatrix(self):
         self.observMatrix={
