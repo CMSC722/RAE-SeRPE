@@ -73,7 +73,7 @@ class SetEncoder(json.JSONEncoder):
 GLOBALS
 """
 
-DEBUG = True
+DEBUG = False
 domain = dict()
 
 """

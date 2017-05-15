@@ -6,7 +6,7 @@ import planning_problem
 from RAE import *
 arena=map.map()
 robo=robot.robot('A',arena)
-ppi = planning_problem.PlanningProblem('../motplan.zip')
+ppi = planning_problem.PlanningProblem('Archive.zip')
 rae=Rae(ppi.method_table, ppi.commands, ppi.domain, ppi.task_table, ('move-to-room', ('r1','A','H')), debug_flag=True)
 
 # arena=map.map()

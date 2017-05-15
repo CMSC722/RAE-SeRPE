@@ -283,7 +283,7 @@ class Interpreter:
                                  format(curr_instr['e_type']))
 
     def eval(self, curr_instr, environment, state_vars):
-        # print("In eval with curr_instr = " + repr(curr_instr))
+        print("In eval with curr_instr = " + repr(curr_instr))
         op_sem = {
             'E_NOOP':         self.e_noop,
             'E_FAIL':         self.e_fail,
@@ -409,15 +409,29 @@ class Interpreter:
         cond_list = instr['conds']
         block_list = instr['blocks']
 
-        for cond, block in zip(cond_list, block_list):
+        print("got cond list: \n")
+        print(dump(cond_list) + "\n")
+
+        print("got block list: \n")
+        print(dump(block_list) + "\n")
+
+        i = 0;
+        while i < len(cond_list):
+            cond = cond_list[i]
+            block = block_list[i]
+            print("in if with cond = " + cond.__repr__())
+
             self.eval(cond, environment=environment,
                             state_vars=state_vars)
             (res, _, _) = self.ret
 
             if res['val']:
+                print("cond succeeded; in block = " + block.__repr__())
                 self.eval(block, environment=environment,
                                  state_vars=state_vars)
                 pass
+
+            i = i + 1;
 
         self.ret = (val_none, environment, state_vars)
 
@@ -713,11 +727,13 @@ class Interpreter:
     # parser and issue separate byte-code instructions; but for now, this will
     # at least work.
     def _eval_helper(self, arg, environment, state_vars):
+        print("in eval_helper evaluating arg = " + arg.__repr__())
         self.eval(arg, environment, state_vars)
         (res, _, _) = self.ret
         return res
 
     def e_state_var_rd(self, instr, environment, state_vars):  # arg1 (id string), arg2 (list of parameter ids)
+        print("in state_var_rd with instr = " + instr.__repr__())
         id = instr['arg1']
         arguments = instr['arg2']
         evaluated_arguments = tuple([self._eval_helper(arg, environment, state_vars)['val'] \
@@ -726,10 +742,12 @@ class Interpreter:
         # print("\n\ntask_table = " + self.task_table.__repr__() + "\n\n")
 
         if id in self.task_table:
-            if not arguments.size == task['params'].size:
+            task = self.task_table[id]
+            print("hit task " + id + " = " + task.__repr__() + "\n")
+            if not len(arguments) == len(task['parameters']):
                 raise SemanticError("Task {0} invoked with improper number of \
                                      arguments ({1} rather than {2})".format(id,
-                                        arguments.size, task['params'].size))
+                                        arguments.size, task['parameters'].size))
             task_node = ('TASK', id, evaluated_arguments)
 
             self.decision_node = task_node
@@ -772,6 +790,7 @@ class Interpreter:
         self.ret = (res, environment, state_vars)
 
     def e_loc_var_rd(self, instr, environment, state_vars):    # arg1 (id string)
+        print ("in loc_var_rd with instr = " + instr.__repr__())
         id = instr['arg1']
         val = environment[id]
 
@@ -810,6 +829,34 @@ class Interpreter:
         # native python function invocation (interface with agent/environment)
     def e_action_invocation(self, instr, environment, state_vars):
         pass
+
+def dump(obj, nested_level=0, header=""):
+    spacing = '   '
+    string = header
+
+    if type(obj) == dict:
+        string = string + '%s{' % ((nested_level) * spacing) + '\n'
+        for k, v in obj.items():
+            if k == '__builtins__':
+                continue
+            elif hasattr(v, '__iter__'):
+                string = string + '%s%s:' % ((nested_level + 1) * spacing, k) + '\n'
+                string = string + dump(v, nested_level + 1) + '\n'
+            else:
+                string = string + '%s%s: %s' % ((nested_level + 1) * spacing, k, v) + '\n'
+        string = string + '%s}' % (nested_level * spacing) + '\n'
+    elif type(obj) == list:
+        string = string + '%s[' % ((nested_level) * spacing) + '\n'
+        for v in obj:
+            if hasattr(v, '__iter__'):
+                string = string + dump(v, nested_level + 1) + '\n'
+            else:
+                string = string + '%s%s' % ((nested_level + 1) * spacing, v) + '\n'
+        string = string + '%s]' % ((nested_level) * spacing) + '\n'
+    else:
+        string = string + '%s%s' % (nested_level * spacing, obj) + '\n'
+
+    return string
 
 
 """

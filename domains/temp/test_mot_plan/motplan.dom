@@ -1,0 +1,17 @@
+Objects:
+location = {A, B, C, D, E, F, G, H, I, J, K, L}
+doors = {DoorA, DoorB, DoorC, DoorD, DoorE, DoorF}
+robot = {r1}
+
+Rigid relations:
+
+/*
+State-variable ranges:
+loc(robot) = {A, B, C, D, E, F, G, H, I, J, K, L}
+*/
+
+Initial state:
+loc(r1) = A
+
+Goal:
+loc(r1) = H

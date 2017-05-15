@@ -129,11 +129,13 @@ task_table = dict()         # table mapping task ids to tasks (as dicts)
 
 # initialize the singleton primitives
 e_true = dict(
-    e_type = 'TRUE'
+    e_type = 'E_TRUE',
+    val = True
 )
 
 e_false = dict(
-    e_type = 'FALSE'
+    e_type = 'E_FALSE',
+    val = False
 )
 
 """
@@ -354,22 +356,22 @@ def p_if_statement(p):
     elif len(p) == 8:
         e_else = dict(
             e_type = None,
-            conds = list(e_true),
+            conds = [e_true],
             blocks = [p[6]]
         )
         p[0] = dict(
-            e_type = p[1],
+            e_type = 'E_IF',
             conds = [p[2]] + e_else['conds'],
             blocks = [p[4]] + e_else['blocks']
         )
     elif len(p) == 9:
         e_else = dict(
             e_type = None,
-            conds = list(e_true),
+            conds = [e_true],
             blocks = [p[7]]
         )
         p[0] = dict(
-            e_type = p[1],
+            e_type = 'E_IF',
             conds = [p[2]] + p[5]['conds'] + e_else['conds'],
             blocks = [p[5]] + p[5]['blocks'] + e_else['blocks']
         )
