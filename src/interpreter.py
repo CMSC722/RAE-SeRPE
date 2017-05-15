@@ -489,6 +489,11 @@ class Interpreter:
                           state_vars=state_vars)
         (r_res, _, _) = self.ret
 
+        print("l_expr = " + l_expr.__repr__() + "\n")
+        print("r_expr = " + r_expr.__repr__() + "\n\n")
+        print("l_res = " + l_res.__repr__() + "\n")
+        print("r_res = " + r_res.__repr__() + "\n\n")
+
         if l_res['v_type'] == r_res['v_type']:
             l_operand, r_operand = l_res['val'], r_res['val']
             self.ret = (dict(
@@ -761,9 +766,9 @@ class Interpreter:
             self.new_decision_node = True
             self.ret = (val_none, environment, state_vars)
         else: # it's a state variable (we hope)
-            # print("\n\n\twe were passed state_vars = \n" + state_vars.__repr__() + "\n\n")
-            # print("id = " + id + "\n\n")
-            # print("evaluated_arguments = " + evaluated_arguments.__repr__() + "\n\n")
+            print("\n\n\twe were passed state_vars = \n" + state_vars.__repr__() + "\n\n")
+            print("id = " + id + "\n\n")
+            print("evaluated_arguments = " + evaluated_arguments.__repr__() + "\n\n")
             val = state_vars[id][evaluated_arguments]
 
             v_type = 'val_none'

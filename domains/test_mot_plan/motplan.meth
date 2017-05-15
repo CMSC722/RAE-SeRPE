@@ -42,7 +42,7 @@ def preconditions(state):
   return state['state_vars']['loc'][(r,)] == loc1
   =END
     body:
-      t=naive-path(r,loc1,loc2)
+      t=naivePath(r,loc1,loc2)
       if t=='empty' then
         return fail
       else
