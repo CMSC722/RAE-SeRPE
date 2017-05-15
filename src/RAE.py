@@ -7,6 +7,8 @@ def Rae(method_lib, command_lib, state, task_table, task, debug_flag=False): #We
     '''This is the main method for RAE, which will loop infinitely as it expects to receive tasks/events and refine a set
        of methods into a plan to complete these tasks/events with the Progress and Retry functions.
        task_event is a tuple of the form: (task_name, (arg1, arg2, ...))'''
+       
+    print "\n STARTING RAE\n"
 
     agenda = [] #making agenda a list instead of a set so we can have mutable stacks in the agenda (and don't have to return them from Progress/Retry)
 
@@ -52,7 +54,7 @@ def Rae(method_lib, command_lib, state, task_table, task, debug_flag=False): #We
             print "]\n"
 
         #Progress stacks and only add back to agenda ones that haven't finished
-        print "\nRunning Progress loop..."
+        print "Running Progress loop..."
         for stack in agenda:
             Progress(method_lib, command_lib, task_table, state, stack, debug_flag)
 
