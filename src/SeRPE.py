@@ -33,6 +33,8 @@ def progressToFinish(refine_methods, action_templates, state, task, m):
       args = args + (arg['val'],)
     if node_type == "ACTION":
       print "Processing command " + str(node_id)
+      if node_id not in action_templates:
+          continue
       action = action_templates[node_id]
       args = (state,) + args
       print("\n\nabout to execute \"" + node_id + "\"\n")

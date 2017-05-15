@@ -1,35 +1,38 @@
-import pacman
-import textDisplay
-import graphicsDisplay
-import game
-import layout
+import pacman.pacman as pacman
+import cPickle as pickle
+import codecs
+import random
 
+game = None
+layout = None
 
-def init(state):
+def init(state, dummy):
+    print 'State = {}'.format(state)
+    global game, layout
     rules = pacman.ClassicGameRules()
     rules.quiet = False
-    gameDisplay = graphicsDisplay.PacmanGraphics()
+    gameDisplay = pacman.graphicsDisplay.PacmanGraphics()
     beQuiet = True
     catchExceptions = False
     noKeyboard = True
     ghostType = pacman.loadAgent('RandomGhost', noKeyboard)
     ghosts = [ghostType(i + 1) for i in range(1)]
+    layout = pacman.layout.getLayout('mediumClassic')
     game = rules.newGame(
-        layout.getLayout('mediumClassic'), 'ReflexAgent', ghosts,
+        layout, 'ReflexAgent', ghosts,
         gameDisplay, beQuiet, catchExceptions)
     gameDisplay.initialize(game.state.data)
-    state.game = game
-    state.score = 0
     return True
 
 
 def render(state):
-    newState = state.game.state.data
+    global game
+    newState = state.data
     newState._agentMoved = 0
-    state.game.display.update(newState)
-    newState = state.game.state.data
+    game.display.update(newState)
+    newState = state.data
     newState._agentMoved = 1
-    state.game.display.update(newState)
+    game.display.update(newState)
     return True
 
 
@@ -45,29 +48,62 @@ def is_accessible(state, x, y):
         return True
 
 
-def go_up(state):
-    state.game.state = state.game.state.generateSuccessor(0, game.Directions().NORTH)
-    state.score = state.game.state.getScore()
+def go_up(state, dummy):
+    # print 'go_up, state = {}'.format(state)
+    return _go_direction(state, 'North')
+
+
+def go_down(state, dummy):
+    # print 'go_down, state = {}'.format(state)
+    return _go_direction(state, 'South')
+
+
+def go_left(state, dummy):
+    # print 'go_left, state = {}'.format(state)
+    return _go_direction(state, 'West')
+
+
+def go_right(state, dummy):
+    # print 'go_right, state = {}'.format(state)
+    return _go_direction(state, 'East')
+
+
+def _go_direction(state, direction):
+    global game
+    if game is None:
+        init(state, None)
+        state['state_vars']['value'][('GameState',)] = codecs.encode(pickle.dumps(game.state), "base64").decode()
+    game_state = pickle.loads(codecs.decode(state['state_vars']['value'][('GameState',)].encode(), "base64"))
+    # if direction not in game_state.getLegalActions():
+    #     print 'direction = {}, getLegalActions = {}'.format(direction, game_state.getLegalActions())
+    #     return False
+    game_state = game_state.generateSuccessor(0, direction)
+    render(game_state)
+    state['state_vars']['value'][('score',)] = game_state.getScore()
+    if game_state.getScore() < 0:
+        return False
+    elif game_state.getScore() > 100:
+        state['state_vars']['value'][('score',)] = 'win'
+    # if state['state_vars']['value'][('score',)] > 5.0:
+    #     state['state_vars']['value'][('score',)] = 'win'
+    # update ghost
+    pacman_x, pacman_y = game_state.getPacmanPosition()
+    ghost_x, ghost_y = game_state.getGhostPosition(1)
+    ghost_action = random.choice(game_state.getLegalActions(1))
+    game_state = game_state.generateSuccessor(1, ghost_action)
+    pacman.time.sleep(0.005)
+    print 'score = {}'.format(game_state.getScore())
+    state['state_vars']['value'][('GameState',)] = codecs.encode(pickle.dumps(game_state), "base64").decode()
+    state['state_vars']['value'][('North',)] = 'true' if 'North' in game_state.getLegalActions() else 'false'
+    state['state_vars']['value'][('East',)] = 'true' if 'East' in game_state.getLegalActions() else 'false'
+    state['state_vars']['value'][('West',)] = 'true' if 'West' in game_state.getLegalActions() else 'false'
+    state['state_vars']['value'][('South',)] = 'true' if 'South' in game_state.getLegalActions() else 'false'
     return True
 
-
-def go_down(state):
-    state.game.state = state.game.state.generateSuccessor(0, game.Directions().SOUTH)
-    state.score = state.game.state.getScore()
-    return True
-
-
-def go_left(state):
-    state.game.state = state.game.state.generateSuccessor(0, game.Directions().WEST)
-    state.score = state.game.state.getScore()
-    return True
-
-
-def go_right(state):
-    state.game.state = state.game.state.generateSuccessor(0, game.Directions().EAST)
-    state.score = state.game.state.getScore()
-    return True
-
-
-def is_done(state):
-    return state.game.gameOver
+def is_done(state, dummy):
+    global game
+    if game is None:
+        init(state, None)
+        state['state_vars']['value'][('GameState',)] = codecs.encode(pickle.dumps(game.state), "base64").decode()
+    game_state = pickle.loads(codecs.decode(state['state_vars']['value'][('GameState',)].encode(), "base64"))
+    return game_state.getScore() >= 0

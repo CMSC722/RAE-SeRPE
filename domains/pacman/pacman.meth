@@ -1,51 +1,50 @@
-method m-play-until-done():
-  task: play-game()
+method m-play-until-done(dummy):
+  task: play-game(dummy)
   pre:
   =BEGIN
 def preconditions(state):
     return True
   =END
   body:
-    while !is_done() do
-      do-action()
-    end
+    do-action(dummy)
 
-method m-go-up():
-    task: do-action()
+method m-go-up(dummy):
+    task: do-action(dummy)
     pre:
     =BEGIN
 def preconditions(state):
-  return 'North' in state.game.state.getLegalActions()
+    return state['state_vars']['value'][('North',)] == 'true'
     =END
     body:
-        go-up()
+        go_up(dummy)
 
-method m-go-down():
-    task: do-action()
+method m-go-down(dummy):
+    task: do-action(dummy)
     pre:
     =BEGIN
 def preconditions(state):
-  return 'South' in state.game.state.getLegalActions()
+    return state['state_vars']['value'][('South',)] == 'true'
     =END
     body:
-        go-down()
+        go_down(dummy)
 
-method m-go-left():
-    task: do-action()
+method m-go-left(dummy):
+    task: do-action(dummy)
     pre:
     =BEGIN
 def preconditions(state):
-  return 'West' in state.game.state.getLegalActions()
+    return state['state_vars']['value'][('West',)] == 'true'
     =END
     body:
-        go-left()
+        go_left(dummy)
 
-m-go-right():
-    task: do-action()
+method m-go-right(dummy):
+    task: do-action(dummy)
     pre:
     =BEGIN
 def preconditions(state):
-  return 'East' in state.game.state.getLegalActions()
+    print state
+    return state['state_vars']['value'][('East',)] == 'true'
     =END
     body:
-        go-right()
+        go_right(dummy)

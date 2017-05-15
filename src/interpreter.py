@@ -726,10 +726,10 @@ class Interpreter:
         # print("\n\ntask_table = " + self.task_table.__repr__() + "\n\n")
 
         if id in self.task_table:
-            if not arguments.size == task['params'].size:
-                raise SemanticError("Task {0} invoked with improper number of \
-                                     arguments ({1} rather than {2})".format(id,
-                                        arguments.size, task['params'].size))
+            # if not arguments.size == task['params'].size:
+            #     raise SemanticError("Task {0} invoked with improper number of \
+            #                          arguments ({1} rather than {2})".format(id,
+            #                             arguments.size, task['params'].size))
             task_node = ('TASK', id, evaluated_arguments)
 
             self.decision_node = task_node

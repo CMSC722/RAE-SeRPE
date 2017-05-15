@@ -2,12 +2,16 @@ import traceback
 from interpreter import *
 # from importlib import import_module
 # import os,sys,inspect
+import random
+
+METHOD_RANDOM_ORDER = False
+
 
 def Rae(method_lib, command_lib, state, task_table, task, debug_flag=False): #We'll need to remove 'task' when we're getting an input stream
     '''This is the main method for RAE, which will loop infinitely as it expects to receive tasks/events and refine a set
        of methods into a plan to complete these tasks/events with the Progress and Retry functions.
        task_event is a tuple of the form: (task_name, (arg1, arg2, ...))'''
-       
+
     print "\n STARTING RAE\n"
 
     agenda = [] #making agenda a list instead of a set so we can have mutable stacks in the agenda (and don't have to return them from Progress/Retry)
@@ -71,7 +75,7 @@ def getTasksEvents():
 
 
 
-def getCandidates(method_lib, task_event, state, debug_flag):
+def getCandidates(method_lib, task_event, state, debug_flag=False):
     '''returns a list of methods, which are tuples of the form -- (method name,  {arg1:{'v_type':v_type1, 'val':value1}, arg2:{'v_type':v_type2, 'val':value2}, ...})'''
     print "Starting getCandidates for " + task_event[0] + ":"
 
@@ -81,114 +85,111 @@ def getCandidates(method_lib, task_event, state, debug_flag):
     task_instantiation_tup = task_event[1]
 
     #Extract the relevant methods from the method_lib whose preconditions evaluate to True given the state
+    method_names = []
     for method_name in method_lib:
-        print "Trying method: " + method_name
         if method_lib[method_name]["task"]["id"] == task_name:
+            method_names.append(method_name)
+    if METHOD_RANDOM_ORDER:
+        random.shuffle(method_names)
 
-            print "Trying to instantiate method: " + method_name + " for task: " + task_name
+    for method_name in method_names:
+        print "Trying method: " + method_name
+        print "Trying to instantiate method: " + method_name + " for task: " + task_name
+        #Need to try all permutations of variables to instantiate what was not given by the task.
+        #Will be considered good method instantiation if precond_func evaluates to true
+        method_arguments_list = method_lib[method_name]["parameters"]
+        task_arguments_list = method_lib[method_name]["task"]["parameters"]
+        if len(task_arguments_list) != len(task_instantiation_tup):
+            print "ERROR: Task: " + task_name + " only given " + str(len(task_instantiation_tup)) + \
+            " arguments, but expects " + str(len(task_arguments_list)) + " arguments in Method: " + method_name
+            return []
 
-            #Need to try all permutations of variables to instantiate what was not given by the task.
-            #Will be considered good method instantiation if precond_func evaluates to true
-            method_arguments_list = method_lib[method_name]["parameters"]
-            task_arguments_list = method_lib[method_name]["task"]["parameters"]
-            if len(task_arguments_list) != len(task_instantiation_tup):
-                print "ERROR: Task: " + task_name + " only given " + str(len(task_instantiation_tup)) + \
-                " arguments, but expects " + str(len(task_arguments_list)) + " arguments in Method: " + method_name
-                return []
+        #Create a bunch of lists of what each argument could be
+        #WE WILL NEED TO CHANGE THIS PART ONCE WE HAVE OBJECT TYPING IN METHODS
+        poss_instantiation_queues = {}
+        for argument in method_arguments_list:
+            poss_instantiation_queues[argument] = []
 
-            #Create a bunch of lists of what each argument could be
-            #WE WILL NEED TO CHANGE THIS PART ONCE WE HAVE OBJECT TYPING IN METHODS
-            poss_instantiation_queues = {}
-            for argument in method_arguments_list:
-                poss_instantiation_queues[argument] = []
-
-                if argument not in task_arguments_list:
-                    for object_type, object_set in state["objects"].iteritems():
-                        for object in object_set:
-                            poss_instantiation_queues[argument].append(object)
-                else: #argument already instantiated, so can get the one in the task instantiation tuple in the same position
-                    ndx = task_arguments_list.index(argument)
-                    poss_instantiation_queues[argument].append(task_instantiation_tup[ndx])
-                    
-            #Print task arguments and instantiation for perusal
-            if debug_flag:
-                print "Task Arguments: " + str(task_arguments_list)
-                print "Task Instantiation: " + str(task_instantiation_tup)
-
-            #Create all permutations by keeping track of an index list that corresponds to the ordering of the arguments
-            #in method_arguments_list.
-            ndx_list = []
-            for key in poss_instantiation_queues:
-                ndx_list.append(0)
-
-            #Then try to run the preconditions for each permutation in poss_instantiation_queues
-            while ndx_list[0] < len(poss_instantiation_queues[method_arguments_list[0]]):
-                ndx_loc = 0
-                meth_environment_dict = method_lib[method_name]["preconditions"]
-                poss_environment = {}
-                for argument in method_arguments_list:
-                    poss_value = poss_instantiation_queues[argument][ndx_list[ndx_loc]]
-                    ndx_loc += 1
-
-                    #Add argument:poss_value to meth_environment_dict
-                    #We need to undo this later to not update our method library!
-                    meth_environment_dict[argument] = poss_value
-
-                    #And also add it to environment dictionary that will be kept if preconditions evaluates to true
-                    v_type = 'val_none'
-                    if isinstance(poss_value, str):
-                        v_type = 'val_str'
-                    elif isinstance(poss_value, (int, float, long)):
-                        v_type = 'val_num'
-                    elif isinstance(poss_value, bool):
-                        v_type = 'val_bool'
-                    poss_environment[argument] = {'v_type':v_type, 'val':poss_value}
-
-                #Print every tried instantiation if set to debug
+            if argument not in task_arguments_list:
+                for object_type, object_set in state["objects"].iteritems():
+                    for object in object_set:
+                        poss_instantiation_queues[argument].append(object)
+            else: #argument already instantiated, so can get the one in the task instantiation tuple in the same position
                 if debug_flag:
-                    printstr = "Trying instantiation: {"
+                    print "Task Arguments: " + str(task_arguments_list)
+                    print "Task Instantiation: " + str(task_instantiation_tup)
+
+                ndx = task_arguments_list.index(argument)
+                poss_instantiation_queues[argument].append(task_instantiation_tup[ndx])
+
+        #Create all permutations by keeping track of an index list that corresponds to the ordering of the arguments
+        #in method_arguments_list.
+        ndx_list = []
+        for key in poss_instantiation_queues:
+            ndx_list.append(0)
+
+        #Then try to run the preconditions for each permutation in poss_instantiation_queues
+        while ndx_list[0] < len(poss_instantiation_queues[method_arguments_list[0]]):
+            ndx_loc = 0
+            meth_environment_dict = method_lib[method_name]["preconditions"]
+            poss_environment = {}
+            for argument in method_arguments_list:
+                poss_value = poss_instantiation_queues[argument][ndx_list[ndx_loc]]
+                ndx_loc += 1
+
+                #Add argument:poss_value to meth_environment_dict
+                #We need to undo this later to not update our method library!
+                meth_environment_dict[argument] = poss_value
+
+                #And also add it to environment dictionary that will be kept if preconditions evaluates to true
+                v_type = 'val_none'
+                if isinstance(poss_value, str):
+                    v_type = 'val_str'
+                elif isinstance(poss_value, (int, float, long)):
+                    v_type = 'val_num'
+                elif isinstance(poss_value, bool):
+                    v_type = 'val_bool'
+                poss_environment[argument] = {'v_type':v_type, 'val':poss_value}
+
+            #Print every tried instantiation if set to debug
+            if debug_flag:
+                printstr = "Trying instantiation: {"
+                for key, value in poss_environment.iteritems():
+                    printstr += key + " : " + str(value['val']) + ", "
+                print printstr + "}"
+
+            #Evaluate preconditions and store this instantiation in candidates if true
+            try:
+                precond_func = method_lib[method_name]["preconditions"]["preconditions"]
+                if precond_func(state):
+                    candidates.append((method_name, poss_environment))
+
+                    printstr = "Success with trying instantiation: {"
                     for key, value in poss_environment.iteritems():
                         printstr += key + " : " + str(value['val']) + ", "
                     print printstr + "}"
+            except Exception as e: #precondition function ran into undefined dictionary entries or something
+                if debug_flag:
+                    print 'Precondition Error: {}'.format(e)
+                pass
 
-                #Evaluate preconditions and store this instantiation in candidates if true
-                try:
-                    precond_func = method_lib[method_name]["preconditions"]["preconditions"]
-                    if precond_func(state):
-                        candidates.append((method_name, poss_environment))
+            #We need to undo the changes to teh meth_environment_dict so we can use different instantiations later
+            for argument in method_arguments_list:
+                del meth_environment_dict[argument]
 
-                        printstr = "Success with trying instantiation: {"
-                        for key, value in poss_environment.iteritems():
-                            printstr += key + " : " + str(value['val']) + ", "
-                        print printstr + "}"
-
-                except KeyError: #precondition function ran into undefined dictionary entries
-                    if debug_flag:
-                        print "\nERROR WITH TRYING INSTANTIATION:"
-                        traceback.print_exc()
-                        print "State was: " + str(state)
-                except Exception: #precondition function ran into some more interesting error
-                    print "\nERROR WITH TRYING INSTANTIATION:"
-                    traceback.print_exc()
-                    print
-
-                #We need to undo the changes to teh meth_environment_dict so we can use different instantiations later
-                for argument in method_arguments_list:
-                    del meth_environment_dict[argument]
-
-                #We're going to increment the index at the end of ndx_list by one and propogate this change toward the start
-                #of the list so we go through every possible permutation
-                rvrs_ndx = len(ndx_list) - 1
+            #We're going to increment the index at the end of ndx_list by one and propogate this change toward the start
+            #of the list so we go through every possible permutation
+            rvrs_ndx = len(ndx_list) - 1
+            ndx_list[rvrs_ndx] += 1
+            while rvrs_ndx > 0 and ndx_list[rvrs_ndx] >= len(poss_instantiation_queues[method_arguments_list[rvrs_ndx]]):
+                ndx_list[rvrs_ndx] = 0
+                rvrs_ndx -= 1
                 ndx_list[rvrs_ndx] += 1
-                while rvrs_ndx > 0 and ndx_list[rvrs_ndx] >= len(poss_instantiation_queues[method_arguments_list[rvrs_ndx]]):
-                    ndx_list[rvrs_ndx] = 0
-                    rvrs_ndx -= 1
-                    ndx_list[rvrs_ndx] += 1
 
     return candidates
 
 
-def Progress(method_lib, command_lib, task_table, state, stack, debug_flag):
+def Progress(method_lib, command_lib, task_table, state, stack, debug_flag=False):
     '''This method will refine the current stack.
        Stack is a bunch of method frames of the form: (task_event, method, Interpreter, tried)
        and method contains it's name and the current instantiation of its arguments: (method name,  {arg1:{'v_type':v_type1, 'val':value1}, arg2:{'v_type':v_type2, 'val':value2}, ...})'''
@@ -242,7 +243,7 @@ def Progress(method_lib, command_lib, task_table, state, stack, debug_flag):
 
         elif node_type == "TASK": #is task
             print "Got task: " + str(id)
-            candidates = getCandidates(method_lib, (id, args), state)
+            candidates = getCandidates(method_lib, (id, args), state, debug_flag)
             if not candidates:
                 Retry(stack, debug_flag, method_lib, state)
             else:
@@ -281,6 +282,8 @@ def Retry(stack, debug_flag, method_lib, state):
     interp = top_tup[2]
     tried = top_tup[3]
 
+    # sometimes tried is a set
+    tried = list(tried)
     tried.append(method)
 
     candidates = getCandidates(method_lib, task_event, state, debug_flag)
@@ -301,7 +304,7 @@ def Retry(stack, debug_flag, method_lib, state):
         if stack:
             Retry(stack, debug_flag, method_lib, state)
         else:
-            print "Failed to accomplish " + task_event
+            print "Failed to accomplish {}".format(task_event)
 
     return
 
