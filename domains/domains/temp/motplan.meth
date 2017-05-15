@@ -1,9 +1,9 @@
 method m1-move-to-room(r,loc1,loc2):
   task: move-to-room(r,loc1,loc2)
-    pre:
+  pre:
   =BEGIN
 def preconditions(state):
-  print state['state_vars']['loc'][(r,)]
+  return state['state_vars']['loc'][(r,)] == loc1
   =END
   body:
     if search(r,loc2) then
@@ -16,8 +16,8 @@ def preconditions(state):
 
 method m1-enter-room(r,loc1,d,loc2):
   task: enter-room(r,d,loc2)
-    pre:
-    =BEGIN
+  pre:
+  =BEGIN
 def preconditions(state):
   return True
   =END
@@ -26,8 +26,8 @@ def preconditions(state):
 
 method m1-exit-room(r,loc1,d,loc2):
   task: exit-room(r,d,loc2)
-    pre:
-    =BEGIN
+  pre:
+  =BEGIN
 def preconditions(state):
   return True
   =END
@@ -36,8 +36,8 @@ def preconditions(state):
 
 method m1-move-towards(r,loc1,loc2):
   task: move-towards(r,loc1,loc2)
-    pre:
-    =BEGIN
+  pre:
+  =BEGIN
 def preconditions(state):
   return state['state_vars']['loc'][(r,)] == loc1
   =END
