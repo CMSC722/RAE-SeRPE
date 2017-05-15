@@ -55,7 +55,7 @@ import json                     # a better way of getting a pretty print of a di
 from pydoc import pager         # we'll be using this to produce less-like,
                                 # paged output -- primarily for debugging purposes
 
-DEBUG = False
+DEBUG = True
 
 """
 METHODS, TASKS, PRECONDITIONS, and INSTRUCTIONS: REPRESENTATION
@@ -464,6 +464,7 @@ def p_bexpr(p):
              | NOT bexpr
              | true
              | false
+             | loc_var_rd
              | state_var_rd     '''
              # | expr             '''
     if len(p) == 4:

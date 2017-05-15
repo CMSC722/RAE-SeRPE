@@ -6,7 +6,8 @@ def preconditions(state):
   return state['state_vars']['loc'][(r,)] == loc1
   =END
   body:
-    if search(r,loc2) then
+    s = search(r,loc2)
+    if s then
           exit-room(r,loc1)
           move(r,loc1,loc2)
           enter-room(r,loc2)
@@ -47,10 +48,13 @@ def preconditions(state):
         return fail
       else
         while !(t == 'empty') do
-              if search(r, poll(t)) then
-                   move-to-room(r,loc1,pop(t))
+              p = poll(t)
+              s = search(r, p)
+              if s then
+                   pt = pop(t)
+                   move-to-room(r,loc1,pt)
               else
-                   move-towards(r,loc1,pop(t))
+                   move-towards(r,loc1,pt)
                end
         end
       end

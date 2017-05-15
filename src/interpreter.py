@@ -183,8 +183,9 @@ class Interpreter:
         self.mode = mode # can be SeRPE or RAE
         self.new_decision_node = False
         self.decision_node = None
+        self.action_result = None
         self.ret = (val_none, environment, state_vars)
-        self.state = 'READY' # can be READY, EXECUTING, FINISHED, or ERROR
+        self.state = 'READY' # can be READY, ACTING, FINISHED, or ERROR
         self.stack = deque([])
 
         # print("\n\nenvironment = " + environment.__repr__() + "\n\n")
@@ -193,15 +194,41 @@ class Interpreter:
         return self
 
     def next(self):
+        # print("\n\nin next again!\n\n")
+        # if we just finished performing an action,
+        # catch the result
+        if self.mode == 'ACTING':
+            # print("\n\nHERE!!!\n\n")
+            self.mode = 'EXECUTING'
+
+            # interpret the result
+            v_type = 'val_none'
+            if isinstance(self.action_result, str):
+                v_type = 'val_str'
+            elif isinstance(self.action_result, (int, float, long)):
+                v_type = 'val_num'
+            elif isinstance(self.action_result, bool):
+                v_type = 'val_bool'
+
+            action_result = dict(
+                v_type = v_type,
+                val = self.action_result
+            )
+            self.ret = (action_result, self.environment, self.state_vars)
+
+        # continue executing the method
         if self.new_decision_node:
+            # print("\n\nreturning decision node!\n\n")
             self.new_decision_node = False
             return self.decision_node
         elif self.stack: # pick up where we left off
             next_instr, environment = self.stack.popleft()
             self.eval(next_instr, environment, self.state_vars)
+            # print("\n\nherein 'elif self.stack'!\n\n")
             return self.next()
-        elif self.state == 'READY':
+        elif self.state == 'READY' or self.state == 'EXECUTING':
             self.execute_method(self.method, self.environment, self.state_vars)
+            # print("\n\nherein 'elif self.state'!\n\n")
             return self.next()
         else:
             self.state = 'FINISHED'
@@ -222,6 +249,7 @@ class Interpreter:
     """
 
     def execute_method(self, method, environment, state_vars):
+        print("\n\nHERE!\n\n")
         self.state = 'EXECUTING'
         if method:
             first_instr = method['exprs']
@@ -317,8 +345,9 @@ class Interpreter:
         # before proceeding with execusion, check if there are any new
         # decision nodes to yield
         # if self.new_decision_node:
-        #    self.new_decision_node = False
-        #    yield self.decision_node
+        #     print("caught decision node = " + self.decision_node.__repr__() + "\n")
+        #     self.stack.append((curr_instr, environment))
+        #     pass
 
         # print("recursing on ast")
         # continue recursing on the AST
@@ -367,8 +396,10 @@ class Interpreter:
         # if so, save the execution state and pass so that the original invok
         # ing method (__next__) can yield the decision node
         if self.new_decision_node:
+            # print("\ncaught decision node in seq!\n\n")
+            # print("self.mode = " + self.mode)
             self.stack.append((next_instr, environment))
-            pass
+            return
         # elif self.mode == 'RAE' and not self.new_decision_node:
         #     self.new_decision_node = True
         #     self.decision_node = dict(
@@ -383,8 +414,8 @@ class Interpreter:
     def e_while(self, instr, environment, state_vars):
         cond = instr['cond']
         block = instr['block']
-        (cond_res, _, _) = self.eval(cond, environment=environment,
-                                           state_vars=state_vars)
+        self.eval(cond, environment=environment, state_vars=state_vars)
+        (cond_res, _, _) =  self.ret
         ret = val_none
         while cond_res['val']:
             # evaluate the code block once
@@ -395,7 +426,7 @@ class Interpreter:
             # there could be a new decision node after evaluating the block
             if self.new_decision_node:
                 self.stack.append((instr, environment)) # save the state
-                pass # return so that __next__ (the original invoking method)
+                return # return so that __next__ (the original invoking method)
                      # can yield the generated decision node
 
             # now evaluate the guard and continue iterating as appropriate
@@ -409,27 +440,27 @@ class Interpreter:
         cond_list = instr['conds']
         block_list = instr['blocks']
 
-        print("got cond list: \n")
-        print(dump(cond_list) + "\n")
-
-        print("got block list: \n")
-        print(dump(block_list) + "\n")
+        # print("got cond list: \n")
+        # print(dump(cond_list) + "\n")
+        #
+        # print("got block list: \n")
+        # print(dump(block_list) + "\n")
 
         i = 0;
         while i < len(cond_list):
             cond = cond_list[i]
             block = block_list[i]
-            print("in if with cond = " + cond.__repr__())
+            # print("in if with cond = " + cond.__repr__())
 
             self.eval(cond, environment=environment,
                             state_vars=state_vars)
             (res, _, _) = self.ret
 
             if res['val']:
-                print("cond succeeded; in block = " + block.__repr__())
+                # print("cond succeeded; in block = " + block.__repr__())
                 self.eval(block, environment=environment,
                                  state_vars=state_vars)
-                pass
+                return
 
             i = i + 1;
 
@@ -489,10 +520,10 @@ class Interpreter:
                           state_vars=state_vars)
         (r_res, _, _) = self.ret
 
-        print("l_expr = " + l_expr.__repr__() + "\n")
-        print("r_expr = " + r_expr.__repr__() + "\n\n")
-        print("l_res = " + l_res.__repr__() + "\n")
-        print("r_res = " + r_res.__repr__() + "\n\n")
+        # print("l_expr = " + l_expr.__repr__() + "\n")
+        # print("r_expr = " + r_expr.__repr__() + "\n\n")
+        # print("l_res = " + l_res.__repr__() + "\n")
+        # print("r_res = " + r_res.__repr__() + "\n\n")
 
         if l_res['v_type'] == r_res['v_type']:
             l_operand, r_operand = l_res['val'], r_res['val']
@@ -732,13 +763,13 @@ class Interpreter:
     # parser and issue separate byte-code instructions; but for now, this will
     # at least work.
     def _eval_helper(self, arg, environment, state_vars):
-        print("in eval_helper evaluating arg = " + arg.__repr__())
+        # print("in eval_helper evaluating arg = " + arg.__repr__())
         self.eval(arg, environment, state_vars)
         (res, _, _) = self.ret
         return res
 
     def e_state_var_rd(self, instr, environment, state_vars):  # arg1 (id string), arg2 (list of parameter ids)
-        print("in state_var_rd with instr = " + instr.__repr__())
+        # print("in state_var_rd with instr = " + instr.__repr__())
         id = instr['arg1']
         arguments = instr['arg2']
         evaluated_arguments = tuple([self._eval_helper(arg, environment, state_vars)['val'] \
@@ -748,7 +779,7 @@ class Interpreter:
 
         if id in self.task_table:
             task = self.task_table[id]
-            print("hit task " + id + " = " + task.__repr__() + "\n")
+            # print("hit task " + id + " = " + task.__repr__() + "\n")
             if not len(arguments) == len(task['parameters']):
                 raise SemanticError("Task {0} invoked with improper number of \
                                      arguments ({1} rather than {2})".format(id,
@@ -761,14 +792,16 @@ class Interpreter:
             self.ret = (val_none, environment, state_vars)
         elif id in self.action_table:
             action_node = ('ACTION', id, evaluated_arguments)
+            # print("\nissuing an action node = " + action_node.__repr__() + "\n")
 
             self.decision_node = action_node
             self.new_decision_node = True
+            self.mode = 'ACTING'
             self.ret = (val_none, environment, state_vars)
         else: # it's a state variable (we hope)
-            print("\n\n\twe were passed state_vars = \n" + state_vars.__repr__() + "\n\n")
-            print("id = " + id + "\n\n")
-            print("evaluated_arguments = " + evaluated_arguments.__repr__() + "\n\n")
+            # print("\n\n\twe were passed state_vars = \n" + state_vars.__repr__() + "\n\n")
+            # print("id = " + id + "\n\n")
+            # print("evaluated_arguments = " + evaluated_arguments.__repr__() + "\n\n")
             val = state_vars[id][evaluated_arguments]
 
             v_type = 'val_none'
@@ -796,7 +829,7 @@ class Interpreter:
         self.ret = (res, environment, state_vars)
 
     def e_loc_var_rd(self, instr, environment, state_vars):    # arg1 (id string)
-        print ("in loc_var_rd with instr = " + instr.__repr__())
+        # print ("in loc_var_rd with instr = " + instr.__repr__())
         id = instr['arg1']
         val = environment[id]
 
@@ -816,8 +849,24 @@ class Interpreter:
     def e_loc_var_wr(self, instr, environment, state_vars):    # arg1 (id string), arg2 (expr)
         id = instr['arg1']
 
-        self.eval(instr['arg2'], environment=environment,
-                                 state_vars=state_vars)
+        if not self.mode == 'ACTED':
+            # print("\n\nabout to evaluate rhs of assignment\n")
+            self.eval(instr['arg2'], environment=environment, state_vars=state_vars)
+            # print("just evaluated rhs of assignment\n")
+            if self.new_decision_node:
+                # print("caught new decision node = " + self.decision_node.__repr__())
+                # print("self.mode = " + self.mode)
+                self.stack.append((instr, environment))
+                # print("\n\nstack now looks like: = " + dump(self.stack) + "\n\n")
+                #pass
+                #print("\n\nwent past pass??\n\n")
+                return
+            # else:
+                # print("failed to generate decision node")
+        # else:
+        #     print("\nback in loc_var_wr after executing task!\n")
+        # print("\n\nHERE in loc_var_wr!\n\n")
+        self.mode = 'EXECUTING'
         (res, _, _) = self.ret
 
         environment[id] = res['val']

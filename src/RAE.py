@@ -226,14 +226,17 @@ def Progress(method_lib, command_lib, task_table, state, stack, debug_flag=False
         for each in interp_args:
             args = args + (each['val'],)
 
+        print("\ngot a node = " + next_node.__repr__() + "\n\n")
+
         if node_type == "ACTION": #is command
             print "Performing command: " + str(id)
             command = command_lib[id]
             args = (state,) + args
-            succeeded = command(*args)
+            res = command(*args)
 
-            if succeeded:
+            if res:
                 print "Command succeded"
+                interp.action_result = res
                 stack[len(stack) - 1] = (task_event, method, interp, tried)
                 return
             else: #command failed
