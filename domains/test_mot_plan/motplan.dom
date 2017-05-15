@@ -1,6 +1,6 @@
 Objects:
 location = {A, B, C, D, E, F, G, H, I, J, K, L}
-doors = {Door A, Door B, Door C, Door D, Door E, Door F}
+doors = {DoorA, DoorB, DoorC, DoorD, DoorE, DoorF}
 robot = {r1}
 
 Rigid relations:

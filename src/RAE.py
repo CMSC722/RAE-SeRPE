@@ -1,8 +1,9 @@
+import traceback
 from interpreter import *
 # from importlib import import_module
 # import os,sys,inspect
 
-def Rae(method_lib, command_lib, state, task_table, task, debug_flag=True): #We'll need to remove 'task' when we're getting an input stream
+def Rae(method_lib, command_lib, state, task_table, task, debug_flag=False): #We'll need to remove 'task' when we're getting an input stream
     '''This is the main method for RAE, which will loop infinitely as it expects to receive tasks/events and refine a set
        of methods into a plan to complete these tasks/events with the Progress and Retry functions.
        task_event is a tuple of the form: (task_name, (arg1, arg2, ...))'''
@@ -104,12 +105,13 @@ def getCandidates(method_lib, task_event, state, debug_flag):
                         for object in object_set:
                             poss_instantiation_queues[argument].append(object)
                 else: #argument already instantiated, so can get the one in the task instantiation tuple in the same position
-                    if debug_flag:
-                        print "Task Arguments: " + str(task_arguments_list)
-                        print "Task Instantiation: " + str(task_instantiation_tup)
-                        
                     ndx = task_arguments_list.index(argument)
                     poss_instantiation_queues[argument].append(task_instantiation_tup[ndx])
+                    
+            #Print task arguments and instantiation for perusal
+            if debug_flag:
+                print "Task Arguments: " + str(task_arguments_list)
+                print "Task Instantiation: " + str(task_instantiation_tup)
 
             #Create all permutations by keeping track of an index list that corresponds to the ordering of the arguments
             #in method_arguments_list.
@@ -158,8 +160,15 @@ def getCandidates(method_lib, task_event, state, debug_flag):
                             printstr += key + " : " + str(value['val']) + ", "
                         print printstr + "}"
 
-                except: #precondition function ran into undefined dictionary entries or something
-                    pass
+                except KeyError: #precondition function ran into undefined dictionary entries
+                    if debug_flag:
+                        print "\nERROR WITH TRYING INSTANTIATION:"
+                        traceback.print_exc()
+                        print "State was: " + str(state)
+                except Exception: #precondition function ran into some more interesting error
+                    print "\nERROR WITH TRYING INSTANTIATION:"
+                    traceback.print_exc()
+                    print
 
                 #We need to undo the changes to teh meth_environment_dict so we can use different instantiations later
                 for argument in method_arguments_list:
