@@ -748,6 +748,7 @@ class Interpreter:
                 raise SemanticError("Task {0} invoked with improper number of \
                                      arguments ({1} rather than {2})".format(id,
                                         arguments.size, task['parameters'].size))
+
             task_node = ('TASK', id, evaluated_arguments)
 
             self.decision_node = task_node

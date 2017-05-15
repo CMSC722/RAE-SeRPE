@@ -53,7 +53,9 @@ import types
 import time
 import random
 import os
-
+import textDisplay
+import graphicsDisplay
+import game
 
 class GameState:
     """
@@ -703,33 +705,10 @@ def readCommand(argv):
 
 
 def loadAgent(pacman, nographics):
-    # Looks through all pythonPath Directories for the right module,
-    pythonPathStr = os.path.expandvars("$PYTHONPATH")
-    if pythonPathStr.find(';') == -1:
-        pythonPathDirs = pythonPathStr.split(':')
-    else:
-        pythonPathDirs = pythonPathStr.split(';')
-    pythonPathDirs.append('.')
-
-    for moduleDir in pythonPathDirs:
-        if not os.path.isdir(moduleDir):
-            continue
-        moduleNames = [f for f in os.listdir(
-            moduleDir) if f.endswith('gents.py')]
-        for modulename in moduleNames:
-            try:
-                module = __import__(modulename[:-3])
-            except ImportError:
-                continue
-            if pacman in dir(module):
-                if nographics and modulename == 'keyboardAgents.py':
-                    raise Exception(
-                        'Using the keyboard requires graphics (not text display)')
-                return getattr(module, pacman)
-    raise Exception(
-        'The agent ' +
-        pacman +
-        ' is not specified in any *Agents.py.')
+    sys.path.append('../domains/pacman')
+    module = __import__('ghostAgents')
+    if pacman in dir(module):
+        return getattr(module, pacman)
 
 
 def replayGame(layout, actions, display):

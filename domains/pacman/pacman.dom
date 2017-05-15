@@ -1,9 +1,18 @@
-Variables:
-game = Games
+Objects:
+variables = {visit, score, path}
+values = {win, lose}
 
-Initial_State:
-score = 0
-game = Game()
+Rigid relations:
+adjacent = {(win, lose)}
+
+Initial state:
+value(visit) = false
+value(score) = none
+value(GameState) = None
+value(North) = false
+value(East) = true
+value(West) = true
+value(South) = false
 
 Goal:
-score > 100 && !is_done()
+value(score) = none
