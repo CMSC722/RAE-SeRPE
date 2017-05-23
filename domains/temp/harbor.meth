@@ -1,0 +1,103 @@
+m1-put-in-pile(c,p_p)
+  task: put-in-pile(c,p_p)
+  pre:
+  =BEGIN
+def preconditions(state):
+  return state['state_vars']['pile'][(c,)] == p_p
+  =END
+  body:
+    /* empty */
+
+m1-uncover(c)
+  task: uncover(c)
+  pre:
+  =BEGIN
+def preconditions(state):
+  p_c = state['state_vars']['pile'][(c,)]
+  return state['state_vars']['top'][p_c] == c
+  =END
+  body:
+    /* empty */
+
+m2-uncover(r,c,c,p_p,d)
+  task: uncover(c)
+  pre:
+def preconditions(state):
+  return state['state_vars']['pile'][(c,)] == p and
+    state['state_vars']['top'][(p,)] != c and
+    state['state_vars']['loc'][(r,)] == d and
+    state['state_vars']['cargo'][(r,)] == 'nil' and
+    (p,d) in state['rigid_rels']['at'] and
+    (p_p,d) in state['rigid_rels']['at'] and
+    and p_p != p
+  body:
+    while !(top(p) == c) do
+      c_p = top(p)
+      pos_of_c_p = pos(c_p)
+      load(r,c_p,pos_of_c_p,p,d)
+      top_of_p_p
+      unload(r,c_p,top_of_p_p,p_p,d)
+    end
+
+m2-put-in-pile(r,c,p,d,p_p,d_p)
+  task: put-in-pile(c,p_p)
+  pre:
+  =BEGIN
+def preconditions(state):
+  return state['state_vars']['pile'][(c,)] == p and
+    (p,d) in state['state_vars']['at'] and
+    (p_p,d_p) in state['state_vars']['at'] and
+    (not p == p_p) and state['state_vars']['carto'][(r,)] == 'nil'
+  =END
+  body:
+    if !(loc(r) == d) then
+      navigate(r,d)
+    end
+
+    uncover(c)
+    load(r, c, pos(c), p, d)
+
+    if !(loc(r) == d_p) then
+      navigate(r,d_p)
+    end
+
+    t = top(p_p)
+    unload(r, c, t, p_p, d)
+
+m1-navigate(r,d_p)
+  task: navigate(r, d_p)
+  pre:
+  =BEGIN
+def preconditions(state):
+  return state['state_vars']['loc'][(r,)] == d_p
+  =END
+  body:
+    /* empty */
+
+m2-navigate(r,d_p)
+  task: navigate(r, d_p)
+  pre:
+  =BEGIN
+def preconditions(state):
+  l = state['state_vars']['loc'][(r,)]
+  return state['state_vars']['loc'][(r,)] != d_p and
+    (l,d_p) in state['state_vars']['adjacent']
+  =END
+  body:
+    l = loc(r)
+    move(r, l, d_p)
+
+m3-navigate(r,d,d_p)
+  task: navigate(r, d_p)
+  pre:
+  =BEGIN
+def preconditions(state):
+  l = state['state_vars']['loc'][(r,)]
+  return state['state_vars']['loc'][(r,)] != d_p and
+    d != d_p and
+    (l,d) in state['rigid_rels']['adjacent']
+  =END
+  body:
+    l = loc(r)
+    move(r, l, d)
+    navigate(r, d_p)

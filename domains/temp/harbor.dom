@@ -1,0 +1,28 @@
+Objects:
+misc = {nil}
+dock = {d1, d2, d3}
+robot = {r1}
+cargo = {c1, c2, c3}
+piles = {p1, p2, p3}
+
+Rigid relations:
+adjacent = {(d1, d2), (d1, d3), (d2, d1), (d2, d3), (d3, d1), (d3, d2)}
+at = {(p1, d1), (p2, d2), (p3, d2)}
+
+Initial state:
+pile(c1) = p1
+pile(c2) = p2
+pile(c3) = p2
+loc(r1) = d1
+top(p1) = c1
+top(p2) = c3
+pos(c1) = nil
+pos(c2) = nil
+pos(c3) = c2
+cargo(r1) = nil
+occupied(d1) = true
+occupied(d2) = false
+occupied(d3) = false
+
+Goal:
+pile(c1) = p2
